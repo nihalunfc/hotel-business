@@ -17,8 +17,8 @@ This project applies rigorous scientific laws to hospitality data:
 * **The Degree-Day Method:** Normalizing energy consumption against Niagara Falls seasonal trends.
 
 ## 📂 Contents
-* `utility_optimization_story.ipynb`: The full Jupyter Notebook containing equations, Python code, and 10-year data simulations.
-* `niagara_hotel_utility_data.csv`: A high-fidelity dataset (2015-2025) simulating real-world hotel metrics.
+* `hotel-cost-cutting(1).ipynb`: The full Jupyter Notebook containing equations, Python code, and 10-year data simulations.
+* `niagara_hotel_10y_utilities.csv`: A high-fidelity dataset (2015-2025) simulating real-world hotel metrics.
 * `visualizations/`: Graphs comparing Actual vs. Ideal efficiency.
 
 ## 📈 Expected ROI
