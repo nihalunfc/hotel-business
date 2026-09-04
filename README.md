@@ -1,11 +1,11 @@
-# Project H-WARL: Holistic Wealth & Asset Revenue Learning
+# Project HARLTON: Hospitality Asset & Revenue Learning, Tactical Optimization Network
 
-Welcome to the conceptual repository for **Project H-WARL**.
+Welcome to the conceptual repository for **Project HARLTON**.
 
-This repository contains advanced, multi-variable architectural proposals designed to optimize revenue management, asset utilization, and Customer Lifetime Value (CLV) within the modern hospitality and mega-resort sector.
+This repository outlines a modern, data-driven approach to optimize revenue management, room assignments, and Customer Lifetime Value (CLV) within the hospitality and resort sector.
 
 ### Documentation
-Please see the full architectural proposal here: [Project Proposal (H-WARL)](./proposal/proposal.md)
+Please see the full project proposal here: [Project Proposal (HARLTON)](./proposal/proposal.md)
 
 ---
-*Developed as a portfolio conceptualization for advanced hospitality data analytics and revenue management.*
+*Developed as a portfolio conceptualization for practical hospitality data analytics and revenue management.*
