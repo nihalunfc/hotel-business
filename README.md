@@ -1,28 +1,11 @@
-# Hotel Business Analytics & Operations
+# Project H-WARL: Holistic Wealth & Asset Revenue Learning
 
-Welcome to my central repository for data-driven hospitality management. As a Master’s candidate in Data Analytics and a professional within the Housekeeping department at **The Brock Hotel (Niagara Falls)**, I am dedicated to bridging the gap between frontline hotel operations and advanced data science.
+Welcome to the conceptual repository for **Project H-WARL**.
 
-## 📌 Mission
-To leverage predictive modeling, stochastic analysis, and operational auditing to solve real-world problems in the hotel industry—specifically focusing on cost reduction, guest sentiment, and labor efficiency.
+This repository contains advanced, multi-variable architectural proposals designed to optimize revenue management, asset utilization, and Customer Lifetime Value (CLV) within the modern hospitality and mega-resort sector.
 
-## 📂 Project Directory
-
-### 🚀 [Internship Proposal 2026: Utility Optimization](./internship-proposal-2026/)
-A high-fidelity predictive model and operational protocol designed to reduce utility waste (Hydro/Water) in historic hotel properties using "Human-in-the-Loop" analytics.
-* **Tech:** Python, Linear Regression, Stochastic Simulation.
-* **Status:** Proposal Stage.
+### Documentation
+Please see the full architectural proposal here: [Project Proposal (H-WARL)](./proposal/proposal.md)
 
 ---
-
-## 👤 About Me
-* **Role:** Room Attendant / Data Analyst Intern (Candidate)
-* **Education:** Master’s in Data Analytics (University of Niagara Falls)
-* **Focus:** Operational Efficiency & Sustainability in Niagara Falls Tourism
-
-## 🛠 Tech Stack
-* **Languages:** Python (Pandas, NumPy, Scikit-learn, Matplotlib)
-* **Tools:** Jupyter Notebooks, Streamlit, Tableau, SQL.
-* **Domain Knowledge:** Hilton Property Management Systems (OnQ, HotSOS), Building Physics.
-
----
-*“Turning operational data into actionable hospitality insights.”*
+*Developed as a portfolio conceptualization for advanced hospitality data analytics and revenue management.*
