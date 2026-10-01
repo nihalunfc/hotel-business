@@ -18,6 +18,8 @@ A portfolio of proposals and tools for multi-property resort hotels. The aim is 
 | 07 | [Vacant-Room Energy Setback](./Project%20HARLTON/07-vacant-room-energy-setback/proposal.md) | Expense |
 | 08 | [Water Leak Detection from Meter Data](./Project%20HARLTON/08-water-leak-detection/proposal.md) | Expense |
 | 09 | [Linen and Amenity Loss Control](./Project%20HARLTON/09-linen-and-amenity-loss-control/proposal.md) | Expense |
+| 10 | [Historical Demand Intelligence](./Project%20HARLTON/10-historical-demand-intelligence/proposal.md) | Revenue analytics |
+| 11 | [Year-Round Occupancy and Room Sales Strategy](./Project%20HARLTON/11-year-round-occupancy-strategy/proposal.md) | Revenue strategy |
 
 Master architecture: [HARLTON proposal](./Project%20HARLTON/proposal/proposal.md)
 
@@ -31,6 +33,18 @@ Initiatives that optimize staffing, guest flow, housekeeping and facilities. The
 | 02 | [Departure Flow Balancing](./Project%20H2/02-departure-flow-balancing/proposal.md) | Guest flow |
 | 03 | [Room-Ready Notifications and Housekeeping Sequencing](./Project%20H2/03-room-ready-guest-notifications/proposal.md) | Housekeeping |
 | 04 | [Review-to-Maintenance Intelligence](./Project%20H2/04-review-to-maintenance-intelligence/proposal.md) | Facilities |
+| 05 | [Automated Schedule Builder](./Project%20H2/05-automated-schedule-builder/proposal.md) | Workforce |
+| 06 | [Low-Strain Work Zone Assignment](./Project%20H2/06-low-strain-work-zone-assignment/proposal.md) | Workforce and safety |
+| 07 | [Night Operations and Front Desk Coverage](./Project%20H2/07-night-operations-coverage/proposal.md) | Workforce and safety |
+| 08 | [Security Coverage Optimization](./Project%20H2/08-security-coverage-optimization/proposal.md) | Security |
+| 09 | [Centralized Supply Sign-Out and Department Accountability](./Project%20H2/09-supply-sign-out-accountability/proposal.md) | Inventory |
+| 10 | [Decentralized Supply and Amenity Placement](./Project%20H2/10-decentralized-supply-placement/proposal.md) | Inventory and layout |
+
+### [Data Foundation](./Data%20Foundation/proposal.md)
+The shared data layer behind both projects: data sources, star-schema fact and dimension tables, controlled label sets, database layers, data quality checks and privacy governance.
+
+### [Further Ideas](./Further%20Ideas/README.md)
+Ideas with real potential that are not yet ready for a full proposal, each listed with what it lacks and what would make it viable.
 
 ---
 *All proposals use public, cited sources and synthetic or anonymized examples. No employer data is included. The multi-agent coordination engine referenced in several modules is the author's own work and is not published here.*

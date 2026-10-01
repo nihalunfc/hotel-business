@@ -19,6 +19,10 @@ The overall architecture is described in the [HARLTON master proposal](./proposa
 | 07 | [Vacant-Room Energy Setback](./07-vacant-room-energy-setback/proposal.md) | Expense | Relax heating and cooling in unsold rooms using PMS room status |
 | 08 | [Water Leak Detection from Meter Data](./08-water-leak-detection/proposal.md) | Expense | Detect leaks from overnight minimum flow |
 | 09 | [Linen and Amenity Loss Control](./09-linen-and-amenity-loss-control/proposal.md) | Expense | Measure and locate linen and amenity loss |
+| 10 | [Historical Demand Intelligence](./10-historical-demand-intelligence/proposal.md) | Revenue analytics | Twelve repeatable analyses of multi-year booking history: seasonality, pace, unconstrained demand, segments, cancellations, price response |
+| 11 | [Year-Round Occupancy and Room Sales Strategy](./11-year-round-occupancy-strategy/proposal.md) | Revenue strategy | A 365-day demand-tier calendar and selling playbook to price peaks correctly and fill need periods profitably |
+
+Shared data model and labels: [Data Foundation](../Data%20Foundation/proposal.md). Ideas not yet ready for a full proposal: [Further Ideas](../Further%20Ideas/README.md).
 
 ## Shared Principles
 
