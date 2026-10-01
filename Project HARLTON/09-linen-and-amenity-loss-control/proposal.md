@@ -1,5 +1,7 @@
 # HARLTON-09: Linen and Amenity Loss Control
 
+> **In short: count linen and amenities in and out each week to find where items go missing, and fix the cause instead of just buying more.**
+
 **Category:** Expense optimization
 **Optimizes:** Replacement cost of linen, towels, robes and in-room amenities
 **Status:** Proposal

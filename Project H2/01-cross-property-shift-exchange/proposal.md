@@ -1,5 +1,7 @@
 # H2-01: Cross-Property Shift Exchange
 
+> **In short: when a shift opens, automatically find a qualified, rested employee, first at the same hotel and then at sister hotels, before paying overtime or agency staff.**
+
 **Category:** Workforce operations
 **Optimizes:** Coverage of open shifts with the right people, at the lowest overtime and agency use, within employment law
 **Status:** Proposal

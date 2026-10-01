@@ -1,5 +1,7 @@
 # H2-04: Review-to-Maintenance Intelligence
 
+> **In short: read guest reviews every day, pick out real problems such as a noisy air conditioner, and turn them into repair tickets before the next guest complains.**
+
 **Category:** Facilities and guest experience operations
 **Optimizes:** Speed of finding and fixing recurring room and facility problems that guests write about
 **Status:** Proposal

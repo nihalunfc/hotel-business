@@ -1,5 +1,7 @@
 # HARLTON-11: Year-Round Occupancy and Room Sales Strategy
 
+> **In short: a plan for every night of the year that prices busy nights correctly and fills quiet nights with the right guests, groups and packages.**
+
 **Category:** Revenue strategy
 **Optimizes:** Total room revenue across all 365 nights and all properties, by filling low-demand periods and pricing high-demand periods correctly
 **Status:** Proposal

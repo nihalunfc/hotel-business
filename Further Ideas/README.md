@@ -1,5 +1,7 @@
 # Further Ideas: Potential and Limitations
 
+> **In short: promising ideas that are not ready yet, each listed honestly with what is missing and what would make it work.**
+
 Ideas with real potential that are not yet ready to become full proposals. Each one has a clear limitation: data the hotel may not have, a capital cost, a dependency on another module, or a risk to guests or staff. They are listed honestly, so that the right ones can be picked up when their limitation is resolved.
 
 | # | Idea | Potential | What it lacks or its drawbacks | What would make it viable |

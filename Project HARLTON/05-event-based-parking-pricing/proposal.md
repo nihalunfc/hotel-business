@@ -1,5 +1,7 @@
 # HARLTON-05: Event-Based Parking Pricing
 
+> **In short: charge more for parking on busy event nights and less on quiet nights, instead of one flat rate all year.**
+
 **Category:** Ancillary revenue
 **Optimizes:** Parking revenue per space on high-demand nights
 **Status:** Proposal

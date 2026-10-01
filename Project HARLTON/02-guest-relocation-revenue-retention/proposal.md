@@ -1,5 +1,7 @@
 # HARLTON-02: Guest Relocation and Revenue Retention
 
+> **In short: when one hotel is overbooked, move guests to a sister hotel instead of a competitor, so the guest and the money stay in the group.**
+
 **Category:** Revenue protection
 **Optimizes:** Revenue kept inside the portfolio when a property is oversold
 **Status:** Proposal

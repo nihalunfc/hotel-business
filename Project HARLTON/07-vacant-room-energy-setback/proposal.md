@@ -1,5 +1,7 @@
 # HARLTON-07: Vacant-Room Energy Setback
 
+> **In short: use the booking system to turn down heating and cooling in rooms nobody has booked tonight, with no new sensors needed.**
+
 **Category:** Expense optimization
 **Optimizes:** Heating and cooling cost in unsold and unoccupied guest rooms
 **Status:** Proposal

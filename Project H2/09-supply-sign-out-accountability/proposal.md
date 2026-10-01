@@ -1,5 +1,7 @@
 # H2-09: Centralized Supply Sign-Out and Department Accountability
 
+> **In short: a simple sign-out sheet, later a tablet, that records who took which supplies, for which department and why, so waste and loss can be traced and reduced.**
+
 **Category:** Inventory operations
 **Optimizes:** Control of supplies from storeroom to use: who took what, for which department and area, and why any of it was lost
 **Status:** Proposal

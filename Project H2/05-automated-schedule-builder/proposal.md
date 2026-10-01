@@ -1,5 +1,7 @@
 # H2-05: Automated Schedule Builder
 
+> **In short: build the weekly staff schedule automatically, then publish the same approved schedule to the staff app, to the familiar Excel sheet and on paper for the staff board.**
+
 **Category:** Workforce operations
 **Optimizes:** The weekly staff schedule, so that coverage matches demand, labour rules are met and managers stop building it by hand
 **Status:** Proposal

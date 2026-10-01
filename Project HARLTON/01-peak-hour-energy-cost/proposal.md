@@ -1,5 +1,7 @@
 # HARLTON-01: Peak-Hour Energy Cost Reduction
 
+> **In short: predict the few hottest hours of the year that set the hotel's electricity bill, and quietly shift equipment use out of those hours to save money.**
+
 **Category:** Expense optimization
 **Optimizes:** Annual electricity cost, specifically the Global Adjustment portion of the bill
 **Status:** Proposal

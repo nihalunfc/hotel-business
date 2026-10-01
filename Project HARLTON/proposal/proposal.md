@@ -1,4 +1,7 @@
 # Project HARLTON
+
+> **In short: a smarter way to make revenue decisions across several hotels, so that today's quick sale never costs the hotel its most valuable guests tomorrow.**
+
 **Hospitality Asset & Revenue Learning, Tactical Optimization Network**
 
 ---

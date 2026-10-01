@@ -1,5 +1,7 @@
 # H2-10: Decentralized Supply and Amenity Placement
 
+> **In short: keep supplies close to where they are used, in hotels and restaurants alike, so staff spend less time walking to the storeroom.**
+
 **Category:** Inventory and layout operations (hotels and restaurants)
 **Optimizes:** Where supplies are stored and how much is kept at each point, so staff walk less and stock is always where it is needed
 **Status:** Proposal

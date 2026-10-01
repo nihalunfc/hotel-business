@@ -1,5 +1,7 @@
 # H2-03: Room-Ready Notifications and Housekeeping Sequencing
 
+> **In short: clean rooms in the order guests actually need them, and text each guest the moment their room is ready.**
+
 **Category:** Guest flow and housekeeping operations
 **Optimizes:** Time from guest arrival to room access, and the number of "is my room ready?" contacts
 **Status:** Proposal

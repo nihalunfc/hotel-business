@@ -1,5 +1,7 @@
 # H2-02: Departure Flow Balancing
 
+> **In short: spread guest check-outs across the morning with simple offers and messages, so elevators, the front desk and housekeeping are not overwhelmed at 11 AM.**
+
 **Category:** Guest flow operations
 **Optimizes:** The morning check-out peak, including elevator queues, front desk lines and the housekeeping start
 **Status:** Proposal

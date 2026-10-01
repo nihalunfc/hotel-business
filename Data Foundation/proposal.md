@@ -1,5 +1,7 @@
 # Data Foundation
 
+> **In short: one agreed set of tables, labels and rules that every report uses, so the same question always gets the same, trustworthy answer.**
+
 **Scope:** Shared by [Project HARLTON](../Project%20HARLTON/README.md) and [Project H2](../Project%20H2/README.md)
 **Defines:** What data is needed, where it comes from, how it is labelled, and how it is stored and governed
 **Status:** Proposal

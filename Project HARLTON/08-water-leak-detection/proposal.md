@@ -1,5 +1,7 @@
 # HARLTON-08: Water Leak Detection from Meter Data
 
+> **In short: check the water meter every night at 3 AM; if water is still flowing, something is leaking, and the system says roughly where.**
+
 **Category:** Expense optimization
 **Optimizes:** Water and sewer cost lost to undetected leaks
 **Status:** Proposal

@@ -1,5 +1,7 @@
 # H2-07: Night Operations and Front Desk Coverage
 
+> **In short: staff the overnight hours based on real night-time demand, take routine paperwork off the night desk and keep staff who work alone safe.**
+
 **Category:** Workforce operations and safety
 **Optimizes:** Overnight service levels, workload and staff safety at the front desk and across night roles
 **Status:** Proposal

@@ -1,5 +1,7 @@
 # HARLTON-03: Early Arrival and Late Departure Revenue
 
+> **In short: predict how many rooms will be ready early, and sell early check-in and late check-out as paid extras instead of giving them away.**
+
 **Category:** Ancillary revenue
 **Optimizes:** Paid early check-in and late check-out revenue, priced against real room readiness
 **Status:** Proposal

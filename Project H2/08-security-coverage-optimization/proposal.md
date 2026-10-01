@@ -1,5 +1,7 @@
 # H2-08: Security Coverage Optimization
 
+> **In short: send security officers where and when problems actually happen, on patrol routes that change every night so they cannot be predicted.**
+
 **Category:** Safety and security operations
 **Optimizes:** Where and when security officers patrol, so that coverage matches risk and patrols are not predictable
 **Status:** Proposal

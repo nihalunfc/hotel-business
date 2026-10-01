@@ -1,5 +1,7 @@
 # Project H2: Unified Executive Business Intelligence
 
+> **In short: bring the numbers from every hotel system into one place and deliver simple, automatic reports, so nobody has to build them by hand.**
+
 ### 1. Executive Summary
 In large-scale hospitality organizations, data is often fragmented across multiple legacy systems—Property Management Systems (PMS) for rooms, Point of Sale (POS) for Food & Beverage, and separate platforms for Payroll and Finance. This fragmentation results in hundreds of hours lost each month manually compiling billing, invoicing, and month-end executive packs.
 

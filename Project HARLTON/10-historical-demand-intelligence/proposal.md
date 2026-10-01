@@ -1,5 +1,7 @@
 # HARLTON-10: Historical Demand Intelligence
 
+> **In short: study several years of past bookings to learn exactly when guests book, who they are and what was turned away, so every future rate is set from evidence.**
+
 **Category:** Revenue analytics
 **Optimizes:** The accuracy of every pricing, inventory and selling decision, by learning from several years of booking history
 **Status:** Proposal

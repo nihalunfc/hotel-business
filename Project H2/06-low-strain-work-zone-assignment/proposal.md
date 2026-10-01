@@ -1,5 +1,7 @@
 # H2-06: Low-Strain Work Zone Assignment
 
+> **In short: give each staff member a compact work area with a fair share of heavy tasks, so nobody walks or lifts more than necessary.**
+
 **Category:** Workforce operations and safety
 **Optimizes:** Daily assignment of staff to areas, so that walking, carrying and physical strain are minimized and shared fairly
 **Status:** Proposal

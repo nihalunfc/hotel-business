@@ -1,5 +1,7 @@
 # HARLTON-04: Amenity Day-Pass Yield Management
 
+> **In short: on quiet days, sell spare waterpark, pool and spa space to day visitors, while always protecting space for hotel guests.**
+
 **Category:** Ancillary revenue
 **Optimizes:** Revenue from unused waterpark, pool and spa capacity on low-occupancy days
 **Status:** Proposal

@@ -1,5 +1,7 @@
 # HARLTON-06: Event and Exchange-Rate Demand Signals
 
+> **In short: add concerts, holidays, the exchange rate and cross-border travel trends to the forecast, so busy dates are spotted and priced early.**
+
 **Category:** Revenue forecasting
 **Optimizes:** Forecast accuracy for room demand, and therefore pricing decisions
 **Status:** Proposal
