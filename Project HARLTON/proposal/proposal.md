@@ -44,7 +44,7 @@ Imagine the hotel is oversold on base rooms and must upgrade one guest to a prem
 *   **Guest B** is a first-time tourist staying for a 3-night anniversary weekend.
 
 A standard system assigns the upgrade randomly based on check-in time. **HARLTON** algorithmically intervenes. It recognizes that Guest A values *convenience and quiet* over a premium view. It assigns Guest A a base room at the end of the hall (quiet) near the stairs (fast exit). It then offers the premium view upgrade to Guest B. 
-*   **The Result:** The corporate guest is thrilled with a quiet night's sleep. The tourist is blown away by the view and becomes a brand advocate. The hotel maximizes CLV for both personas without spending a dime.
+*   **The Result:** The corporate guest gets the quiet night they value. The tourist gets a memorable view and is more likely to return. Both guests are better served at no extra cost to the hotel.
 
 ---
 
@@ -60,7 +60,7 @@ When Sales requests a quote for a group, HARLTON runs an instant, multi-layered 
 2.  **Commission Extraction:** Automatically deducting third-party planner commissions or OTA distribution costs.
 3.  **Transient Displacement:** Simulating the exact number of full-price guests that will be turned away, factoring in Length of Stay (LOS) restrictions.
 4.  **Wash Prediction:** Using historical data to predict how much of the block the group will *actually* pick up, allowing the hotel to safely overbook.
-5.  **Future Recurring Value (The Golden Goose):** Calculating the statistical probability of this specific tour group returning annually. 
+5.  **Future Recurring Value:** Calculating the statistical probability of this specific tour group returning annually. 
 
 ### The Output
 Instead of a simple "Yes or No," the Revenue Analyst is presented with a dual-metric dashboard:

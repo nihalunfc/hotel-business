@@ -5,7 +5,7 @@
 ### 1. Executive Summary
 In large-scale hospitality organizations, data is often fragmented across multiple legacy systems—Property Management Systems (PMS) for rooms, Point of Sale (POS) for Food & Beverage, and separate platforms for Payroll and Finance. This fragmentation results in hundreds of hours lost each month manually compiling billing, invoicing, and month-end executive packs.
 
-**Project H2** proposes an end-to-end, automated Business Intelligence solution. Instead of relying exclusively on heavy, expensive third-party BI software, Project H2 utilizes a lightweight, highly efficient stack: **Self-contained HTML pages backed by robust SQL stored procedures and Python automation.**
+**Project H2** proposes an end-to-end, automated Business Intelligence solution. Instead of relying exclusively on heavy, expensive third-party BI software, Project H2 utilizes a lightweight, highly efficient stack: **Self-contained HTML pages backed by SQL stored procedures and Python automation.**
 
 This architecture is designed to eliminate manual data entry, ensure numbers strictly tie back to their source, and deliver actionable insights to the executive floor in real-time.
 
@@ -14,7 +14,7 @@ This architecture is designed to eliminate manual data entry, ensure numbers str
 #### Pillar 1: Advanced SQL Data Unification (The Engine)
 The foundation of Project H2 is built on writing clean, highly optimized SQL.
 *   **The Concept:** Rather than exporting multiple CSVs from different systems and combining them in Excel, the data is unified at the database level.
-*   **The Execution:** Complex SQL Stored Procedures utilize advanced joins, grouping, and window functions to seamlessly merge `fact_daily_revenue`, `fact_pos_transactions`, and `fact_payroll`. This allows the system to instantly calculate critical metrics, such as Labor Cost Percentage against Total Daily Revenue across multiple properties.
+*   **The Execution:** Complex SQL Stored Procedures utilize advanced joins, grouping, and window functions to merge `fact_daily_revenue`, `fact_pos_transactions`, and `fact_payroll`. This allows the system to instantly calculate critical metrics, such as Labor Cost Percentage against Total Daily Revenue across multiple properties.
 
 #### Pillar 2: Python Automation Jobs (The Worker)
 Manual billing, invoicing, and generating month-end packs are highly susceptible to human error and consume valuable analyst time.

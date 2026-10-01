@@ -1,6 +1,17 @@
 # Hospitality Data Architecture and Business Intelligence
 
-A portfolio of proposals and tools for multi-property resort hotels. The aim is to turn data hotels already collect into decisions that protect revenue, remove avoidable cost and make daily operations run more smoothly. Every proposal states what the problem is, why it matters, with linked sources, and how it would be solved and measured.
+A portfolio of proposals and working tools for multi-property resort hotels. The aim is to turn data hotels already collect into decisions that protect revenue, remove avoidable cost and make daily operations run more smoothly. Every proposal states what the problem is, why it matters, with linked sources, and how it would be solved and measured.
+
+## Live Demos
+
+**Start here: [nihalunfc.github.io/hotel-business](https://nihalunfc.github.io/hotel-business/)**
+
+| Demo | What it shows |
+| :-- | :-- |
+| [Revenue Command Centre](https://nihalunfc.github.io/hotel-business/revenue.html) | Three years of booking history turned into a 365-night demand calendar, a weekly selling brief, booking pace against last year, demand turned away on sold-out nights, channel net rates, cancellations, and a forecast accuracy check. |
+| [Staff Schedule Builder](https://nihalunfc.github.io/hotel-business/schedule.html) | A housekeeping schedule built from expected workload, checked against Ontario labour rules, compared with a fixed weekly pattern, and exported to Excel, print and a staff-app shift list. |
+
+Both demos run on one shared sample dataset of five fictional hotels (about 640,000 bookings over four years). The code that builds it, the SQL warehouse, the quality checks and the tests are in [analytics/](./analytics). A small extract of the sample data is in [data/sample/](./data/sample).
 
 ## Projects
 
@@ -45,6 +56,42 @@ The shared data layer behind both projects: data sources, star-schema fact and d
 
 ### [Further Ideas](./Further%20Ideas/README.md)
 Ideas with real potential that are not yet ready for a full proposal, each listed with what it lacks and what would make it viable.
+
+## Repository Layout
+
+| Folder | Contents |
+| :-- | :-- |
+| [Project HARLTON](./Project%20HARLTON/README.md) | Revenue, profit and expense proposals |
+| [Project H2](./Project%20H2/README.md) | Operations proposals |
+| [Data Foundation](./Data%20Foundation/proposal.md) | Shared data model, labels and governance |
+| [Further Ideas](./Further%20Ideas/README.md) | Ideas with their limitations |
+| [analytics](./analytics) | Python and SQL pipeline behind the demos, with tests |
+| [docs](./docs) | The demo website (GitHub Pages) |
+| [data/sample](./data/sample) | Small extracts of the generated sample data |
+| [June 2026](./June%202026) | Earlier booking snapshot analysis |
+
+## Credits and Tools
+
+The ideas, direction, judgement calls and final review in this repository are my own. I used AI assistants throughout, the same way I would use them on the job, and I want that to be clear.
+
+**AI assistants**
+- **Claude** (Anthropic), working through the Claude app with **Claude Code** as the agent environment: research and fact-checking of every cited source, drafting and editing of the module proposals, the Data Foundation, the analytics package, the demo website, tests and repository organization.
+- **Gemini** (Google), used inside **Google Antigravity**: the first versions of the HARLTON and H2 proposals, the repository setup, and the initial Python analysis in the June 2026 folder.
+
+**Platforms and services**
+- **GitHub** and **GitHub Pages** for version control and hosting the demos.
+- **Kaggle Notebooks** for running the June 2026 analysis.
+
+**Open-source software**
+- Python, pandas, NumPy, python-dateutil and SQLite for data processing and the warehouse.
+- PuLP with the COIN-OR CBC solver for schedule optimization.
+- openpyxl for Excel output.
+- pytest for tests.
+- Chart.js for charts.
+- The Inter typeface via Google Fonts.
+- Playwright with Chromium for checking how the pages render.
+
+**Sources.** The public research and data behind each proposal are cited, with links, at the end of that proposal.
 
 ---
 *All proposals use public, cited sources and synthetic or anonymized examples. No employer data is included. The multi-agent coordination engine referenced in several modules is the author's own work and is not published here.*
