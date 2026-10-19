@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Occupancy Forecaster</title>
+<meta name="description" content="A free occupancy forecaster for hotels: upload your daily rooms sold, or use the sample, and get a 30, 60 or 90 day forecast with an 80% range, backtest accuracy, weekday pattern and a month-by-month table.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.howto { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 860px) { .howto { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.datasum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+@media (max-width: 760px) { .datasum { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.datasum div { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--ink-2); }
+.datasum b { display: block; font-size: 17px; color: var(--ink); }
+.okbox { background: var(--good-soft); border: 1px solid #b9e0c8; color: #14532d; border-radius: 8px; padding: 10px 14px; font-size: 14px; margin-top: 12px; }
+.okbox ul, .warnbox ul { margin: 6px 0 0; padding-left: 20px; }
+.src { display: inline-block; font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 2px 10px; background: var(--brand-soft); color: var(--brand); }
+#t-daily input.w-num { width: 80px; }
+#t-daily td { vertical-align: middle; }
+#t-daily tr.wkend td:first-child { box-shadow: inset 3px 0 0 #86b6ef; }
+.occbar { display: inline-block; height: 8px; border-radius: 4px; background: var(--brand-2); vertical-align: middle; margin-left: 6px; }
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: flex-start; }
+.mape-big { font-size: 15px; }
+#horizon button { white-space: nowrap; padding: 8px 11px; }
+.pill.Moderate { background: var(--warn-soft); color: var(--warn); }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Occupancy Forecaster</h1>
+    <p class="lead">Upload your daily rooms sold, or use the built-in sample, and see how full the hotel is likely to be over the next 30, 60 or 90 days. Every forecast comes with a realistic range and an honest score of how accurate it has been on your own recent data.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Accuracy tested on your own data</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-data"><b>Step 1</b>Your daily history</a>
+    <a href="#s-set"><b>Step 2</b>Forecast settings</a>
+    <a href="#s-res"><b>Step 3</b>Read the forecast</a>
+    <a href="#s-daily"><b>Step 4</b>Add bookings on hand</a>
+  </nav>
+
+  <!-- 1. Data -->
+  <section class="sec no-print" id="s-data">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Your daily history</h2><p>One row per night with the rooms you sold. Rooms available and room revenue are optional. Export it from your PMS (property management system) as CSV. Two years gives the best result; eight weeks is the minimum.</p></div>
+      <div class="toolbar">
+        <label class="btn sm primary" style="margin:0">Upload CSV<input type="file" id="imp" accept=".csv,.txt,text/csv" hidden></label>
+        <button class="btn sm" id="tpl">Download template</button>
+        <button class="btn sm reset" data-reset="hist">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div id="data-src"></div>
+      <div class="datasum" id="datasum"></div>
+      <div id="imp-msg"></div>
+      <p class="note">Columns: <code>date, rooms_sold, rooms_available, room_revenue</code>. Names can differ (for example "Stay date" or "Occ rooms"). Dates like <code>2025-07-01</code>, <code>07/01/2025</code>, <code>1/7/2025</code> or <code>1-Jul-2025</code> all work. Missing nights are filled in for you.</p>
+    </div>
+  </section>
+
+  <!-- 2. Settings -->
+  <section class="sec no-print" id="s-set">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Forecast settings</h2><p>How far ahead to look and a few facts about your hotel.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="set">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="f-hotel">Hotel</label><input type="text" id="f-hotel" data-k="hotel"></div>
+        <div class="field"><label for="f-cap">Rooms available each night</label><input type="number" min="1" id="f-cap" data-k="capacity" data-num><small>Used when your file has no rooms_available column, and for future nights</small></div>
+        <div class="field"><label>Forecast how far ahead</label><div class="seg" id="horizon"><button data-h="30">30 days</button><button data-h="60">60 days</button><button data-h="90">90 days</button></div></div>
+        <div class="field"><label for="f-s30">Share of rooms usually booked 30 days out (%)</label><input type="number" min="5" max="95" id="f-s30" data-k="s30" data-num><small>Only used when you enter rooms on the books (Step 4)</small></div>
+        <div class="field"><label for="f-hol">Long weekends and holidays</label><select id="f-hol" data-k="holidays"><option value="on">Adjust for Ontario holidays</option><option value="off">Ignore holidays</option></select><small>Learns the holiday lift from your data</small></div>
+      </div>
+      <div id="set-warn"></div>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <span class="muted" style="font-size:14px">The forecast updates as you change anything.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section id="s-res">
+    <h2 id="res-title" style="margin-bottom:12px">Forecast</h2>
+    <div id="res-warn"></div>
+    <div class="grid g5" id="kpis"></div>
+    <div class="takeaway" id="takeaway"></div>
+
+    <div class="card" style="margin-top:18px">
+      <div class="chart-head">
+        <div><h3>History, forecast and range</h3><p class="muted" style="margin:0">Rooms sold per night. The shaded band is the 80% range: on 8 nights out of 10 the real figure should land inside it. The dashed line is the backtest: what the method would have forecast for the last 8 weeks.</p></div>
+        <div class="seg no-print" id="view"><button data-v="180">6 months</button><button data-v="365">1 year</button><button data-v="all">All</button></div>
+      </div>
+      <div class="chart-box tall" style="margin-top:10px"><canvas id="c-main"></canvas></div>
+    </div>
+
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card">
+        <h3>Weekday pattern</h3>
+        <p class="muted">How busy each night of the week is compared with an average night (100%), learned from your last 52 weeks.</p>
+        <div class="chart-box"><canvas id="c-dow"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>How accurate is it?</h3>
+        <div id="acc"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="chart-head">
+        <div><h3>Month by month</h3><p class="muted" style="margin:0">Forecast nights in each month, compared with the same nights last year.</p></div>
+        <div class="toolbar no-print"><button class="btn sm primary" id="xlsx">Download Excel</button><button class="btn sm" id="csv">Download CSV</button><button class="btn sm" onclick="window.print()">Print</button></div>
+      </div>
+      <div class="table-wrap" style="margin-top:10px"><table id="t-month"></table></div>
+    </div>
+  </section>
+
+  <section class="sec" id="s-daily" style="margin-top:22px">
+    <div class="sec-head">
+      <div><h2><span class="num-badge no-print">4</span>Day by day, with rooms on the books</h2><p class="no-print">Optional: type or paste the rooms already reserved for each night (OTB, rooms on the books). The forecast then blends your model with real bookings, leaning more on bookings as the night gets closer. Paste a column from Excel into the first box to fill many nights at once.</p></div>
+      <div class="toolbar no-print"><button class="btn sm" id="otb-sample">Fill sample OTB</button><button class="btn sm reset" data-reset="otb">Clear OTB</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap"><table id="t-daily"><thead><tr><th>Night</th><th class="num">Model forecast</th><th class="num">80% range</th><th class="num">On the books</th><th class="num">Final forecast</th><th>Occupancy</th><th class="num">Last year</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <details class="tech no-print" style="margin-top:22px">
+    <summary>How it's calculated</summary>
+    <p><b>Cleaning.</b> Rows are sorted, repeated dates are combined, rooms sold are capped at rooms available, and missing nights are filled with the same weekday a week earlier (or the average of the nights either side). The page tells you how many were filled.</p>
+    <p><b>Model (with at least 60 weeks of history).</b> A multiplicative seasonal model you can check by hand:</p>
+    <pre>forecast = last year's level for the same week × growth vs last year × weekday index × holiday lift</pre>
+    <ul>
+      <li><b>Last year's level</b>: the 7-night average of rooms sold around the same weekday 52 weeks earlier (same-period-last-year seasonality, so summer peaks and quiet winters come through).</li>
+      <li><b>Growth vs last year</b>: each night's 7-night average divided by last year's, smoothed with Holt's method (a smoothed level and trend, α 0.15, β 0.05) over the last 26 weeks. The trend is damped (0.95 a day) so it flattens out rather than running away.</li>
+      <li><b>Weekday index</b>: rooms sold divided by the 7-night average, averaged by weekday over the last 52 weeks (holiday nights left out).</li>
+      <li><b>Holiday lift</b>: the average extra demand on Ontario long-weekend Sundays (Family Day, Easter, Victoria Day, Civic Holiday, Labour Day, Thanksgiving), June 30 and New Year's Eve, learned from your history.</li>
+    </ul>
+    <p><b>Shorter history.</b> With less than 60 weeks there is no last year to copy, so the forecast is the damped Holt level and trend of the 7-night average times the weekday index. The page says when this happens; expect it to miss seasonal turns.</p>
+    <p><b>Range and accuracy.</b> The method is re-run from up to 8 past starting points using only the data available at that time, and its forecasts are compared with what actually happened. The 10th and 90th percentiles of those errors, grouped by how far ahead (1 to 14, 15 to 30, 31 to 60, 61 to 90 days), give the 80% range. MAPE (mean absolute percentage error) is the average size of the miss as a percentage of actual rooms sold, measured on the last 8 weeks.</p>
+    <p><b>Rooms on the books.</b> A typical booking curve says what share of final rooms is usually booked by a given number of days out (your 30-day setting, rising to 100% on the night). OTB ÷ that share gives a bookings-based estimate. The final forecast is <code>share × bookings estimate + (1 − share) × model</code>, never below OTB and never above rooms available.</p>
+    <p><b>Limits.</b> The model cannot know about new events, renovations, big group blocks or a pandemic unless they show up in the data or in your OTB. It forecasts rooms, not price. Your data stays in this browser; nothing is uploaded anywhere.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.forecaster.v1";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const int = (v) => Math.round(v).toLocaleString("en-CA");
+  const pct0 = (v) => Math.round(v * 100) + "%";
+  const pct1 = (v) => (v * 100).toFixed(1) + "%";
+  const DOWN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  // ---------------- dates ----------------
+  const pad = (n) => String(n).padStart(2, "0");
+  const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const addDays = (s, n) => { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() + n); return iso(d); };
+  const dayDiff = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 864e5);
+  const dowOf = (s) => new Date(s + "T12:00:00").getDay();
+  const label = (s) => new Date(s + "T12:00:00").toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" });
+  const longLabel = (s) => new Date(s + "T12:00:00").toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" });
+  const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  function parseDate(raw, dmy) {
+    let s = String(raw ?? "").trim().replace(/^"|"$/g, "");
+    if (!s) return null;
+    let m;
+    if (/^\d{5}(\.\d+)?$/.test(s)) { const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(+s) * 864e5); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
+    if ((m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) return mk(+m[1], +m[2], +m[3]);
+    if ((m = s.match(/^(\d{4})(\d{2})(\d{2})$/))) return mk(+m[1], +m[2], +m[3]);
+    if ((m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/))) { let y = +m[3]; if (y < 100) y += 2000; const a = +m[1], b = +m[2]; return (dmy || a > 12) ? mk(y, b, a) : mk(y, a, b); }
+    if ((m = s.match(/^(\d{1,2})[-\s/]([a-z]{3})[a-z]*\.?[-\s/,]+(\d{2,4})/i))) { let y = +m[3]; if (y < 100) y += 2000; return mk(y, MONTHS.indexOf(m[2].toLowerCase()) + 1, +m[1]); }
+    if ((m = s.match(/^(?:[a-z]+,?\s+)?([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/i))) return mk(+m[3], MONTHS.indexOf(m[1].toLowerCase()) + 1, +m[2]);
+    return null;
+    function mk(y, mo, d) { if (mo < 1 || mo > 12 || d < 1 || d > 31 || y < 1990 || y > 2100) return null; const r = `${y}-${pad(mo)}-${pad(d)}`; const t = new Date(r + "T12:00:00"); return isNaN(t) || t.getDate() !== d ? null : r; }
+  }
+  const toNum = (v) => { const s = String(v ?? "").replace(/[$,\s]/g, ""); if (s === "" || s === "-") return null; const n = parseFloat(s); return isFinite(n) ? n : null; };
+
+  // ---------------- Ontario holiday nights (busy nights before a holiday) ----------------
+  const holCache = {};
+  function easter(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return `${y}-${pad(mo)}-${pad(da)}`; }
+  function nthMon(y, mo, n) { const d = new Date(y, mo - 1, 1, 12); while (d.getDay() !== 1) d.setDate(d.getDate() + 1); d.setDate(d.getDate() + 7 * (n - 1)); return iso(d); }
+  function victoria(y) { const d = new Date(y, 4, 24, 12); while (d.getDay() !== 1) d.setDate(d.getDate() - 1); return iso(d); }
+  function holNights(y) {
+    if (holCache[y]) return holCache[y];
+    const mons = [nthMon(y, 2, 3), victoria(y), nthMon(y, 8, 1), nthMon(y, 9, 1), nthMon(y, 10, 2)];
+    const set = new Set(mons.map(d => addDays(d, -1)));
+    set.add(easter(y)); set.add(`${y}-06-30`); set.add(`${y}-12-31`);
+    return (holCache[y] = set);
+  }
+  const isHol = (d) => holNights(+d.slice(0, 4)).has(d);
+
+  // ---------------- sample: ~2 years, Niagara-style ----------------
+  function hashRng(str) { let h = 1779033703 ^ str.length; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; } let s = h >>> 0; return () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function sampleHistory() {
+    const cap = 620, end = addDays(iso(new Date()), -1), rows = [];
+    const mOcc = [0.42, 0.50, 0.52, 0.56, 0.68, 0.82, 0.93, 0.95, 0.78, 0.71, 0.60, 0.55];
+    const dowF = [0.86, 0.78, 0.80, 0.85, 0.93, 1.16, 1.30];
+    for (let i = 729; i >= 0; i--) {
+      const d = addDays(end, -i), dt = new Date(d + "T12:00:00"), R = hashRng("summit" + d);
+      const doy = (dt - new Date(dt.getFullYear(), 0, 1)) / 864e5, pos = doy / 30.44 - 0.5;
+      const m0 = ((Math.floor(pos) % 12) + 12) % 12, m1 = (m0 + 1) % 12, fr = pos - Math.floor(pos), w = (1 - Math.cos(Math.PI * fr)) / 2;
+      const season = mOcc[m0] * (1 - w) + mOcc[m1] * w;
+      const growth = 1 + 0.035 * ((730 - i) / 365 - 1);
+      const noise = 1 + ((R() + R() + R()) / 3 - 0.5) * 0.16;
+      let occ = season * dowF[dt.getDay()] * growth * noise;
+      if (isHol(d)) occ *= 1.28;
+      if (d.slice(5) === "12-24" || d.slice(5) === "12-25") occ *= 0.7;
+      const sold = Math.max(40, Math.min(cap, Math.round(cap * occ)));
+      const adr = (139 + 150 * (season - 0.42) + (dt.getDay() >= 5 ? 38 : 0) + (sold > cap * 0.95 ? 25 : 0)) * growth * (0.97 + R() * 0.06);
+      rows.push([d, sold, cap, Math.round(sold * adr)]);
+    }
+    return rows;
+  }
+
+  // ---------------- state ----------------
+  const DEF_SET = { hotel: "Summit Tower Hotel", capacity: 620, horizon: 60, s30: 45, holidays: "on" };
+  const DEFAULTS = { hist: null, set: clone(DEF_SET), otb: {}, view: "180" };
+  let S, SAMPLE = sampleHistory(), charts = {};
+  let saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; }
+      catch (e) {
+        try { const t = clone(S); t.hist = null; localStorage.setItem(KEY, JSON.stringify(t)); $("#saved").textContent = "✓ Settings saved (your file is too large to keep in this browser; upload it again next time)"; } catch (e2) { $("#saved").textContent = ""; }
+      }
+    }, 250);
+  }
+  function load() {
+    try { const t = localStorage.getItem(KEY); if (t) { const v = JSON.parse(t); const o = Object.assign(clone(DEFAULTS), v); o.set = Object.assign(clone(DEF_SET), v.set || {}); if (!o.otb || typeof o.otb !== "object") o.otb = {}; return o; } } catch (e) {}
+    return clone(DEFAULTS);
+  }
+  const histRows = () => (S.hist && S.hist.rows && S.hist.rows.length) ? S.hist.rows : SAMPLE;
+
+  // ---------------- model ----------------
+  function ma7(y) {
+    const n = y.length, m = new Array(n);
+    for (let t = 0; t < n; t++) { let s = 0, c = 0; for (let k = t - 3; k <= t + 3; k++) if (k >= 0 && k < n) { s += y[k]; c++; } m[t] = s / c; }
+    return m;
+  }
+  function holt(series, a, b, phi) {
+    let L = series[0], T = 0;
+    for (let i = 1; i < series.length; i++) { const pL = L; L = a * series[i] + (1 - a) * (L + phi * T); T = b * (L - pL) + (1 - b) * phi * T; }
+    return { L, T, at: (h) => { let s = 0, p = 1; for (let i = 1; i <= h; i++) { p *= phi; s += p; } return L + T * s; } };
+  }
+  // Fit on y[0..n-1] (dates d[0..n-1]); forecast H nights after.
+  function fitForecast(d, y, H, useHol) {
+    const n = y.length, m = ma7(y);
+    // weekday index over last 364 nights, holiday nights excluded
+    const from = Math.max(0, n - 364), sum = Array(7).fill(0), cnt = Array(7).fill(0);
+    for (let t = from; t < n; t++) { if (useHol && isHol(d[t])) continue; if (m[t] > 0) { const w = dowOf(d[t]); sum[w] += y[t] / m[t]; cnt[w]++; } }
+    let idx = sum.map((s, i) => cnt[i] ? s / cnt[i] : 1); const mean = idx.reduce((a, b) => a + b, 0) / 7; idx = idx.map(v => v / mean);
+    // holiday lift
+    let hol = 1, holN = 0;
+    if (useHol) { let s = 0; for (let t = 0; t < n; t++) if (isHol(d[t]) && m[t] > 0) { s += y[t] / (m[t] * idx[dowOf(d[t])]); holN++; } if (holN) hol = Math.max(1, Math.min(1.6, s / holN)); }
+    const yearly = n >= 420;
+    let growth = null, levelFn;
+    if (yearly) {
+      const r = []; for (let t = Math.max(364, n - 182); t < n; t++) if (m[t - 364] > 0) r.push(m[t] / m[t - 364]);
+      growth = holt(r.length ? r : [1], 0.15, 0.05, 0.95);
+      levelFn = (h) => { const t = n - 1 + h; return m[t - 364] * Math.max(0.5, Math.min(2, growth.at(h))); };
+    } else {
+      const lv = holt(m.slice(Math.max(0, n - 182)), 0.2, 0.05, 0.98);
+      levelFn = (h) => Math.max(0, lv.at(h));
+    }
+    const out = [];
+    for (let h = 1; h <= H; h++) {
+      const date = addDays(d[n - 1], h);
+      let f = levelFn(h) * idx[dowOf(date)] * (useHol && isHol(date) ? hol : 1);
+      out.push({ date, f: Math.max(0, f) });
+    }
+    return { out, idx, hol, holN, yearly, growth: growth ? growth.L : null, trend: growth ? growth.T : null };
+  }
+  function quantile(arr, q) { if (!arr.length) return 0; const s = arr.slice().sort((a, b) => a - b), p = (s.length - 1) * q, lo = Math.floor(p), hi = Math.ceil(p); return s[lo] + (s[hi] - s[lo]) * (p - lo); }
+  const BUCKETS = [[1, 14], [15, 30], [31, 60], [61, 90]];
+  function analyse() {
+    const rows = histRows(), d = rows.map(r => r[0]), y = rows.map(r => r[1]), n = rows.length;
+    const capOf = (i) => rows[i][2] || S.set.capacity;
+    const H = S.set.horizon, useHol = S.set.holidays !== "off";
+    const fit = fitForecast(d, y, H, useHol);
+    // backtests (rolling origins)
+    const errs = BUCKETS.map(() => []), allErr = [];
+    let bt = null;
+    for (let o = 0; o < 8; o++) {
+      const k = n - 56 - 28 * o; if (k < 56) break;
+      const h = Math.min(90, n - k);
+      const f = fitForecast(d.slice(0, k), y.slice(0, k), h, useHol).out;
+      f.forEach((p, j) => { const a = y[k + j]; if (a > 0 && p.f > 0) { const e = Math.log(a / p.f); allErr.push(e); errs[BUCKETS.findIndex(b => j + 1 <= b[1])].push(e); } });
+      if (o === 0) {
+        const pts = f.slice(0, 56).map((p, j) => ({ date: p.date, f: Math.min(capOf(k + j), p.f), a: y[k + j] }));
+        const ok = pts.filter(p => p.a > 0);
+        bt = { pts, mape: ok.reduce((s, p) => s + Math.abs(p.a - p.f) / p.a, 0) / ok.length, mae: ok.reduce((s, p) => s + Math.abs(p.a - p.f), 0) / ok.length, bias: ok.reduce((s, p) => s + (p.f - p.a), 0) / ok.reduce((s, p) => s + p.a, 0), within: 0 };
+      }
+    }
+    const band = BUCKETS.map((_, i) => {
+      let e = errs[i];
+      if (e.length < 20) { const prev = errs.slice(0, i + 1).flat(); e = prev.length >= 20 ? prev : allErr; }
+      if (e.length < 20) return { lo: -0.15 - 0.002 * i * 30, hi: 0.15 + 0.002 * i * 30, fallback: true };
+      return { lo: Math.min(-0.02, quantile(e, 0.1)), hi: Math.max(0.02, quantile(e, 0.9)) };
+    });
+    // widen monotonically with horizon
+    for (let i = 1; i < band.length; i++) { band[i].lo = Math.min(band[i].lo, band[i - 1].lo); band[i].hi = Math.max(band[i].hi, band[i - 1].hi); }
+    const capF = rows[n - 1][2] || S.set.capacity;
+    const futCap = S.set.capacity || capF;
+    const s30 = Math.max(0.05, Math.min(0.95, S.set.s30 / 100)), k = 15;
+    const share = (h) => 1 - (1 - s30) * (1 - Math.exp(-h / k)) / (1 - Math.exp(-30 / k));
+    const lyIdx = {}; d.forEach((x, i) => lyIdx[x] = i);
+    const fc = fit.out.map((p, j) => {
+      const h = j + 1, b = band[BUCKETS.findIndex(B => h <= B[1])];
+      const model = Math.min(futCap, p.f);
+      let lo = Math.min(futCap, p.f * Math.exp(b.lo)), hi = Math.min(futCap, p.f * Math.exp(b.hi));
+      const otbRaw = S.otb[p.date], otb = otbRaw == null || otbRaw === "" ? null : Math.max(0, Math.min(futCap, +otbRaw));
+      let fin = model, w = 0;
+      if (otb != null) {
+        w = share(j); const est = otb / w;
+        fin = Math.min(futCap, Math.max(otb, w * est + (1 - w) * model));
+        const r = model > 0 ? fin / model : 1; lo = Math.max(otb, Math.min(futCap, lo * r)); hi = Math.min(futCap, Math.max(fin, hi * r));
+        if (lo > fin) lo = fin;
+      }
+      const li = lyIdx[addDays(p.date, -364)];
+      return { date: p.date, model, lo, hi, otb, fin, w, cap: futCap, ly: li != null ? y[li] : null, lyCap: li != null ? capOf(li) : null, lyRev: li != null ? rows[li][3] : null };
+    });
+    if (bt) bt.within = bt.pts.filter((p, j) => { const B = band[BUCKETS.findIndex(x => j + 1 <= x[1])]; return p.a >= p.f * Math.exp(B.lo) && p.a <= p.f * Math.exp(B.hi); }).length / bt.pts.length;
+    return { rows, d, y, n, fit, bt, band, fc, hasRev: rows.some(r => r[3] != null && r[3] > 0) };
+  }
+
+  // ---------------- upload ----------------
+  function parseTable(t) {
+    t = t.replace(/^﻿/, "");
+    const lines5 = t.split(/\r?\n/).filter(l => l.trim()).slice(0, 6), cnt = (ch) => Math.max(0, ...lines5.map(l => l.split(ch).length - 1));
+    const delim = cnt("\t") > 0 ? "\t" : (cnt(";") > cnt(",") ? ";" : ",");
+    const out = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true; else if (c === delim) { row.push(cell); cell = ""; } else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); out.push(row); row = []; cell = ""; } else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); out.push(row); }
+    return out.filter(r => r.some(x => String(x).trim()));
+  }
+  function importHistory(text, name) {
+    const table = parseTable(text);
+    const fail = (m) => { $("#imp-msg").innerHTML = `<div class="warnbox">${m} Your previous data is still in use.</div>`; };
+    if (table.length < 2) return fail("That file looks empty or has only one line.");
+    // find header row within the first 5 lines (some exports have a title line first)
+    let hi = -1;
+    for (let i = 0; i < Math.min(5, table.length); i++) { if (table[i].some(c => parseDate(c))) break; if (table[i].some(c => /[a-z]/i.test(c))) hi = i; }
+    let map = { date: 0, sold: 1, avail: 2, rev: 3 }, notes = [];
+    if (hi >= 0) {
+      const head = table[hi].map(h => String(h).toLowerCase().replace(/[^a-z0-9%]+/g, " ").trim());
+      const find = (re, not) => head.findIndex((h, i) => re.test(h) && !(not && not.test(h)) && !Object.values(map).includes(i));
+      map = {};
+      map.date = find(/date|day|night|stay|period/); if (map.date < 0) map.date = 0;
+      map.rev = find(/rev|revenue|amount|\$/);
+      map.avail = find(/avail|capacity|inventory|supply|total rooms|rooms total/);
+      map.sold = find(/sold|occupied|occ rooms|room nights|rns|rooms occ|^rooms$|occupancy rooms/, /%|pct|percent|rate/);
+      if (map.sold < 0) { const sample = table[hi + 1] || []; map.sold = head.findIndex((h, i) => i !== map.date && i !== map.rev && i !== map.avail && toNum(sample[i]) != null && !/%|pct|percent|adr|rate/.test(h)); if (map.sold >= 0) notes.push(`used the "${esc(table[hi][map.sold])}" column as rooms sold`); }
+      if (map.sold < 0) return fail(`We couldn't find a rooms sold column. Name it <b>rooms_sold</b>, or use <b>Download template</b> to see the layout.`);
+      table.splice(0, hi + 1);
+      if (hi > 0) notes.push(`skipped ${hi} title line${hi > 1 ? "s" : ""} above the headings`);
+    } else {
+      notes.push("no heading row found, so columns were read as date, rooms sold, rooms available, revenue");
+    }
+    const dmy = table.some(r => { const m = String(r[map.date] || "").trim().match(/^(\d{1,2})[-/.](\d{1,2})[-/.]\d{2,4}/); return m && +m[1] > 12; });
+    const recs = {}, badDate = [], badNum = []; let dupes = 0, total = 0;
+    table.forEach((r, i) => {
+      const dt = parseDate(r[map.date], dmy);
+      if (!dt) { if (String(r[map.date] || "").trim() && !/total|sum|average/i.test(r.join(" "))) badDate.push(i + 1); return; }
+      const sold = toNum(r[map.sold]);
+      if (sold == null) { badNum.push(dt); return; }
+      total++;
+      const av = map.avail >= 0 ? toNum(r[map.avail]) : null, rv = map.rev >= 0 ? toNum(r[map.rev]) : null;
+      if (recs[dt]) { dupes++; recs[dt].sold += sold; recs[dt].rev = (recs[dt].rev || 0) + (rv || 0); recs[dt].n++; if (av) recs[dt].av = Math.max(recs[dt].av || 0, av); }
+      else recs[dt] = { sold, av, rev: rv, n: 1 };
+    });
+    let dates = Object.keys(recs).sort();
+    if (dates.length < 56) return fail(dates.length ? `Only ${dates.length} usable night${dates.length > 1 ? "s" : ""} found. The forecaster needs at least 8 weeks (56 nights) of daily history.` : `We couldn't read any dates. Dates like <code>2025-07-01</code>, <code>07/01/2025</code> or <code>1-Jul-2025</code> work best.`);
+    // duplicates: either segment rows (sum) or repeats (keep last)
+    if (dupes) {
+      const segRows = dupes > dates.length * 0.2;
+      if (!segRows) { /* undo sum: keep average of repeats as a safe single value */ dates.forEach(k => { const r = recs[k]; if (r.n > 1) { r.sold = r.sold / r.n; if (r.rev) r.rev = r.rev / r.n; } }); notes.push(`${dupes} repeated date${dupes > 1 ? "s were" : " was"} averaged`); }
+      else notes.push(`dates appear on several rows (like one row per room type or segment), so they were added together`);
+    }
+    if (dates.length > 1200) { dates = dates.slice(-1200); notes.push("only the most recent 1,200 nights were kept"); }
+    // fill gaps
+    const first = dates[0], last = dates[dates.length - 1], span = dayDiff(first, last) + 1;
+    const rows = []; let filled = 0, capped = 0;
+    const avs = dates.map(k => recs[k].av).filter(v => v > 0);
+    let cap = avs.length ? null : S.set.capacity;
+    const maxSold = Math.max(...dates.map(k => recs[k].sold));
+    if (!avs.length && maxSold > S.set.capacity) { S.set.capacity = Math.round(maxSold); cap = S.set.capacity; notes.push(`some nights sold more rooms than your rooms setting, so rooms available was raised to ${int(maxSold)}`); }
+    for (let i = 0; i < span; i++) {
+      const dt = addDays(first, i), r = recs[dt];
+      if (r) {
+        let sold = Math.max(0, r.sold), av = r.av > 0 ? r.av : (cap || S.set.capacity);
+        if (sold > av) { sold = av; capped++; }
+        rows.push([dt, Math.round(sold), Math.round(av), r.rev != null ? Math.round(r.rev) : null]);
+      } else {
+        filled++;
+        const wk = rows[i - 7], prev = rows[i - 1];
+        let next = null; for (let j = 1; j < 8; j++) { const nr = recs[addDays(dt, j)]; if (nr) { next = nr.sold; break; } }
+        const v = wk ? wk[1] : next != null ? Math.round((prev[1] + next) / 2) : prev[1];
+        rows.push([dt, v, prev[2], null]);
+      }
+    }
+    if (filled / span > 0.3) notes.push(`<b>${filled} of ${span} nights were missing</b>, so the forecast will be rough. Check the export covers every night`);
+    else if (filled) notes.push(`${filled} missing night${filled > 1 ? "s were" : " was"} filled in from the same weekday a week earlier`);
+    if (capped) notes.push(`${capped} night${capped > 1 ? "s" : ""} sold more than rooms available and ${capped > 1 ? "were" : "was"} capped`);
+    if (badDate.length) notes.push(`${badDate.length} row${badDate.length > 1 ? "s" : ""} had a date we couldn't read (line${badDate.length > 1 ? "s" : ""} ${badDate.slice(0, 5).join(", ")}${badDate.length > 5 ? "…" : ""}) and ${badDate.length > 1 ? "were" : "was"} skipped`);
+    if (badNum.length) notes.push(`${badNum.length} night${badNum.length > 1 ? "s" : ""} had no rooms sold figure and ${badNum.length > 1 ? "were" : "was"} treated as missing`);
+    if (dmy) notes.push("dates were read as day/month/year");
+    if (span < 420) notes.push(`there is less than 60 weeks of history, so the forecast can't copy last year's seasons. Add more history for a better forecast`);
+    if (dayDiff(last, iso(new Date())) > 10) notes.push(`your data ends on ${longLabel(last)}, so the forecast starts the next day`);
+    S.hist = { rows, name, notes, loaded: iso(new Date()) };
+    S.otb = {};
+    save(); bindFields(); renderAll();
+  }
+
+  // ---------------- rendering ----------------
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      el.value = S.set[el.dataset.k] ?? "";
+      el.oninput = el.onchange = () => { S.set[el.dataset.k] = el.hasAttribute("data-num") ? (el.value === "" ? "" : +el.value) : el.value; save(); schedule(); };
+    });
+    document.querySelectorAll("#horizon button").forEach(b => { b.classList.toggle("active", +b.dataset.h === S.set.horizon); b.onclick = () => { S.set.horizon = +b.dataset.h; save(); bindFields(); renderResults(); }; });
+    document.querySelectorAll("#view button").forEach(b => { b.classList.toggle("active", b.dataset.v === S.view); b.onclick = () => { S.view = b.dataset.v; save(); bindFields(); renderResults(); }; });
+  }
+  function renderData() {
+    const rows = histRows(), n = rows.length, first = rows[0][0], last = rows[n - 1][0];
+    const isSample = !S.hist;
+    $("#data-src").innerHTML = isSample
+      ? `<span class="src">Using the sample</span> <span class="muted" style="font-size:14px">Two years of made-up nightly data for ${esc(DEF_SET.hotel)} (620 rooms): busy summers, weekend peaks, holiday weekends and everyday noise. Upload your own CSV to replace it.</span>`
+      : `<span class="src">Using your file</span> <span class="muted" style="font-size:14px">${esc(S.hist.name || "uploaded data")}. Press Reset this section to go back to the sample.</span>`;
+    const sold = rows.reduce((s, r) => s + r[1], 0), av = rows.reduce((s, r) => s + r[2], 0);
+    const hasRev = rows.some(r => r[3] > 0);
+    $("#datasum").innerHTML = [["Nights of history", int(n)], ["From", longLabel(first)], ["To", longLabel(last)], ["Average occupancy", pct1(sold / av)]].map(x => `<div>${x[0]}<b>${x[1]}</b></div>`).join("") ;
+    const notes = S.hist && S.hist.notes || [];
+    $("#imp-msg").innerHTML = S.hist ? `<div class="${notes.some(x => /missing<\/b>|less than 60/.test(x)) ? "warnbox" : "okbox"}"><b>Loaded ${int(n)} nights.</b>${notes.length ? " What we did with your file:<ul>" + notes.map(x => `<li>${x}</li>`).join("") + "</ul>" : " Everything looked clean."}${hasRev ? "" : " No revenue column, so revenue estimates are hidden."}</div>` : "";
+  }
+  let recTimer;
+  function schedule() { clearTimeout(recTimer); recTimer = setTimeout(renderResults, 250); }
+  let A = null;
+  function renderResults() {
+    const w = [];
+    if (!(S.set.capacity >= 1)) w.push("Enter the rooms available each night (at least 1).");
+    if (!(S.set.s30 >= 5 && S.set.s30 <= 95)) w.push("The share booked 30 days out must be between 5% and 95%.");
+    $("#set-warn").innerHTML = w.map(x => `<div class="warnbox">${x}</div>`).join("");
+    if (w.length) { $("#res-warn").innerHTML = `<div class="warnbox" style="margin-bottom:12px">The forecast is paused until Step 2 is fixed: ${w.join(" ")}</div>`; return; }
+    $("#res-warn").innerHTML = "";
+    A = analyse();
+    const { fc, bt, fit, rows, hasRev } = A, H = fc.length;
+    const fin = fc.reduce((s, p) => s + p.fin, 0), lo = fc.reduce((s, p) => s + p.lo, 0), hi = fc.reduce((s, p) => s + p.hi, 0), capT = fc.reduce((s, p) => s + p.cap, 0);
+    const lyOk = fc.every(p => p.ly != null), lyRooms = lyOk ? fc.reduce((s, p) => s + p.ly, 0) : null, lyCap = lyOk ? fc.reduce((s, p) => s + p.lyCap, 0) : null;
+    const occ = fin / capT, lyOcc = lyOk ? lyRooms / lyCap : null;
+    const busiest = fc.reduce((a, p) => p.fin / p.cap > a.fin / a.cap ? p : a, fc[0]);
+    const quiet = fc.reduce((a, p) => p.fin / p.cap < a.fin / a.cap ? p : a, fc[0]);
+    const peaks = fc.filter(p => p.fin / p.cap >= 0.9).length;
+    const otbDays = fc.filter(p => p.otb != null).length;
+    const lyAdr = (p) => p.lyRev && p.ly ? p.lyRev / p.ly : null;
+    const growth = fit.growth ? Math.max(0.5, Math.min(2, fit.growth)) : 1;
+    const revEst = hasRev && fc.every(p => lyAdr(p)) ? fc.reduce((s, p) => s + p.fin * lyAdr(p), 0) : null;
+    $("#res-title").textContent = `${S.set.hotel || "Your hotel"}: next ${H} nights from ${label(fc[0].date)}`;
+    $("#kpis").innerHTML = [
+      ["Forecast occupancy", pct0(occ), lyOk ? `vs ${pct0(lyOcc)} on the same nights last year ${delta(occ, lyOcc, "points")}` : `${H} nights ahead`],
+      ["Room nights", int(fin), `80% range ${int(lo)} to ${int(hi)}`],
+      ["Accuracy (MAPE)", bt ? pct1(bt.mape) : "n/a", bt ? `Last 8 weeks: off by about ${int(bt.mae)} rooms a night` : "Needs 16 weeks of history"],
+      ["Busiest night", label(busiest.date), `${pct0(busiest.fin / busiest.cap)} full; ${peaks} night${peaks === 1 ? "" : "s"} at 90% or more`],
+      revEst ? ["Room revenue estimate", fmt.compact(revEst), "Forecast rooms × last year's ADR for the same nights"] : ["Quietest night", label(quiet.date), `${pct0(quiet.fin / quiet.cap)} full`],
+    ].map(k => `<div class="kpi"><div class="label">${k[0]}</div><div class="value" style="${k[1].length > 9 ? "font-size:24px" : ""}">${k[1]}</div><div class="sub">${k[2]}</div></div>`).join("");
+    const months = monthRows();
+    const top = months.slice().sort((a, b) => b.occ - a.occ)[0];
+    $("#takeaway").innerHTML = `<strong>What this means:</strong> expect about <b>${int(fin)}</b> room nights over the next ${H} nights (${pct0(occ)} full)` +
+      (lyOk ? `, ${Math.abs(occ - lyOcc) < 0.005 ? "level with" : (occ > lyOcc ? Math.round((occ - lyOcc) * 100) + " points ahead of" : Math.round((lyOcc - occ) * 100) + " points behind")} the same nights last year` : "") + `. ` +
+      (fit.growth ? `Recent weeks are running <b>${Math.abs(Math.round((growth - 1) * 100))}% ${growth >= 1 ? "above" : "below"}</b> last year, and the forecast assumes that gap continues. ` : "") +
+      (peaks ? `${peaks} night${peaks === 1 ? " is" : "s are"} forecast at 90% or more, led by ${label(busiest.date)}: protect those dates (close discounts, set minimum stays) and staff up. ` : "") +
+      (top && months.length > 1 ? `${top.name} is the busiest month in this window. ` : "") +
+      (bt ? `On the last 8 weeks the method was off by ${pct1(bt.mape)} on an average night, so treat single nights as a guide and month totals as solid.` : "") +
+      (otbDays ? ` Bookings on hand are blended in for ${otbDays} night${otbDays === 1 ? "" : "s"}.` : "");
+    renderAcc(); renderCharts(); renderMonths(months); renderDaily();
+  }
+  function renderAcc() {
+    const { bt, fit, band } = A;
+    if (!bt) { $("#acc").innerHTML = `<p class="muted">Accuracy needs at least 16 weeks of history: 8 to learn from and 8 to test on. Upload more history to see it.</p>`; return; }
+    const grade = bt.mape < 0.06 ? ["Very good", "pass"] : bt.mape < 0.1 ? ["Good", "pass"] : bt.mape < 0.15 ? ["Fair", "Moderate"] : ["Rough", "fail"];
+    $("#acc").innerHTML = `<p class="mape-big"><span class="pill ${grade[1]}">${grade[0]}</span> &nbsp;<b>MAPE ${pct1(bt.mape)}</b></p>
+      <p>We pretended it was 8 weeks ago, forecast the next 8 weeks with only the data known then, and compared with what really happened. MAPE (mean absolute percentage error) is the average miss: <b>on a typical night the forecast was ${pct1(bt.mape)} away from the actual rooms sold</b>, about ${int(bt.mae)} rooms.</p>
+      <p>It ran <b>${Math.abs(bt.bias) < 0.01 ? "with almost no bias" : `${pct1(Math.abs(bt.bias))} ${bt.bias > 0 ? "high" : "low"} overall`}</b>, and the actual figure landed inside the 80% range on <b>${pct0(bt.within)}</b> of those nights.</p>
+      <p class="note" style="margin:0">For comparison, hotel forecasts within 5% to 10% a night are generally considered good. ${fit.yearly ? "" : "<b>Less than 60 weeks of history, so seasons from last year are not used.</b> "}${band[0].fallback ? "Too few backtests for a measured range, so a ±15% range is used." : ""}</p>`;
+  }
+  function renderCharts() {
+    if (!window.Chart) return;
+    const { rows, fc, bt, fit } = A;
+    const view = S.view === "all" ? rows.length : Math.min(rows.length, +S.view || 180);
+    const hist = rows.slice(-view);
+    const labels = hist.map(r => r[0]).concat(fc.map(p => p.date));
+    const nH = hist.length, nF = fc.length, nul = (k) => Array(k).fill(null);
+    const btMap = {}; if (bt) bt.pts.forEach(p => btMap[p.date] = p.f);
+    const ds = [
+      { label: "Actual rooms sold", data: hist.map(r => r[1]).concat(nul(nF)), borderColor: "#8a96a3", backgroundColor: "#8a96a3", borderWidth: 1.4, order: 3 },
+      { label: "Backtest (last 8 weeks)", data: hist.map(r => btMap[r[0]] != null ? Math.round(btMap[r[0]]) : null).concat(nul(nF)), borderColor: COLORS.s2, backgroundColor: COLORS.s2, borderDash: [5, 4], borderWidth: 1.6, order: 2 },
+      { label: "80% range (low)", data: nul(nH - 1).concat([hist[nH - 1][1]], fc.map(p => Math.round(p.lo))), borderColor: "transparent", backgroundColor: "transparent", pointRadius: 0, order: 5 },
+      { label: "80% range", data: nul(nH - 1).concat([hist[nH - 1][1]], fc.map(p => Math.round(p.hi))), borderColor: "transparent", backgroundColor: "rgba(42,120,214,0.16)", fill: "-1", pointRadius: 0, order: 5 },
+      { label: "Forecast", data: nul(nH - 1).concat([hist[nH - 1][1]], fc.map(p => Math.round(p.fin))), borderColor: COLORS.s1, backgroundColor: COLORS.s1, borderWidth: 2.4, order: 1 },
+    ];
+    const cap = fc[0].cap;
+    if (charts.main) charts.main.destroy();
+    charts.main = new Chart($("#c-main"), { type: "line", data: { labels, datasets: ds },
+      options: { plugins: { legend: { labels: { filter: (it) => it.text !== "80% range (low)" } }, tooltip: { filter: (it) => it.dataset.label !== "80% range (low)" && it.raw != null, callbacks: { title: (it) => label(it[0].label), label: (c) => c.dataset.label === "80% range" ? ` 80% range: ${int(c.chart.data.datasets[2].data[c.dataIndex])} to ${int(c.raw)}` : ` ${c.dataset.label}: ${int(c.raw)} (${pct0(c.raw / cap)})` } } },
+        scales: { x: gridScale({ grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: window.innerWidth < 600 ? 4 : 8, callback: function (v) { const s = this.getLabelForValue(v); const dt = new Date(s + "T12:00:00"); return MON[dt.getMonth()] + (view > 200 ? " " + String(dt.getFullYear()).slice(2) : " " + dt.getDate()); } } }),
+          y: gridScale({ min: 0, suggestedMax: cap, title: { display: true, text: "Rooms sold" } }) } } });
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    if (charts.dow) charts.dow.destroy();
+    charts.dow = new Chart($("#c-dow"), { type: "bar", data: { labels: order.map(i => DOWN[i]), datasets: [{ label: "Compared with an average night", data: order.map(i => +(fit.idx[i] * 100).toFixed(1)), backgroundColor: order.map(i => fit.idx[i] >= 1 ? COLORS.s1 : "#9cc3ee") }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${c.raw}% of an average night` } } }, scales: { x: gridScale({ grid: { display: false } }), y: gridScale({ min: 0, ticks: { callback: v => v + "%" } }) } } });
+  }
+  function monthRows() {
+    const g = {};
+    A.fc.forEach(p => {
+      const k = p.date.slice(0, 7); const r = g[k] || (g[k] = { key: k, nights: 0, fin: 0, lo: 0, hi: 0, cap: 0, ly: 0, lyCap: 0, lyOk: true, rev: 0, revOk: true, otb: 0 });
+      r.nights++; r.fin += p.fin; r.lo += p.lo; r.hi += p.hi; r.cap += p.cap; r.otb += p.otb || 0;
+      if (p.ly == null) r.lyOk = false; else { r.ly += p.ly; r.lyCap += p.lyCap; }
+      if (p.lyRev && p.ly) r.rev += p.fin * p.lyRev / p.ly; else r.revOk = false;
+    });
+    return Object.values(g).map(r => { const [y, m] = r.key.split("-"); const dim = new Date(+y, +m, 0).getDate(); return { ...r, name: MON[+m - 1] + " " + y, partial: r.nights < dim, occ: r.fin / r.cap, lyOcc: r.lyOk ? r.ly / r.lyCap : null }; });
+  }
+  function renderMonths(months) {
+    const rev = A.hasRev && months.every(m => m.revOk);
+    const tot = months.reduce((a, m) => ({ nights: a.nights + m.nights, fin: a.fin + m.fin, lo: a.lo + m.lo, hi: a.hi + m.hi, cap: a.cap + m.cap, ly: a.ly + m.ly, lyCap: a.lyCap + m.lyCap, rev: a.rev + m.rev }), { nights: 0, fin: 0, lo: 0, hi: 0, cap: 0, ly: 0, lyCap: 0, rev: 0 });
+    const lyAll = months.every(m => m.lyOk);
+    const row = (name, m, lyOcc, b) => `<tr${b ? ' style="font-weight:700;background:#fafbfc"' : ""}><td>${name}</td><td class="num">${m.nights}</td><td class="num">${int(m.fin)}</td><td class="num">${int(m.lo)} to ${int(m.hi)}</td><td class="num">${pct1(m.fin / m.cap)}</td><td class="num">${lyOcc != null ? pct1(lyOcc) : "-"}</td><td class="num">${lyOcc != null ? delta(m.fin / m.cap, lyOcc, "points") : "-"}</td>${rev ? `<td class="num">${fmt.money(m.rev)}</td>` : ""}</tr>`;
+    $("#t-month").innerHTML = `<thead><tr><th>Month</th><th class="num">Nights</th><th class="num">Forecast room nights</th><th class="num">80% range</th><th class="num">Occupancy</th><th class="num">Last year</th><th class="num">Change</th>${rev ? '<th class="num">Revenue at last year\'s ADR</th>' : ""}</tr></thead><tbody>` +
+      months.map(m => row(m.name + (m.partial ? ' <span class="muted" style="font-weight:400">(part)</span>' : ""), m, m.lyOcc)).join("") + row("Total", tot, lyAll ? tot.ly / tot.lyCap : null, true) + "</tbody>";
+  }
+  function renderDaily() {
+    const tb = $("#t-daily tbody");
+    tb.innerHTML = A.fc.map((p, i) => {
+      const o = p.fin / p.cap, dw = dowOf(p.date);
+      return `<tr class="${dw === 5 || dw === 6 ? "wkend" : ""}"><td style="white-space:nowrap"><b>${label(p.date)}</b></td><td class="num">${int(p.model)}</td><td class="num muted">${int(p.lo)} to ${int(p.hi)}</td>
+        <td class="num"><input type="number" min="0" class="w-num" data-d="${p.date}" data-i="${i}" value="${p.otb ?? ""}" placeholder="-" aria-label="Rooms on the books ${label(p.date)}"></td>
+        <td class="num"><b>${int(p.fin)}</b></td><td style="white-space:nowrap">${pct0(o)}<span class="occbar" style="width:${Math.round(o * 60)}px;${o >= 0.9 ? "background:#184f95" : ""}"></span></td><td class="num muted">${p.ly != null ? int(p.ly) : "-"}</td></tr>`;
+    }).join("");
+    tb.querySelectorAll("input[data-d]").forEach(el => {
+      el.oninput = () => { if (el.value === "") delete S.otb[el.dataset.d]; else S.otb[el.dataset.d] = Math.max(0, +el.value); save(); clearTimeout(el._t); el._t = setTimeout(() => { const f = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.d : null; renderResults(); if (f) { const n = $(`#t-daily input[data-d="${f}"]`); if (n) { n.focus(); const v = n.value; n.value = ""; n.value = v; } } }, 700); };
+      el.addEventListener("paste", (ev) => {
+        const t = (ev.clipboardData || window.clipboardData).getData("text"); const lines = t.replace(/\r/g, "").replace(/\n+$/, "").split("\n");
+        if (lines.length < 2) return; ev.preventDefault();
+        const start = +el.dataset.i;
+        lines.forEach((l, k) => { const p = A.fc[start + k]; if (!p) return; const cells = l.split("\t"); const v = toNum(cells[cells.length - 1]); if (v == null) delete S.otb[p.date]; else S.otb[p.date] = Math.max(0, v); });
+        save(); renderResults();
+      });
+    });
+  }
+
+  // ---------------- export ----------------
+  function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  const csvCell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v ?? "");
+  const dailyRows = () => [["date", "day", "model_forecast", "range_low_80", "range_high_80", "rooms_on_books", "final_forecast", "rooms_available", "occupancy_pct", "last_year_rooms"]]
+    .concat(A.fc.map(p => [p.date, DOWN[dowOf(p.date)], Math.round(p.model), Math.round(p.lo), Math.round(p.hi), p.otb ?? "", Math.round(p.fin), p.cap, +(p.fin / p.cap * 100).toFixed(1), p.ly ?? ""]));
+  $("#csv").onclick = () => download("occupancy-forecast.csv", dailyRows().map(r => r.map(csvCell).join(",")).join("\n"), "text/csv");
+  $("#xlsx").onclick = () => {
+    if (!window.XLSX) { $("#csv").click(); return; }
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(dailyRows()); ws["!cols"] = [12, 6, 14, 12, 12, 14, 14, 14, 12, 14].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws, "Daily forecast");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Month", "Nights", "Forecast room nights", "Range low", "Range high", "Occupancy %", "Last year occupancy %"]]
+      .concat(monthRows().map(m => [m.name, m.nights, Math.round(m.fin), Math.round(m.lo), Math.round(m.hi), +(m.occ * 100).toFixed(1), m.lyOcc != null ? +(m.lyOcc * 100).toFixed(1) : ""]))), "Monthly");
+    const bt = A.bt;
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Item", "Value"], ["Hotel", S.set.hotel], ["History nights", A.n], ["Method", A.fit.yearly ? "Same period last year x growth (Holt) x weekday index x holiday lift" : "Holt level and trend x weekday index"],
+      ["Backtest MAPE % (last 8 weeks)", bt ? +(bt.mape * 100).toFixed(2) : ""], ["Backtest bias %", bt ? +(bt.bias * 100).toFixed(2) : ""], ["Holiday lift", +A.fit.hol.toFixed(3)],
+      ...[1, 2, 3, 4, 5, 6, 0].map(i => [`Weekday index ${DOWN[i]}`, +A.fit.idx[i].toFixed(3)])]), "Method");
+    XLSX.writeFile(wb, "occupancy-forecast.xlsx");
+  };
+  $("#tpl").onclick = () => download("forecaster-template.csv", [["date", "rooms_sold", "rooms_available", "room_revenue"]].concat(SAMPLE.slice(-21)).map(r => r.map(csvCell).join(",")).join("\n"), "text/csv");
+  $("#imp").onchange = async (ev) => {
+    const f = ev.target.files[0]; if (!f) return;
+    if (/\.xlsx?$/i.test(f.name)) { $("#imp-msg").innerHTML = `<div class="warnbox">That is an Excel file. In Excel choose <b>File, Save As, CSV (comma delimited)</b>, then upload the CSV.</div>`; ev.target.value = ""; return; }
+    try { importHistory(await f.text(), f.name); } catch (e) { $("#imp-msg").innerHTML = `<div class="warnbox">We couldn't read that file. Save it as CSV (comma separated) and try again.</div>`; }
+    ev.target.value = "";
+  };
+  $("#otb-sample").onclick = () => {
+    const s30 = S.set.s30 / 100;
+    A.fc.slice(0, 45).forEach((p, j) => { const share = 1 - (1 - s30) * (1 - Math.exp(-j / 15)) / (1 - Math.exp(-30 / 15)); const R = hashRng("otb" + p.date); S.otb[p.date] = Math.round(Math.min(p.cap, p.model * share * (0.9 + R() * 0.25))); });
+    save(); renderResults();
+  };
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset, names = { hist: "history back to the sample", set: "forecast settings", otb: "rooms on the books" };
+    if (!confirm(`Reset the ${names[sec]}? Your changes in this section will be lost.`)) return;
+    if (sec === "otb") S.otb = {}; else { S[sec] = clone(DEFAULTS[sec]); if (sec === "hist") S.otb = {}; }
+    save(); bindFields(); renderAll();
+  });
+  $("#reset-all").onclick = () => { if (!confirm("Reset everything back to the sample? This can't be undone.")) return; S = clone(DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {} bindFields(); renderAll(); $("#saved").textContent = ""; };
+  function renderAll() { renderData(); renderResults(); }
+
+  // ---------------- start ----------------
+  chartDefaults();
+  S = load();
+  bindFields();
+  renderAll();
+})();
+</script>
+</body>
+</html>

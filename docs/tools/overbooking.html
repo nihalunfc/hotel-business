@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overbooking Calculator</title>
+<meta name="description" content="A free overbooking calculator for hotels: enter tonight's rooms, bookings, cancellation and no-show rates and the cost of walking a guest, and get the overbooking level with the best expected result, plus a 14-night planner.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.howto { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 860px) { .howto { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.walk-total td { font-weight: 700; background: #fafbfc; }
+.scroll-y { max-height: 440px; overflow: auto; }
+.scroll-y thead th { position: sticky; top: 0; z-index: 1; }
+tr.best td { background: var(--good-soft); font-weight: 600; }
+tr.uncapped td:first-child { box-shadow: inset 3px 0 0 var(--s4); }
+.pos { color: var(--good); }
+.neg { color: var(--bad); }
+.status { font-size: 13px; font-weight: 600; white-space: nowrap; }
+table.edit input.w-pct { width: 70px; }
+table.edit input.w-date { width: 140px; }
+.out { background: #fafbfc; }
+.pastebox { display: none; margin-top: 12px; }
+.pastebox textarea { width: 100%; min-height: 130px; font: 13px ui-monospace, Menlo, Consolas, monospace; border: 1px solid var(--line-2); border-radius: 7px; padding: 8px; }
+.inline-fields { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: flex-end; }
+.inline-fields .field { min-width: 200px; }
+.legend-note { font-size: 13px; color: var(--ink-3); margin: 8px 0 0; }
+.legend-note i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+@media print {
+  .scroll-y { max-height: none; overflow: visible; }
+  tr.best td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Overbooking Calculator</h1>
+    <p class="lead">Some guests always cancel late or never show up, so a full book rarely means a full hotel. This tool tells you how many extra reservations to accept so you fill those rooms without walking too many guests, for tonight and for the next 14 nights.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Exact probability model, not a rule of thumb</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-night"><b>Step 1</b>Tonight's numbers</a>
+    <a href="#s-walk"><b>Step 2</b>Cost of walking a guest</a>
+    <a href="#s-risk"><b>Step 3</b>Your risk appetite</a>
+    <a href="#s-plan"><b>Step 4</b>14-night planner</a>
+  </nav>
+
+  <!-- 1. Tonight -->
+  <section class="sec no-print" id="s-night">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Tonight's numbers</h2><p>Rooms you can sell, what is booked, and how often guests cancel or fail to show. Use your PMS history for the same day of week and season.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="setup">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="f-hotel">Hotel</label><input type="text" id="f-hotel" data-k="setup.hotel"></div>
+        <div class="field"><label for="f-rooms">Rooms available tonight</label><input type="number" min="1" step="1" id="f-rooms" data-k="setup.rooms" data-num><small>Sellable rooms, after rooms out of order</small></div>
+        <div class="field"><label for="f-books">Reservations on the books</label><input type="number" min="0" step="1" id="f-books" data-k="setup.onBooks" data-num><small>Confirmed bookings for tonight right now</small></div>
+        <div class="field"><label for="f-cxl">Cancellation rate before arrival (%)</label><input type="number" min="0" max="99" step="0.1" id="f-cxl" data-k="setup.cancel" data-num><small>Share of bookings cancelled from now to arrival</small></div>
+        <div class="field"><label for="f-ns">No-show rate (%)</label><input type="number" min="0" max="99" step="0.1" id="f-ns" data-k="setup.noShow" data-num><small>Share of remaining bookings that never arrive</small></div>
+        <div class="field"><label for="f-rate">Average room rate ($)</label><input type="number" min="0" step="1" id="f-rate" data-k="setup.rate" data-num><small>ADR: average daily rate, before tax</small></div>
+        <div class="field"><label for="f-extra">Typical extras per occupied room ($)</label><input type="number" min="0" step="1" id="f-extra" data-k="setup.extras" data-num><small>Parking, restaurant, bar, resort fee</small></div>
+        <div class="field"><label for="f-svc">Cost to service an occupied room ($)</label><input type="number" min="0" step="1" id="f-svc" data-k="setup.service" data-num><small>Cleaning, laundry, amenities. Use 0 for revenue only</small></div>
+      </div>
+      <p class="note" id="value-note"></p>
+    </div>
+  </section>
+
+  <!-- 2. Walk cost -->
+  <section class="sec no-print" id="s-walk">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Cost of walking a guest</h2><p>"Walking" a guest means sending someone with a confirmed booking to another hotel because you are full. List every cost of doing it once; the lines add up.</p></div>
+      <div class="toolbar"><button class="btn sm" id="add-walk">Add a cost line</button><button class="btn sm reset" data-reset="walk">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap"><table class="edit" id="t-walk"><thead><tr><th>Cost item</th><th class="num">Amount ($)</th><th></th></tr></thead><tbody></tbody><tfoot><tr class="walk-total"><td>Total cost per walked guest</td><td class="num" id="walk-total"></td><td></td></tr></tfoot></table></div>
+      <p class="note">Tip: "future business at risk" is the profit you expect to lose because some walked guests never book again. A common estimate is the chance they don't return times what they would spend over the next few years.</p>
+    </div>
+  </section>
+
+  <!-- 3. Risk -->
+  <section class="sec no-print" id="s-risk">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">3</span>Your risk appetite</h2><p>The best average result sometimes means walking a guest now and then. If your brand standards say that should be rare, set a cap.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="risk">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="inline-fields">
+        <div class="field"><label for="r-mode">Recommend the level that</label><select id="r-mode" data-k="risk.mode"><option value="ev">Earns the most on average (no cap)</option><option value="cap">Earns the most, with a cap on walking risk</option></select></div>
+        <div class="field"><label for="r-cap">Most acceptable chance of walking anyone (%)</label><input type="number" min="0" max="100" step="1" id="r-cap" data-k="risk.cap" data-num><small>For example 10% means about one night in ten</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <span class="muted" style="font-size:14px">Results update as you type.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <div id="warn-main"></div>
+
+  <!-- Results: tonight -->
+  <section class="sec" id="s-result">
+    <div class="sec-head">
+      <div><h2 id="res-title">Tonight's recommendation</h2><p>Based on the numbers above. "Expected" means the average over many nights like this one.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm primary" id="csv-levels">Download CSV</button>
+        <button class="btn sm" onclick="window.print()">Print</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="grid g4" id="kpis"></div>
+      <div class="takeaway" id="takeaway"></div>
+      <div class="card" style="margin-top:16px">
+        <h3>Expected net value by overbooking level</h3>
+        <p class="muted" style="font-size:14px">Net value = profit from rooms filled minus the cost of guests walked. The orange line is the chance of walking at least one guest.</p>
+        <div class="chart-box"><canvas id="chart"></canvas></div>
+        <p class="legend-note"><i style="background:#1a7f4b"></i>Recommended level</p>
+      </div>
+      <h3 style="margin-top:20px">Every level compared</h3>
+      <div class="table-wrap scroll-y"><table id="t-levels"><thead><tr>
+        <th>Overbook by</th><th class="num">Booking limit</th><th class="num">Guests expected to arrive</th><th class="num">Expected empty rooms</th><th class="num">Expected walked guests</th><th class="num">Chance of walking anyone</th><th class="num">Expected net value</th><th class="num">Gain vs no overbooking</th>
+      </tr></thead><tbody></tbody></table></div>
+      <p class="note">Green row: recommended. The booking limit is rooms available plus the overbooking level: stop selling when bookings reach it.</p>
+    </div>
+  </section>
+
+  <!-- 4. Planner -->
+  <section class="sec" id="s-plan">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">4</span>14-night planner</h2><p>One row per night. Type rooms available and bookings on the books; leave the rate columns blank to use the rates from step 1, or enter a night's own rate (for example a holiday or a big event). Revenue, walk cost and risk appetite come from steps 1 to 3.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm" id="plan-dates">Dates from today</button>
+        <button class="btn sm" id="plan-add">Add night</button>
+        <label class="btn sm" style="margin:0">Import CSV<input type="file" id="plan-imp" accept=".csv,text/csv,.txt" hidden></label>
+        <button class="btn sm" id="plan-paste-open">Paste from Excel</button>
+        <button class="btn sm" id="plan-tpl">Download template</button>
+        <button class="btn sm primary" id="plan-csv">Download CSV</button>
+        <button class="btn sm reset" data-reset="plan">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="pastebox no-print" id="pastebox">
+        <label for="paste-area" style="font-size:13px;font-weight:600;color:var(--ink-2)">Copy the cells from Excel or Google Sheets (date, rooms available, on the books, and optionally cancel % and no-show %) and paste them here.</label>
+        <textarea id="paste-area" placeholder="2026-10-19&#9;620&#9;455&#10;2026-10-20&#9;620&#9;470"></textarea>
+        <div class="toolbar" style="margin-top:8px"><button class="btn sm primary" id="paste-apply">Use pasted rows</button><button class="btn sm" id="paste-cancel">Cancel</button></div>
+      </div>
+      <div id="plan-warn"></div>
+      <div class="grid g4" id="plan-kpis" style="margin-bottom:14px"></div>
+      <div class="table-wrap"><table class="edit" id="t-plan"><thead><tr>
+        <th>Night</th><th class="num">Rooms available</th><th class="num">On the books</th><th class="num">Cancel % <span class="muted">(optional)</span></th><th class="num">No-show % <span class="muted">(optional)</span></th>
+        <th class="num out">Overbook by</th><th class="num out">Booking limit</th><th class="out">What to do</th><th class="num out">Chance of walking anyone</th><th class="num out">Gain vs no overbooking</th><th></th>
+      </tr></thead><tbody></tbody></table></div>
+      <p class="note">CSV columns: <code>date, rooms_available, on_the_books, cancel_pct, no_show_pct</code>. The last two can be left blank. Up to 14 nights.</p>
+    </div>
+  </section>
+
+  <details class="tech no-print" style="margin-top:22px">
+    <summary>How it's calculated</summary>
+    <p><b>Show-up chance.</b> Each booking turns into an arriving guest with probability <code>p = (1 - cancellation rate) &times; (1 - no-show rate)</code>. Guests are assumed to decide independently of each other.</p>
+    <p><b>Arrivals.</b> If you accept <code>L</code> bookings (the booking limit = rooms available <code>C</code> + overbooking level <code>k</code>), the number who arrive, <code>S</code>, follows a binomial distribution with <code>L</code> trials and chance <code>p</code>. The tool works out the full distribution exactly (in log space so large hotels don't overflow). Above 3,000 bookings it switches to a normal approximation with a continuity correction, which is accurate at that size.</p>
+    <p><b>For each level</b>:</p>
+    <pre>Expected empty rooms   = E[max(C - S, 0)]
+Expected walked guests = E[max(S - C, 0)]
+Chance of walking any  = P(S &gt; C)
+Value of a filled room = room rate + extras - servicing cost
+Expected net value     = value of a filled room &times; E[min(S, C)] - walk cost &times; E[walked]</pre>
+    <p><b>Recommendation.</b> The level with the highest expected net value. With a risk cap, only levels whose chance of walking anyone is at or below the cap are considered. Levels are tested from 0 up to well past the point where extra bookings stop paying.</p>
+    <p><b>Assumptions and limits.</b> The model assumes you will sell up to the booking limit (overbooking only matters when demand is strong enough). It does not model walk-ins, early departures, stay-overs that extend, or guests on multi-night stays affecting the next night; no-show fees you collect are not counted, which makes it slightly cautious. Cancellations and no-shows often run together in groups (a storm, a cancelled concert), which this model treats as independent, so on unusual nights a lower cap is wise. Rates are best taken from at least 8 weeks of history for the same day of week and booking channel.</p>
+    <p>Your inputs are saved only in this browser (local storage). Nothing is sent anywhere.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.overbooking.v1";
+  const MAX_NIGHTS = 14;
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const money = (v) => (v < 0 ? "-$" : "$") + Math.round(Math.abs(v)).toLocaleString("en-CA");
+  const signed = (v) => (v >= 0 ? "+" : "-") + "$" + Math.round(Math.abs(v)).toLocaleString("en-CA");
+  const num1 = (v) => (Math.round(v * 10) / 10).toLocaleString("en-CA", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const pct = (v) => v < 0.001 && v > 0 ? "<0.1%" : (v * 100).toFixed(1) + "%";
+  const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const addDays = (s, n) => { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() + n); return iso(d); };
+  const today = () => iso(new Date());
+  const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s + "T12:00:00"));
+  const dayLabel = (s) => isDate(s) ? new Date(s + "T12:00:00").toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" }) : (s || "-");
+
+  // ---------------- sample: Summit Tower Hotel ----------------
+  function samplePlan(start) {
+    // typical bookings on hand by day of week (0 = Sun), shrinking for nights further out
+    const base = { 0: 430, 1: 470, 2: 490, 3: 530, 4: 585, 5: 660, 6: 672 };
+    return Array.from({ length: MAX_NIGHTS }, (_, i) => {
+      const date = addDays(start, i), dow = new Date(date + "T12:00:00").getDay();
+      const fade = i < 7 ? 1 : 0.9;
+      const rooms = i === 2 || i === 3 ? 612 : 620;
+      const row = { date, rooms, books: Math.round(base[dow] * fade - i * 2), cancel: "", noshow: "" };
+      if (dow === 6 && i < 7) row.noshow = 2;           // Saturdays: drive-in leisure guests rarely no-show
+      if (dow === 5 && i >= 7) row.cancel = 9;          // a Friday with a concert that may be cancelled
+      return row;
+    });
+  }
+  const DEFAULTS = {
+    setup: { hotel: "Summit Tower Hotel", rooms: 620, onBooks: 641, cancel: 6, noShow: 3, rate: 219, extras: 36, service: 30 },
+    walk: [
+      { label: "Room at a nearby competitor (first night)", amt: 209 },
+      { label: "Taxi to and from the other hotel", amt: 40 },
+      { label: "Goodwill credit (free night voucher or points)", amt: 75 },
+      { label: "Future business at risk", amt: 110 },
+    ],
+    risk: { mode: "cap", cap: 15 },
+    plan: samplePlan(today()),
+  };
+
+  let S, chart = null;
+  let saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; } catch (e) { $("#saved").textContent = ""; }
+    }, 250);
+  }
+  function load() {
+    try {
+      const t = localStorage.getItem(KEY);
+      if (t) {
+        const v = JSON.parse(t), out = clone(DEFAULTS);
+        for (const k of Object.keys(out)) if (v && v[k] != null) out[k] = Array.isArray(out[k]) ? (Array.isArray(v[k]) ? v[k] : out[k]) : Object.assign(out[k], v[k]);
+        return out;
+      }
+    } catch (e) {}
+    return clone(DEFAULTS);
+  }
+
+  // ---------------- maths ----------------
+  const lnF = [0];
+  function lnFact(n) { for (let i = lnF.length; i <= n; i++) lnF[i] = lnF[i - 1] + Math.log(i); return lnF[n]; }
+  // returns { lo, pmf[] } with pmf[j] = P(S = lo + j)
+  function binom(n, p) {
+    if (n <= 0 || p <= 0) return { lo: 0, pmf: [1] };
+    if (p >= 1) return { lo: n, pmf: [1] };
+    if (n > 3000) {
+      const mu = n * p, sd = Math.sqrt(n * p * (1 - p));
+      const lo = Math.max(0, Math.floor(mu - 9 * sd)), hi = Math.min(n, Math.ceil(mu + 9 * sd));
+      const Phi = (x) => 0.5 * (1 + erf(x / Math.SQRT2));
+      const pmf = []; for (let k = lo; k <= hi; k++) pmf.push(Phi((k + 0.5 - mu) / sd) - Phi((k - 0.5 - mu) / sd));
+      const s = pmf.reduce((a, b) => a + b, 0); return { lo, pmf: pmf.map(x => x / s) };
+    }
+    lnFact(n);
+    const lp = Math.log(p), lq = Math.log(1 - p), pmf = new Array(n + 1);
+    for (let k = 0; k <= n; k++) pmf[k] = Math.exp(lnF[n] - lnF[k] - lnF[n - k] + k * lp + (n - k) * lq);
+    return { lo: 0, pmf };
+  }
+  function erf(x) { // Abramowitz-Stegun 7.1.26
+    const s = Math.sign(x); x = Math.abs(x);
+    const t = 1 / (1 + 0.3275911 * x);
+    const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return s * y;
+  }
+  function stats(L, C, p) {
+    const { lo, pmf } = binom(L, p);
+    let filled = 0, walked = 0, pw = 0, mean = 0;
+    for (let j = 0; j < pmf.length; j++) {
+      const s = lo + j, q = pmf[j];
+      mean += q * s; filled += q * Math.min(s, C);
+      if (s > C) { walked += q * (s - C); pw += q; }
+    }
+    return { mean, filled, empty: C - filled, walked, pw };
+  }
+  // all levels for one night
+  function analyse(C, p, value, walkCost, risk) {
+    const auto = Math.ceil(C * (1 - p) / Math.max(p, 0.05) * 2) + 12;
+    const maxK = Math.min(Math.max(12, auto), 600);
+    const rows = [];
+    let best = null, bestFree = null;
+    for (let k = 0; k <= maxK; k++) {
+      const st = stats(C + k, C, p);
+      const ev = value * st.filled - walkCost * st.walked;
+      const r = { k, L: C + k, ...st, ev };
+      rows.push(r);
+      if (!bestFree || ev > bestFree.ev + 1e-9) bestFree = r;
+      const ok = risk.mode !== "cap" || st.pw <= risk.cap / 100 + 1e-12;
+      if (ok && (!best || ev > best.ev + 1e-9)) best = r;
+    }
+    if (!best) best = rows[0];
+    rows.forEach(r => r.gain = r.ev - rows[0].ev);
+    // trim long tail for display: keep up to a little beyond the larger of the two picks
+    const showTo = Math.min(rows.length - 1, Math.max(best.k, bestFree.k) + Math.max(8, Math.ceil(0.4 * Math.max(best.k, bestFree.k))));
+    return { rows, best, bestFree, view: rows.slice(0, showTo + 1) };
+  }
+
+  // ---------------- inputs and validation ----------------
+  const walkCost = () => S.walk.reduce((a, w) => a + (+w.amt || 0), 0);
+  const roomValue = () => (+S.setup.rate || 0) + (+S.setup.extras || 0) - (+S.setup.service || 0);
+  function validate() {
+    const st = S.setup, w = [];
+    const fin = (v) => typeof v === "number" && isFinite(v);
+    if (!fin(st.rooms) || st.rooms < 1 || st.rooms % 1) w.push("Rooms available must be a whole number of 1 or more.");
+    if (fin(st.rooms) && st.rooms > 20000) w.push("Rooms available looks too large (over 20,000).");
+    if (!fin(st.onBooks) || st.onBooks < 0 || st.onBooks % 1) w.push("Reservations on the books must be a whole number, 0 or more.");
+    if (!fin(st.cancel) || st.cancel < 0 || st.cancel >= 100) w.push("Cancellation rate must be between 0 and 99.9%.");
+    if (!fin(st.noShow) || st.noShow < 0 || st.noShow >= 100) w.push("No-show rate must be between 0 and 99.9%.");
+    ["rate", "extras", "service"].forEach(k => { if (!fin(st[k]) || st[k] < 0) w.push("Rates, extras and costs can't be blank or negative."); });
+    if (!w.length && roomValue() <= 0) w.push("Servicing cost is higher than rate plus extras, so a filled room loses money and overbooking can never pay. Check step 1.");
+    if (S.walk.some(x => !fin(+x.amt) || x.amt === "" || +x.amt < 0)) w.push("Each walk cost line needs an amount of 0 or more.");
+    if (S.risk.mode === "cap" && (!fin(S.risk.cap) || S.risk.cap < 0 || S.risk.cap > 100)) w.push("The walking-risk cap must be between 0 and 100%.");
+    return [...new Set(w)];
+  }
+  const showP = (cx, ns) => (1 - cx / 100) * (1 - ns / 100);
+
+  // ---------------- render: inputs ----------------
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const [sec, key] = el.dataset.k.split(".");
+      el.value = S[sec][key];
+      el.oninput = () => { S[sec][key] = el.hasAttribute("data-num") ? (el.value === "" ? NaN : +el.value) : el.value; save(); compute(); };
+    });
+    $("#r-cap").disabled = S.risk.mode !== "cap";
+  }
+  function renderWalk() {
+    $("#t-walk tbody").innerHTML = S.walk.map((w, i) => `<tr>
+      <td><input type="text" value="${esc(w.label)}" data-i="${i}" data-f="label" style="min-width:220px"></td>
+      <td class="num"><input type="number" min="0" step="1" value="${esc(w.amt)}" data-i="${i}" data-f="amt" class="w-num" style="text-align:right"></td>
+      <td><button class="xbtn" data-del="${i}" title="Remove this line" aria-label="Remove this line">&times;</button></td></tr>`).join("") ||
+      `<tr><td colspan="3" class="muted">No cost lines. Add at least one: walking a guest is never free.</td></tr>`;
+    $("#t-walk tbody").querySelectorAll("input").forEach(el => el.oninput = () => {
+      const w = S.walk[+el.dataset.i]; w[el.dataset.f] = el.dataset.f === "amt" ? (el.value === "" ? "" : +el.value) : el.value; save(); compute();
+    });
+    $("#t-walk tbody").querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.walk.splice(+b.dataset.del, 1); save(); renderWalk(); compute(); });
+  }
+  function renderPlan() {
+    $("#t-plan tbody").innerHTML = S.plan.map((r, i) => `<tr data-row="${i}">
+      <td><input type="date" class="w-date" value="${esc(r.date)}" data-i="${i}" data-f="date"></td>
+      <td class="num"><input type="number" min="1" step="1" class="w-num" value="${esc(r.rooms)}" data-i="${i}" data-f="rooms"></td>
+      <td class="num"><input type="number" min="0" step="1" class="w-num" value="${esc(r.books)}" data-i="${i}" data-f="books"></td>
+      <td class="num"><input type="number" min="0" max="99" step="0.1" class="w-pct" value="${esc(r.cancel)}" placeholder="${esc(S.setup.cancel)}" data-i="${i}" data-f="cancel"></td>
+      <td class="num"><input type="number" min="0" max="99" step="0.1" class="w-pct" value="${esc(r.noshow)}" placeholder="${esc(S.setup.noShow)}" data-i="${i}" data-f="noshow"></td>
+      <td class="num out" data-o="k"></td><td class="num out" data-o="L"></td><td class="out" data-o="do"></td><td class="num out" data-o="pw"></td><td class="num out" data-o="gain"></td>
+      <td><button class="xbtn" data-del="${i}" title="Remove this night" aria-label="Remove this night">&times;</button></td></tr>`).join("") ||
+      `<tr><td colspan="11" class="muted">No nights yet. Press "Dates from today", add a night, or import a CSV.</td></tr>`;
+    $("#t-plan tbody").querySelectorAll("input").forEach(el => el.oninput = () => {
+      const f = el.dataset.f, r = S.plan[+el.dataset.i];
+      r[f] = f === "date" ? el.value : (el.value === "" ? "" : +el.value);
+      save(); computePlan();
+    });
+    $("#t-plan tbody").querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.plan.splice(+b.dataset.del, 1); save(); renderPlan(); computePlan(); });
+    $("#plan-add").disabled = S.plan.length >= MAX_NIGHTS;
+  }
+
+  // ---------------- render: results ----------------
+  let LAST = null;
+  function compute() {
+    $("#r-cap").disabled = S.risk.mode !== "cap";
+    $("#walk-total").textContent = money(walkCost());
+    document.querySelectorAll("#t-plan input[data-f=cancel]").forEach(el => el.placeholder = isFinite(S.setup.cancel) ? S.setup.cancel : "");
+    document.querySelectorAll("#t-plan input[data-f=noshow]").forEach(el => el.placeholder = isFinite(S.setup.noShow) ? S.setup.noShow : "");
+    const warns = validate();
+    $("#warn-main").innerHTML = warns.length ? `<div class="warnbox" style="margin:0 0 22px"><b>Please check your inputs.</b> ${warns.map(esc).join(" ")}</div>` : "";
+    $("#s-result").hidden = !!warns.length;
+    if (warns.length) { LAST = null; $("#value-note").textContent = ""; computePlan(); return; }
+    const st = S.setup, C = st.rooms, p = showP(st.cancel, st.noShow), v = roomValue(), w = walkCost();
+    $("#value-note").textContent = `Each filled room is worth ${money(v)} to you (rate plus extras minus servicing cost). About ${(p * 100).toFixed(1)}% of bookings turn into arriving guests.`;
+    const A = analyse(C, p, v, w, S.risk);
+    LAST = A;
+    const b = A.best, f = A.bestFree;
+    const now = stats(st.onBooks, C, p);
+    const left = b.L - st.onBooks;
+    $("#res-title").textContent = `Tonight's recommendation: ${st.hotel || "your hotel"}`;
+    $("#kpis").innerHTML = [
+      ["Recommended overbooking", `+${b.k}`, `Booking limit ${b.L.toLocaleString("en-CA")} for ${C.toLocaleString("en-CA")} rooms`],
+      ["Rooms you can still sell", left >= 0 ? left.toLocaleString("en-CA") : "0", left >= 0 ? `You have ${st.onBooks.toLocaleString("en-CA")} on the books` : `<span class="neg">${(-left).toLocaleString("en-CA")} over the limit: stop selling</span>`],
+      ["Gain vs no overbooking", signed(b.gain), `Expected, per night like this one`],
+      ["Chance of walking anyone", pct(b.pw), `About ${num1(b.walked)} walked and ${num1(b.empty)} empty on average`],
+    ].map(([l, val, sub]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${val}</div><div class="sub">${sub}</div></div>`).join("");
+
+    const noShowCount = C * (1 - p) / p;
+    let t = `<strong>What this means:</strong> accept up to <b>${b.L.toLocaleString("en-CA")}</b> reservations for your ${C.toLocaleString("en-CA")} rooms tonight, that is <b>${b.k}</b> more than you have rooms. `;
+    if (b.k === 0) t += `Overbooking doesn't pay here: walking a guest costs ${money(w)} and a filled room earns ${money(v)}, and with only ${(100 - p * 100).toFixed(1)}% of bookings falling away each extra booking is more likely to cause a walk than fill an empty room. `;
+    else t += `With ${st.cancel}% cancelling and ${st.noShow}% not showing, a full book of ${C.toLocaleString("en-CA")} would leave about ${Math.round(C * (1 - p))} rooms empty. Overbooking by ${b.k} fills most of them: on average you end up with ${num1(b.empty)} empty rooms and walk ${num1(b.walked)} guests, which is worth <b>${signed(b.gain)}</b> a night compared with not overbooking. `;
+    t += `There is a ${pct(b.pw)} chance you will have to walk at least one guest, so have a walk plan and a partner hotel ready. `;
+    if (S.risk.mode === "cap" && f.k !== b.k) t += `Without your ${S.risk.cap}% cap the best average result would be +${f.k} (${signed(f.gain - b.gain)} more a night), but the chance of walking someone would rise to ${pct(f.pw)}. `;
+    if (left < 0) t += `<br><b>Right now you are ${-left} bookings over this limit.</b> If you stop selling, you can expect about ${num1(now.walked)} walks (${pct(now.pw)} chance of any) tonight. Consider closing all channels and offering upgrades or flexible dates to recent bookers.`;
+    else if (left > 0) t += `<br>You have ${st.onBooks.toLocaleString("en-CA")} on the books, so you can sell <b>${left}</b> more before closing. If you sold nothing more you would expect about ${num1(now.empty)} empty rooms.`;
+    else t += `<br>You are exactly at the limit: close sales now.`;
+    $("#takeaway").innerHTML = t;
+
+    $("#t-levels tbody").innerHTML = A.view.map(r => `<tr class="${r.k === b.k ? "best" : ""}${r.k === f.k && f.k !== b.k ? " uncapped" : ""}">
+      <td>+${r.k}${r.k === b.k ? ' <span class="pill pass">Recommended</span>' : ""}${r.k === f.k && f.k !== b.k ? ' <span class="pill" style="background:#fff3df;color:#8a5300">Best with no cap</span>' : ""}</td>
+      <td class="num">${r.L.toLocaleString("en-CA")}</td><td class="num">${num1(r.mean)}</td><td class="num">${num1(r.empty)}</td><td class="num">${num1(r.walked)}</td>
+      <td class="num">${pct(r.pw)}</td><td class="num">${money(r.ev)}</td><td class="num ${r.gain > 0.5 ? "pos" : r.gain < -0.5 ? "neg" : ""}">${signed(r.gain)}</td></tr>`).join("");
+
+    if (window.Chart) {
+      const labels = A.view.map(r => "+" + r.k);
+      const data = A.view.map(r => Math.round(r.ev));
+      const colors = A.view.map(r => r.k === b.k ? "#1a7f4b" : COLORS.s1);
+      const radius = A.view.map(r => r.k === b.k ? 7 : 2.5);
+      if (chart) chart.destroy();
+      chart = new Chart($("#chart"), {
+        type: "line",
+        data: { labels, datasets: [
+          { label: "Expected net value", data, borderColor: COLORS.s1, backgroundColor: colors, pointBackgroundColor: colors, pointBorderColor: colors, pointRadius: radius, yAxisID: "y" },
+          { label: "Chance of walking anyone", data: A.view.map(r => +(r.pw * 100).toFixed(1)), borderColor: COLORS.s2, borderDash: [5, 4], pointRadius: 0, yAxisID: "y1" },
+        ] },
+        options: {
+          scales: {
+            x: gridScale({ grid: { display: false }, title: { display: true, text: "Overbooking level (extra bookings over rooms available)" }, ticks: { autoSkip: true, maxTicksLimit: 14, color: COLORS.ink } }),
+            y: gridScale({ title: { display: true, text: "Expected net value" }, ticks: { color: COLORS.ink, callback: (v) => fmt.compact(v) } }),
+            y1: gridScale({ position: "right", min: 0, max: 100, grid: { display: false }, title: { display: true, text: "Chance of walking (%)" }, ticks: { color: COLORS.ink, callback: (v) => v + "%" } }),
+          },
+          plugins: { tooltip: { callbacks: { label: (c) => c.datasetIndex === 0 ? ` Net value: ${money(c.raw)} (gain ${signed(A.view[c.dataIndex].gain)})` : ` Chance of walking anyone: ${c.raw}%` } } },
+        },
+      });
+    }
+    computePlan();
+  }
+
+  // ---------------- planner ----------------
+  let PLAN = [];
+  function computePlan() {
+    const tb = $("#t-plan tbody");
+    PLAN = [];
+    const gw = validate();
+    const msgs = [];
+    if (gw.length) {
+      $("#plan-warn").innerHTML = `<div class="warnbox" style="margin:0 0 12px">Fix the inputs in steps 1 to 3 first; the planner uses them.</div>`;
+      tb.querySelectorAll("[data-o]").forEach(td => td.textContent = "");
+      $("#plan-kpis").innerHTML = ""; return;
+    }
+    const v = roomValue(), w = walkCost();
+    S.plan.forEach((r, i) => {
+      const tr = tb.querySelector(`tr[data-row="${i}"]`); if (!tr) return;
+      const set = (k, h) => { tr.querySelector(`[data-o="${k}"]`).innerHTML = h; };
+      const cx = r.cancel === "" || r.cancel == null ? S.setup.cancel : +r.cancel;
+      const ns = r.noshow === "" || r.noshow == null ? S.setup.noShow : +r.noshow;
+      const bad = [];
+      if (!(Number.isInteger(+r.rooms) && +r.rooms >= 1 && r.rooms !== "")) bad.push("rooms available");
+      if (!(Number.isInteger(+r.books) && +r.books >= 0 && r.books !== "")) bad.push("on the books");
+      if (!(isFinite(cx) && cx >= 0 && cx < 100)) bad.push("cancel %");
+      if (!(isFinite(ns) && ns >= 0 && ns < 100)) bad.push("no-show %");
+      if (bad.length) {
+        ["k", "L", "pw", "gain"].forEach(k => set(k, "-")); set("do", `<span class="status neg">Check ${bad.join(", ")}</span>`);
+        msgs.push(`${dayLabel(r.date)}: check ${bad.join(", ")}.`); return;
+      }
+      const C = +r.rooms, p = showP(cx, ns), A = analyse(C, p, v, w, S.risk), b = A.best, left = b.L - r.books;
+      const status = left > 0 ? `<span class="status pos">Open: sell ${left} more</span>` : left === 0 ? `<span class="status">At limit: close sales</span>` : `<span class="status neg">Over by ${-left}: close, plan walks</span>`;
+      set("k", "+" + b.k); set("L", b.L.toLocaleString("en-CA")); set("do", status); set("pw", pct(b.pw)); set("gain", `<span class="${b.gain > 0.5 ? "pos" : ""}">${signed(b.gain)}</span>`);
+      PLAN.push({ date: r.date, rooms: C, books: +r.books, cancel: cx, noshow: ns, k: b.k, L: b.L, left, pw: b.pw, walked: b.walked, empty: b.empty, gain: b.gain, status: left > 0 ? `Open: sell ${left} more` : left === 0 ? "At limit: close sales" : `Over by ${-left}: close sales and plan walks` });
+    });
+    const dates = S.plan.map(r => r.date).filter(Boolean);
+    if (dates.length !== new Set(dates).size) msgs.push("Some dates appear twice.");
+    if (S.plan.some(r => !isDate(r.date))) msgs.push("Some nights have no date.");
+    $("#plan-warn").innerHTML = msgs.length ? `<div class="warnbox" style="margin:0 0 12px">${msgs.map(esc).join(" ")}</div>` : "";
+    if (!PLAN.length) { $("#plan-kpis").innerHTML = ""; return; }
+    const over = PLAN.filter(x => x.left < 0).length, tot = PLAN.reduce((a, x) => a + x.gain, 0), walks = PLAN.reduce((a, x) => a + x.walked, 0);
+    const open = PLAN.filter(x => x.left > 0).reduce((a, x) => a + x.left, 0);
+    $("#plan-kpis").innerHTML = [
+      ["Expected gain, all nights", signed(tot), `vs not overbooking, ${PLAN.length} nights`],
+      ["Rooms still to sell", open.toLocaleString("en-CA"), "Up to each night's booking limit"],
+      ["Nights over the limit", over, over ? "Close sales on these nights" : "None: you are within every limit"],
+      ["Expected walks in total", num1(walks), "Across all planned nights"],
+    ].map(([l, val, sub]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${val}</div><div class="sub">${sub}</div></div>`).join("");
+  }
+
+  // ---------------- import / export ----------------
+  function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  const csvCell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  const toCSV = (rows) => rows.map(r => r.map(csvCell).join(",")).join("\n");
+  $("#csv-levels").onclick = () => {
+    if (!LAST) return;
+    const st = S.setup;
+    const rows = [["Hotel", st.hotel], ["Rooms available", st.rooms], ["On the books", st.onBooks], ["Cancellation %", st.cancel], ["No-show %", st.noShow], ["Value of a filled room", roomValue()], ["Cost per walked guest", walkCost()], ["Recommended overbooking", LAST.best.k], [],
+      ["Overbook by", "Booking limit", "Expected arrivals", "Expected empty rooms", "Expected walked guests", "Chance of walking anyone %", "Expected net value", "Gain vs no overbooking", "Recommended"]];
+    LAST.view.forEach(r => rows.push([r.k, r.L, r.mean.toFixed(2), r.empty.toFixed(2), r.walked.toFixed(2), (r.pw * 100).toFixed(2), Math.round(r.ev), Math.round(r.gain), r.k === LAST.best.k ? "yes" : ""]));
+    download("overbooking-levels.csv", toCSV(rows), "text/csv");
+  };
+  $("#plan-csv").onclick = () => {
+    computePlan();
+    const rows = [["date", "rooms_available", "on_the_books", "cancel_pct", "no_show_pct", "overbook_by", "booking_limit", "rooms_left_to_sell", "chance_walk_any_pct", "expected_walks", "expected_empty", "gain_vs_no_overbooking", "action"]];
+    PLAN.forEach(x => rows.push([x.date, x.rooms, x.books, x.cancel, x.noshow, x.k, x.L, x.left, (x.pw * 100).toFixed(1), x.walked.toFixed(2), x.empty.toFixed(2), Math.round(x.gain), x.status]));
+    download("overbooking-14-night-plan.csv", toCSV(rows), "text/csv");
+  };
+  $("#plan-tpl").onclick = () => {
+    const rows = [["date", "rooms_available", "on_the_books", "cancel_pct", "no_show_pct"]];
+    for (let i = 0; i < MAX_NIGHTS; i++) rows.push([addDays(today(), i), S.setup.rooms || 620, "", "", ""]);
+    download("overbooking-planner-template.csv", toCSV(rows), "text/csv");
+  };
+  function parseCSV(t, sep) {
+    const out = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true; else if (c === sep) { row.push(cell); cell = ""; } else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); out.push(row); row = []; cell = ""; } else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); out.push(row); }
+    return out.filter(r => r.some(x => String(x).trim()));
+  }
+  function normDate(s) {
+    s = String(s || "").trim();
+    if (isDate(s)) return s;
+    let m = s.match(/^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/); if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+    m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); if (m) return `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`; // month/day/year
+    const d = new Date(s); return isNaN(d) ? "" : iso(d);
+  }
+  function importRows(text) {
+    const sep = text.includes("\t") ? "\t" : ",";
+    const rows = parseCSV(text, sep);
+    if (!rows.length) { alert("Nothing to import."); return; }
+    let head = rows[0].map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
+    let idx = { date: 0, rooms: 1, books: 2, cancel: 3, noshow: 4 };
+    if (head.some(h => h.includes("date") || h.includes("night"))) {
+      const find = (...keys) => head.findIndex(h => keys.some(k => h.includes(k)));
+      idx = { date: find("date", "night"), rooms: find("room", "capacity", "available"), books: find("book", "otb", "reserv"), cancel: find("cancel", "cxl"), noshow: find("noshow", "show") };
+      rows.shift();
+    }
+    const cell = (r, k) => idx[k] >= 0 && r[idx[k]] != null ? String(r[idx[k]]).trim().replace(/[%$,\s]/g, "") : "";
+    const out = rows.map(r => {
+      const n = (k) => { const v = cell(r, k); return v === "" || isNaN(+v) ? "" : +v; };
+      return { date: normDate(idx.date >= 0 ? r[idx.date] : ""), rooms: n("rooms") === "" ? (S.setup.rooms || "") : n("rooms"), books: n("books"), cancel: n("cancel"), noshow: n("noshow") };
+    });
+    if (!out.length) { alert("No rows found. Check the columns: date, rooms_available, on_the_books."); return; }
+    if (out.length > MAX_NIGHTS) alert(`Only the first ${MAX_NIGHTS} nights were kept (the file had ${out.length}).`);
+    S.plan = out.slice(0, MAX_NIGHTS); save(); renderPlan(); computePlan();
+  }
+  $("#plan-imp").onchange = async (ev) => { const f = ev.target.files[0]; if (!f) return; importRows(await f.text()); ev.target.value = ""; };
+  $("#plan-paste-open").onclick = () => { $("#pastebox").style.display = "block"; $("#paste-area").focus(); };
+  $("#paste-cancel").onclick = () => { $("#pastebox").style.display = "none"; $("#paste-area").value = ""; };
+  $("#paste-apply").onclick = () => { const t = $("#paste-area").value; if (!t.trim()) return; importRows(t); $("#pastebox").style.display = "none"; $("#paste-area").value = ""; };
+  $("#plan-dates").onclick = () => {
+    if (!S.plan.length) { S.plan = samplePlan(today()).map(r => ({ ...r, books: "", cancel: "", noshow: "", rooms: S.setup.rooms || 620 })); }
+    else S.plan.forEach((r, i) => r.date = addDays(today(), i));
+    save(); renderPlan(); computePlan();
+  };
+  $("#plan-add").onclick = () => {
+    if (S.plan.length >= MAX_NIGHTS) return;
+    const last = S.plan[S.plan.length - 1];
+    S.plan.push({ date: last && isDate(last.date) ? addDays(last.date, 1) : today(), rooms: last ? last.rooms : (S.setup.rooms || 620), books: "", cancel: "", noshow: "" });
+    save(); renderPlan(); computePlan();
+  };
+
+  // ---------------- buttons ----------------
+  $("#add-walk").onclick = () => { S.walk.push({ label: "Other cost", amt: 0 }); save(); renderWalk(); compute(); const ins = $("#t-walk tbody").querySelectorAll("input[data-f=label]"); if (ins.length) ins[ins.length - 1].select(); };
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset;
+    const names = { setup: "tonight's numbers", walk: "walk costs", risk: "risk appetite", plan: "14-night planner" };
+    if (!confirm(`Reset the ${names[sec]} to the sample? Your changes in this section will be lost.`)) return;
+    S[sec] = sec === "plan" ? samplePlan(today()) : clone(DEFAULTS[sec]);
+    save(); renderAll();
+  });
+  $("#reset-all").onclick = () => {
+    if (!confirm("Reset every section to the sample? This can't be undone.")) return;
+    S = clone(DEFAULTS); S.plan = samplePlan(today());
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    renderAll(); $("#saved").textContent = "";
+  };
+  function renderAll() { bindFields(); renderWalk(); renderPlan(); compute(); }
+
+  // ---------------- start ----------------
+  chartDefaults();
+  S = load();
+  renderAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Group Quote and Displacement Calculator</title>
+<meta name="description" content="A free group displacement calculator for hotels: see how many regular guests a group pushes out, what that costs, the group's real profit, the break-even group rate and a suggested counter-offer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.pos { color: var(--good); }
+.neg { color: var(--bad); }
+table.edit input.w-date { width: 140px; }
+table.edit input.w-num { width: 84px; }
+.calc { background: #fafbfc; }
+tfoot td { font-weight: 700; background: #fafbfc; }
+#t-result td:first-child { white-space: nowrap; }
+.verdict { display: inline-block; padding: 2px 14px; border-radius: 999px; font-size: 26px; }
+.verdict.Accept { background: var(--good-soft); color: var(--good); }
+.verdict.Negotiate { background: var(--warn-soft); color: var(--warn); }
+.verdict.Decline { background: var(--bad-soft); color: var(--bad); }
+.pastebox { display: none; margin-top: 12px; margin-bottom: 12px; }
+.pastebox textarea { width: 100%; min-height: 120px; font: 13px ui-monospace, Menlo, Consolas, monospace; border: 1px solid var(--line-2); border-radius: 7px; padding: 8px; }
+.quote { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; background: var(--surface); }
+.quote h3 { margin-bottom: 2px; }
+.quote dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 18px; margin: 14px 0 0; font-size: 14.5px; }
+.quote dt { color: var(--ink-2); }
+.quote dd { margin: 0; text-align: right; font-weight: 600; }
+.quote .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+@media (max-width: 760px) { .quote .cols { grid-template-columns: 1fr; } }
+.quote .rule { border-top: 1px solid var(--line); margin: 14px 0 4px; }
+@media print {
+  .quote { border: 0; padding: 0; }
+  .verdict { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .chart-card { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Group Quote and Displacement Calculator</h1>
+    <p class="lead">A group can look like great business and still lose you money if it pushes out regular guests who would have paid more. Enter the group's request and your expected demand, and get a clear Accept, Negotiate or Decline, the lowest rate worth taking and a counter-offer.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Counts food, beverage and meeting room profit</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-hotel"><b>Step 1</b>Hotel and costs</a>
+    <a href="#s-nights"><b>Step 2</b>Stay pattern and demand</a>
+    <a href="#s-offer"><b>Step 3</b>The group's offer</a>
+    <a href="#s-extras"><b>Step 4</b>Food, beverage and meetings</a>
+    <a href="#s-result"><b>Step 5</b>Verdict and quote</a>
+  </nav>
+
+  <!-- 1. Hotel -->
+  <section class="sec no-print" id="s-hotel">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Hotel and costs</h2><p>Your sellable rooms and what it costs to have a room occupied, so the tool compares profit, not just revenue.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="hotel">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="h-name">Hotel</label><input type="text" id="h-name" data-k="hotel.name"></div>
+        <div class="field"><label for="h-cap">Hotel capacity (rooms)</label><input type="number" min="1" step="1" id="h-cap" data-k="hotel.capacity" data-num><small>Sellable rooms each night</small></div>
+        <div class="field"><label for="h-vc">Variable cost per occupied room ($)</label><input type="number" min="0" step="1" id="h-vc" data-k="hotel.varCost" data-num><small>Cleaning, laundry, amenities, utilities</small></div>
+        <div class="field"><label for="h-ch">Transient booking cost (%)</label><input type="number" min="0" max="60" step="0.5" id="h-ch" data-k="hotel.channel" data-num><small>Average OTA (online travel agent) and card fees on regular bookings</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Nights -->
+  <section class="sec no-print" id="s-nights">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Stay pattern and demand</h2><p>One row per night, up to 14. "Transient demand" is how many rooms regular (non-group) guests would book if you had unlimited rooms; take it from your forecast or last year's same nights.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="add-night">Add night</button>
+        <label class="btn sm" style="margin:0">Import CSV<input type="file" id="imp" accept=".csv,text/csv,.txt" hidden></label>
+        <button class="btn sm" id="paste-open">Paste from Excel</button>
+        <button class="btn sm" id="tpl">Download template</button>
+        <button class="btn sm reset" data-reset="nights">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="pastebox" id="pastebox">
+        <label for="paste-area" style="font-size:13px;font-weight:600;color:var(--ink-2)">Copy the cells from Excel or Google Sheets (date, transient demand, transient rate, group rooms requested) and paste them here.</label>
+        <textarea id="paste-area" placeholder="2026-11-12&#9;540&#9;199&#9;110"></textarea>
+        <div class="toolbar" style="margin-top:8px"><button class="btn sm primary" id="paste-apply">Use pasted rows</button><button class="btn sm" id="paste-cancel">Cancel</button></div>
+      </div>
+      <div class="table-wrap"><table class="edit" id="t-nights"><thead><tr>
+        <th>Night</th><th class="num">Transient demand (rooms)</th><th class="num">Transient rate ($)</th><th class="num">Group rooms requested</th><th class="num calc">Rooms displaced</th><th></th>
+      </tr></thead><tbody></tbody></table></div>
+      <div id="nights-warn"></div>
+      <p class="note">Transient rate = the average daily rate (ADR) regular guests would pay that night. CSV columns: <code>date, transient_demand, transient_rate, group_rooms</code>.</p>
+    </div>
+  </section>
+
+  <!-- 3. Offer -->
+  <section class="sec no-print" id="s-offer">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">3</span>The group's offer</h2><p>What the group is asking for. "Pickup" is the share of the requested rooms the group actually uses; the rest is "wash".</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="offer">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="o-name">Group name</label><input type="text" id="o-name" data-k="offer.name"></div>
+        <div class="field"><label for="o-rate">Group rate per room night ($)</label><input type="number" min="0" step="1" id="o-rate" data-k="offer.rate" data-num><small>The rate they asked for or you plan to quote</small></div>
+        <div class="field"><label for="o-pu">Expected pickup (%)</label><input type="number" min="1" max="100" step="1" id="o-pu" data-k="offer.pickup" data-num><small>Use this group's or similar groups' history</small></div>
+        <div class="field"><label for="o-rs">Unused group rooms you can resell (%)</label><input type="number" min="0" max="100" step="5" id="o-rs" data-k="offer.resale" data-num><small>Released at cut-off in time to sell again</small></div>
+        <div class="field"><label for="o-com">Commission (%)</label><input type="number" min="0" max="50" step="0.5" id="o-com" data-k="offer.commission" data-num><small>Paid to a planner or third party on room revenue</small></div>
+        <div class="field"><label for="o-hurdle">Safety margin above break-even (%)</label><input type="number" min="0" max="100" step="1" id="o-hurdle" data-k="offer.hurdle" data-num><small>Cushion for forecast error; sets the counter-offer</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Extras -->
+  <section class="sec no-print" id="s-extras">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">4</span>Food, beverage and meeting room</h2><p>Average group spend per room night outside the room, and the profit margin you keep on it.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="extras">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="e-f">Food per room night ($)</label><input type="number" min="0" step="1" id="e-f" data-k="extras.food" data-num><small>Banquet meals, breakfasts</small></div>
+        <div class="field"><label for="e-b">Beverage per room night ($)</label><input type="number" min="0" step="1" id="e-b" data-k="extras.bev" data-num><small>Bars, receptions</small></div>
+        <div class="field"><label for="e-m">Meeting room per room night ($)</label><input type="number" min="0" step="1" id="e-m" data-k="extras.meeting" data-num><small>Room rental and AV, divided by room nights</small></div>
+        <div class="field"><label for="e-mg">Profit margin on these (%)</label><input type="number" min="0" max="100" step="1" id="e-mg" data-k="extras.margin" data-num><small>Typical banquet margin is 25 to 40%</small></div>
+      </div>
+      <p class="note" id="extras-note"></p>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <span class="muted" style="font-size:14px">Results update as you type.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <div id="warn-main"></div>
+
+  <!-- Results -->
+  <section class="sec" id="s-result">
+    <div class="sec-head">
+      <div><h2 id="res-title">Verdict</h2><p>Profit compares what the group brings in, after commission and costs, with the profit from the regular guests it pushes out.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm primary" id="csv">Download CSV</button>
+        <button class="btn sm" onclick="window.print()">Print quote</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="grid g4" id="kpis"></div>
+      <div class="takeaway" id="takeaway"></div>
+      <div class="card chart-card" style="margin-top:16px">
+        <h3>Demand, group and capacity by night</h3>
+        <p class="muted" style="font-size:14px">Bars show the rooms you would fill with the group: regular guests you keep plus expected group rooms. The line shows regular demand, the dashed line your capacity. Where demand is above the bars, the group is pushing guests out.</p>
+        <div class="chart-box"><canvas id="chart"></canvas></div>
+      </div>
+      <h3 style="margin-top:20px">Night by night</h3>
+      <div class="table-wrap"><table id="t-result"><thead><tr>
+        <th>Night</th><th class="num">Transient demand</th><th class="num">Group rooms expected</th><th class="num">Rooms held for group</th><th class="num">Transient displaced</th><th class="num">Transient revenue lost</th><th class="num">Transient profit lost</th><th class="num">Group revenue</th><th class="num">Group profit</th><th class="num">Net gain or loss</th>
+      </tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <p class="note">Rooms held = expected group rooms plus unused group rooms you can't resell. Group revenue includes room revenue, food, beverage and meeting room; group profit is after commission, room costs and the extras margin.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="s-quote">
+    <div class="sec-head">
+      <div><h2>Quote summary</h2><p class="no-print">A one-page summary to share with your director of sales or revenue manager. Use Print quote to save it as a PDF.</p></div>
+    </div>
+    <div class="sec-body"><div class="quote" id="quote"></div></div>
+  </section>
+
+  <details class="tech no-print" style="margin-top:22px">
+    <summary>How it's calculated</summary>
+    <p>For each night, with capacity <code>C</code>, transient demand <code>D</code>, transient rate <code>ADR</code> and group rooms requested <code>R</code>:</p>
+    <pre>Expected group rooms   g = R &times; pickup
+Rooms held for group   h = g + (R - g) &times; (1 - resale share)      (never more than C)
+Transient without group  = min(D, C)
+Transient with group     = min(D, C - h)
+Transient displaced      = the difference
+Transient profit / room  = ADR &times; (1 - booking cost %) - variable cost
+Group profit / room night = rate &times; (1 - commission) - variable cost + (food + beverage + meeting) &times; margin
+Net gain                 = group profit - transient profit lost</pre>
+    <p><b>Break-even group rate</b> is the rate at which net gain is exactly zero across the whole stay:</p>
+    <pre>break-even = (transient profit lost + g_total &times; (variable cost - extras profit per room night)) / (g_total &times; (1 - commission))</pre>
+    <p><b>Verdict.</b> Accept when the group rate is at least break-even plus your safety margin. Negotiate when it is below that but within 10% of break-even (close enough to bridge with rate, dates or a food and beverage minimum). Decline when it is more than 10% below break-even. The counter-offer is break-even plus the safety margin, rounded up to the next $5.</p>
+    <p><b>Assumptions and limits.</b> Demand is treated as a single best estimate per night (no uncertainty band), so a cautious safety margin matters most on nights where demand is near capacity. Displaced guests are assumed to be lost, not moved to other nights. Multi-night transient stays that the group breaks up (a guest who can't get Saturday may not book Friday either) are not modelled, so displacement on shoulder nights can be understated. Group rooms that aren't picked up and can't be resold earn nothing; attrition penalties in the contract are not counted. Everything is before tax.</p>
+    <p>Your inputs are saved only in this browser (local storage). Nothing is sent anywhere.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.group-displacement.v1";
+  const MAX_NIGHTS = 14;
+  const NEG_BAND = 0.10; // within 10% below break-even = Negotiate
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const money = (v) => (v < -0.5 ? "-$" : "$") + Math.round(Math.abs(v)).toLocaleString("en-CA");
+  const money2 = (v) => (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const signed = (v) => (v >= -0.5 ? "+" : "-") + "$" + Math.round(Math.abs(v)).toLocaleString("en-CA");
+  const n0 = (v) => Math.round(v).toLocaleString("en-CA");
+  const n1 = (v) => (Math.round(v * 10) / 10).toLocaleString("en-CA", { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  const iso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const addDays = (s, n) => { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() + n); return iso(d); };
+  const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s + "T12:00:00"));
+  const dayLabel = (s) => isDate(s) ? new Date(s + "T12:00:00").toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" }) : (s || "Night");
+  const fin = (v) => typeof v === "number" && isFinite(v);
+
+  // ---------------- sample: Summit Tower Hotel, a 4-night association meeting ----------------
+  const DEFAULTS = {
+    hotel: { name: "Summit Tower Hotel", capacity: 620, varCost: 32, channel: 12 },
+    nights: [
+      { date: "2026-11-12", demand: 540, adr: 199, group: 110 },
+      { date: "2026-11-13", demand: 655, adr: 249, group: 120 },
+      { date: "2026-11-14", demand: 690, adr: 279, group: 120 },
+      { date: "2026-11-15", demand: 380, adr: 159, group: 90 },
+    ],
+    offer: { name: "Great Lakes Dental Association fall meeting", rate: 159, pickup: 88, resale: 50, commission: 10, hurdle: 10 },
+    extras: { food: 48, bev: 18, meeting: 12, margin: 32 },
+  };
+
+  let S, chart = null;
+  let saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; } catch (e) { $("#saved").textContent = ""; }
+    }, 250);
+  }
+  function load() {
+    try {
+      const t = localStorage.getItem(KEY);
+      if (t) {
+        const v = JSON.parse(t), out = clone(DEFAULTS);
+        for (const k of Object.keys(out)) if (v && v[k] != null) out[k] = Array.isArray(out[k]) ? (Array.isArray(v[k]) ? v[k] : out[k]) : Object.assign(out[k], v[k]);
+        return out;
+      }
+    } catch (e) {}
+    return clone(DEFAULTS);
+  }
+
+  // ---------------- validation ----------------
+  function validate() {
+    const w = [], h = S.hotel, o = S.offer, e = S.extras;
+    if (!fin(h.capacity) || h.capacity < 1 || h.capacity % 1) w.push("Hotel capacity must be a whole number of 1 or more.");
+    if (!fin(h.varCost) || h.varCost < 0) w.push("Variable cost per occupied room can't be blank or negative.");
+    if (!fin(h.channel) || h.channel < 0 || h.channel >= 100) w.push("Transient booking cost must be between 0 and 99%.");
+    if (!fin(o.rate) || o.rate < 0) w.push("Group rate can't be blank or negative.");
+    if (!fin(o.pickup) || o.pickup <= 0 || o.pickup > 100) w.push("Expected pickup must be more than 0 and at most 100%.");
+    if (!fin(o.resale) || o.resale < 0 || o.resale > 100) w.push("Resell share must be between 0 and 100%.");
+    if (!fin(o.commission) || o.commission < 0 || o.commission >= 100) w.push("Commission must be between 0 and 99%.");
+    if (!fin(o.hurdle) || o.hurdle < 0 || o.hurdle > 200) w.push("Safety margin must be between 0 and 200%.");
+    ["food", "bev", "meeting"].forEach(k => { if (!fin(e[k]) || e[k] < 0) w.push("Food, beverage and meeting room spend can't be blank or negative."); });
+    if (!fin(e.margin) || e.margin < 0 || e.margin > 100) w.push("Extras profit margin must be between 0 and 100%.");
+    if (!S.nights.length) w.push("Add at least one night to the stay pattern.");
+    const bad = [];
+    S.nights.forEach((n, i) => {
+      const lab = dayLabel(n.date);
+      if (!(fin(n.demand) && n.demand >= 0)) bad.push(`${lab}: transient demand`);
+      if (!(fin(n.adr) && n.adr >= 0)) bad.push(`${lab}: transient rate`);
+      if (!(fin(n.group) && n.group >= 0 && n.group % 1 === 0)) bad.push(`${lab}: group rooms (whole number)`);
+    });
+    if (bad.length) w.push("Check these values: " + bad.join("; ") + ".");
+    if (S.nights.length && S.nights.every(n => !(+n.group > 0))) w.push("The group hasn't requested any rooms yet.");
+    return [...new Set(w)];
+  }
+  function softWarns() {
+    const w = [], C = S.hotel.capacity;
+    const over = S.nights.filter(n => n.group > C);
+    if (over.length) w.push(`On ${over.map(n => dayLabel(n.date)).join(", ")} the group asks for more rooms than the hotel has; the tool caps it at ${n0(C)}.`);
+    const dates = S.nights.map(n => n.date).filter(Boolean);
+    if (dates.length !== new Set(dates).size) w.push("Some dates appear twice.");
+    if (S.nights.some(n => !isDate(n.date))) w.push("Some nights have no date.");
+    return w;
+  }
+
+  // ---------------- model ----------------
+  function model() {
+    const h = S.hotel, o = S.offer, e = S.extras, C = h.capacity;
+    const extrasRev = e.food + e.bev + e.meeting, extrasProfit = extrasRev * e.margin / 100;
+    const gpp = o.rate * (1 - o.commission / 100) - h.varCost + extrasProfit;   // group profit per room night
+    const rows = S.nights.map(n => {
+      const req = Math.min(n.group, C);
+      const g = req * o.pickup / 100;
+      const held = Math.min(C, g + (req - g) * (1 - o.resale / 100));
+      const without = Math.min(n.demand, C), withG = Math.min(n.demand, Math.max(0, C - held));
+      const displaced = without - withG;
+      const tpp = n.adr * (1 - h.channel / 100) - h.varCost;
+      const lostRev = displaced * n.adr, lostProfit = displaced * tpp;
+      const groupRev = g * (o.rate + extrasRev), groupProfit = g * gpp;
+      return { ...n, req, g, held, without, withG, displaced, tpp, lostRev, lostProfit, groupRev, groupProfit, net: groupProfit - lostProfit, netRev: groupRev - lostRev, occ: withG + g };
+    });
+    const T = rows.reduce((a, r) => { ["g", "held", "displaced", "lostRev", "lostProfit", "groupRev", "groupProfit", "net", "netRev", "demand", "req"].forEach(k => a[k] = (a[k] || 0) + r[k]); return a; }, {});
+    const keep = 1 - o.commission / 100;
+    const be = T.g > 0 && keep > 0 ? (T.lostProfit + T.g * (h.varCost - extrasProfit)) / (T.g * keep) : null;
+    const beRate = be == null ? null : Math.max(0, be);
+    const target = beRate == null ? null : beRate * (1 + o.hurdle / 100);
+    let verdict = "Accept";
+    if (beRate != null) {
+      if (o.rate >= target - 1e-9) verdict = "Accept";
+      else if (o.rate >= beRate * (1 - NEG_BAND)) verdict = "Negotiate";
+      else verdict = "Decline";
+    }
+    const counter = target == null ? null : Math.max(o.rate, Math.ceil(target / 5) * 5);
+    // F&B alternative: extra spend per room night needed at their rate to reach the target
+    const gap = target == null ? 0 : Math.max(0, (target - o.rate) * keep * T.g);
+    const fbNeeded = T.g > 0 && e.margin > 0 ? gap / (T.g * e.margin / 100) : null;
+    return { rows, T, beRate, target, verdict, counter, fbNeeded, extrasRev, extrasProfit, gpp };
+  }
+
+  // ---------------- render: inputs ----------------
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const [sec, key] = el.dataset.k.split(".");
+      el.value = S[sec][key] == null ? "" : S[sec][key];
+      el.oninput = () => { S[sec][key] = el.hasAttribute("data-num") ? (el.value === "" ? NaN : +el.value) : el.value; save(); compute(); };
+    });
+  }
+  function renderNights() {
+    $("#t-nights tbody").innerHTML = S.nights.map((n, i) => `<tr data-row="${i}">
+      <td><input type="date" class="w-date" value="${esc(n.date)}" data-i="${i}" data-f="date"></td>
+      <td class="num"><input type="number" min="0" step="1" class="w-num" value="${esc(n.demand)}" data-i="${i}" data-f="demand"></td>
+      <td class="num"><input type="number" min="0" step="1" class="w-num" value="${esc(n.adr)}" data-i="${i}" data-f="adr"></td>
+      <td class="num"><input type="number" min="0" step="1" class="w-num" value="${esc(n.group)}" data-i="${i}" data-f="group"></td>
+      <td class="num calc" data-o="disp">-</td>
+      <td><button class="xbtn" data-del="${i}" title="Remove this night" aria-label="Remove this night">&times;</button></td></tr>`).join("") ||
+      `<tr><td colspan="6" class="muted">No nights yet. Add a night, paste from Excel or import a CSV.</td></tr>`;
+    $("#t-nights tbody").querySelectorAll("input").forEach(el => el.oninput = () => {
+      const f = el.dataset.f, n = S.nights[+el.dataset.i];
+      n[f] = f === "date" ? el.value : (el.value === "" ? NaN : +el.value);
+      save(); compute();
+    });
+    $("#t-nights tbody").querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.nights.splice(+b.dataset.del, 1); save(); renderNights(); compute(); });
+    $("#add-night").disabled = S.nights.length >= MAX_NIGHTS;
+  }
+
+  // ---------------- render: results ----------------
+  let M = null;
+  function compute() {
+    const warns = validate();
+    $("#warn-main").innerHTML = warns.length ? `<div class="warnbox" style="margin:0 0 22px"><b>Please check your inputs.</b> ${warns.map(esc).join(" ")}</div>` : "";
+    const soft = softWarns();
+    $("#nights-warn").innerHTML = soft.length ? `<div class="warnbox">${soft.map(esc).join(" ")}</div>` : "";
+    $("#s-result").hidden = $("#s-quote").hidden = !!warns.length;
+    const e = S.extras;
+    if (fin(e.food) && fin(e.bev) && fin(e.meeting) && fin(e.margin))
+      $("#extras-note").textContent = `Total ${money2(e.food + e.bev + e.meeting)} per room night, of which you keep ${money2((e.food + e.bev + e.meeting) * e.margin / 100)} as profit.`;
+    if (warns.length) { M = null; $("#t-nights tbody").querySelectorAll("[data-o=disp]").forEach(td => td.textContent = "-"); return; }
+    M = model();
+    const { rows, T, beRate, target, verdict, counter, fbNeeded } = M, o = S.offer, h = S.hotel;
+    rows.forEach((r, i) => { const td = $(`#t-nights tbody tr[data-row="${i}"] [data-o=disp]`); if (td) td.textContent = n1(r.displaced); });
+
+    $("#res-title").textContent = `Verdict: ${o.name || "this group"}`;
+    $("#kpis").innerHTML = [
+      ["Verdict", `<span class="verdict ${verdict}">${verdict}</span>`, verdict === "Accept" ? "The rate clears break-even plus your margin" : verdict === "Negotiate" ? "Close: worth a counter-offer" : "Too far below break-even"],
+      ["Net gain or loss", `<span class="${T.net >= 0 ? "pos" : "neg"}">${signed(T.net)}</span>`, `Profit vs regular business, ${rows.length} night${rows.length === 1 ? "" : "s"}`],
+      ["Break-even group rate", beRate == null ? "n/a" : money(Math.ceil(beRate)), `Lowest rate that still beats regular business`],
+      ["Suggested counter-offer", counter == null ? "n/a" : money(counter), verdict === "Accept" ? "Their rate already works: no counter needed" : `Break-even + ${o.hurdle}% margin, rounded up`],
+    ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+
+    const losers = rows.filter(r => r.net < -0.5), winners = rows.filter(r => r.net >= -0.5);
+    let t = `<strong>What this means:</strong> the group should use about <b>${n0(T.g)}</b> room nights (${o.pickup}% of ${n0(T.req)} requested). `;
+    if (T.displaced < 0.5) t += `You have enough empty rooms on every night, so it pushes out no regular guests and almost everything it pays is extra profit. `;
+    else t += `To hold its rooms you would turn away about <b>${n0(T.displaced)}</b> regular room nights worth ${money(T.lostRev)} in revenue (${money(T.lostProfit)} in profit). `;
+    t += `The group brings ${money(T.groupRev)} in revenue and ${money(T.groupProfit)} in profit, so overall you are <b class="${T.net >= 0 ? "pos" : "neg"}">${T.net >= 0 ? "better off by " + money(T.net) : "worse off by " + money(-T.net)}</b>. `;
+    if (beRate != null) t += `The break-even rate is ${money2(beRate)}; at ${money(o.rate)} the group is ${o.rate >= beRate ? money(o.rate - beRate) + " above" : money(beRate - o.rate) + " below"} it. `;
+    if (verdict === "Accept") t += `<br><b>Accept.</b> The rate covers break-even plus your ${o.hurdle}% safety margin. `;
+    else if (verdict === "Negotiate") t += `<br><b>Negotiate.</b> Counter at <b>${money(counter)}</b>${fbNeeded != null && fbNeeded > 0 ? `, or keep ${money(o.rate)} and require an extra ${money(Math.ceil(fbNeeded))} of food and beverage spend per room night (a food and beverage minimum)` : ""}. `;
+    else t += `<br><b>Decline at this rate.</b> You would need at least <b>${money(counter)}</b> to make it worth it. `;
+    if (losers.length && winners.length && verdict !== "Accept") t += `The loss comes from ${losers.map(r => dayLabel(r.date)).join(", ")}, when regular demand is strong. If the group can move or shrink those nights, the remaining nights alone are worth ${signed(winners.reduce((a, r) => a + r.net, 0))}.`;
+    $("#takeaway").innerHTML = t;
+
+    $("#t-result tbody").innerHTML = rows.map(r => `<tr>
+      <td>${esc(dayLabel(r.date))}</td><td class="num">${n0(r.demand)}</td><td class="num">${n1(r.g)}</td><td class="num">${n1(r.held)}</td><td class="num">${n1(r.displaced)}</td>
+      <td class="num">${money(r.lostRev)}</td><td class="num">${money(r.lostProfit)}</td><td class="num">${money(r.groupRev)}</td><td class="num">${money(r.groupProfit)}</td>
+      <td class="num ${r.net >= 0 ? "pos" : "neg"}"><b>${signed(r.net)}</b></td></tr>`).join("");
+    $("#t-result tfoot").innerHTML = `<tr><td>Total</td><td class="num">${n0(T.demand)}</td><td class="num">${n1(T.g)}</td><td class="num">${n1(T.held)}</td><td class="num">${n1(T.displaced)}</td>
+      <td class="num">${money(T.lostRev)}</td><td class="num">${money(T.lostProfit)}</td><td class="num">${money(T.groupRev)}</td><td class="num">${money(T.groupProfit)}</td><td class="num ${T.net >= 0 ? "pos" : "neg"}">${signed(T.net)}</td></tr>`;
+
+    renderQuote();
+
+    if (window.Chart) {
+      const labels = rows.map(r => dayLabel(r.date));
+      if (chart) chart.destroy();
+      chart = new Chart($("#chart"), {
+        data: { labels, datasets: [
+          { type: "bar", label: "Regular guests kept", data: rows.map(r => +r.withG.toFixed(1)), backgroundColor: COLORS.s1, stack: "occ", order: 3 },
+          { type: "bar", label: "Group rooms (expected)", data: rows.map(r => +r.g.toFixed(1)), backgroundColor: COLORS.s4, stack: "occ", order: 3 },
+          { type: "line", label: "Regular demand (unconstrained)", data: rows.map(r => r.demand), borderColor: COLORS.s2, backgroundColor: COLORS.s2, pointRadius: 4, order: 1, stack: "demand" },
+          { type: "line", label: "Capacity", data: rows.map(() => h.capacity), borderColor: "#18212b", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, order: 0, stack: "cap" },
+        ] },
+        options: {
+          scales: { x: gridScale({ grid: { display: false }, stacked: true }), y: gridScale({ stacked: true, min: 0, title: { display: true, text: "Rooms" } }) },
+          plugins: { tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${n1(c.raw)}` } } },
+        },
+      });
+    }
+  }
+
+  function renderQuote() {
+    const { rows, T, beRate, verdict, counter, fbNeeded, extrasRev } = M, o = S.offer, h = S.hotel, e = S.extras;
+    const first = rows.map(r => r.date).filter(isDate).sort()[0], last = rows.map(r => r.date).filter(isDate).sort().slice(-1)[0];
+    const span = first ? (first === last ? dayLabel(first) : `${dayLabel(first)} to ${dayLabel(last)}`) : `${rows.length} nights`;
+    const line = (a, b) => `<dt>${a}</dt><dd>${b}</dd>`;
+    $("#quote").innerHTML = `
+      <h3>${esc(o.name || "Group")}: quote review</h3>
+      <p class="muted" style="margin:0">${esc(h.name || "Hotel")} &middot; ${esc(span)} &middot; ${rows.length} night${rows.length === 1 ? "" : "s"} &middot; prepared ${new Date().toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" })}</p>
+      <p style="margin:12px 0 0">Recommendation: <span class="verdict ${verdict}" style="font-size:16px">${verdict}</span>${verdict !== "Accept" && counter != null ? ` &nbsp;Counter-offer <b>${money(counter)}</b> per room night` : ""}</p>
+      <div class="cols">
+        <dl>
+          ${line("Requested room nights", n0(T.req))}
+          ${line("Expected pickup", `${o.pickup}% (${n0(T.g)} room nights)`)}
+          ${line("Group rate offered", money2(o.rate))}
+          ${line("Commission", `${o.commission}%`)}
+          ${line("Food, beverage and meeting per room night", `${money2(extrasRev)} at ${e.margin}% margin`)}
+          ${line("Group revenue", money(T.groupRev))}
+          ${line("Group profit", money(T.groupProfit))}
+        </dl>
+        <dl>
+          ${line("Regular room nights displaced", n0(T.displaced))}
+          ${line("Regular revenue lost", money(T.lostRev))}
+          ${line("Regular profit lost", money(T.lostProfit))}
+          ${line("Net gain or loss (profit)", `<span class="${T.net >= 0 ? "pos" : "neg"}">${signed(T.net)}</span>`)}
+          ${line("Net gain or loss (revenue)", `<span class="${T.netRev >= 0 ? "pos" : "neg"}">${signed(T.netRev)}</span>`)}
+          ${line("Break-even group rate", beRate == null ? "n/a" : money2(beRate))}
+          ${line(`Rate with ${o.hurdle}% safety margin`, counter == null ? "n/a" : money(counter))}
+        </dl>
+      </div>
+      ${verdict !== "Accept" && fbNeeded != null && fbNeeded > 0 ? `<div class="rule"></div><p class="muted" style="margin:0;font-size:14px">Alternative to a higher rate: keep ${money(o.rate)} and add a food and beverage minimum of about ${money(Math.ceil(fbNeeded))} more per room night (${money(Math.ceil(fbNeeded * T.g))} in total).</p>` : ""}
+      <div class="rule"></div>
+      <p class="muted" style="margin:0;font-size:13px">Per-night figures are in the table above and in the CSV export. Profit uses a variable cost of ${money(h.varCost)} per occupied room and a ${h.channel}% booking cost on regular business. Estimates, before tax.</p>`;
+  }
+
+  // ---------------- import / export ----------------
+  function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  const csvCell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  const toCSV = (rows) => rows.map(r => r.map(csvCell).join(",")).join("\n");
+  $("#csv").onclick = () => {
+    if (!M) return;
+    const { rows, T, beRate, verdict, counter } = M, o = S.offer, h = S.hotel, e = S.extras;
+    const out = [["Group", o.name], ["Hotel", h.name], ["Capacity", h.capacity], ["Group rate", o.rate], ["Pickup %", o.pickup], ["Resell unused %", o.resale], ["Commission %", o.commission],
+      ["Food per room night", e.food], ["Beverage per room night", e.bev], ["Meeting room per room night", e.meeting], ["Extras margin %", e.margin], ["Variable cost per room", h.varCost], ["Transient booking cost %", h.channel],
+      ["Verdict", verdict], ["Break-even group rate", beRate == null ? "" : beRate.toFixed(2)], ["Suggested counter-offer", counter == null ? "" : counter], ["Net gain (profit)", Math.round(T.net)], [],
+      ["date", "transient_demand", "transient_rate", "group_rooms_requested", "group_rooms_expected", "rooms_held", "transient_displaced", "transient_revenue_lost", "transient_profit_lost", "group_revenue", "group_profit", "net_gain"]];
+    rows.forEach(r => out.push([r.date, r.demand, r.adr, r.group, r.g.toFixed(1), r.held.toFixed(1), r.displaced.toFixed(1), Math.round(r.lostRev), Math.round(r.lostProfit), Math.round(r.groupRev), Math.round(r.groupProfit), Math.round(r.net)]));
+    out.push(["Total", Math.round(T.demand), "", T.req, T.g.toFixed(1), T.held.toFixed(1), T.displaced.toFixed(1), Math.round(T.lostRev), Math.round(T.lostProfit), Math.round(T.groupRev), Math.round(T.groupProfit), Math.round(T.net)]);
+    download("group-quote.csv", toCSV(out), "text/csv");
+  };
+  $("#tpl").onclick = () => {
+    const rows = [["date", "transient_demand", "transient_rate", "group_rooms"]];
+    const start = (S.nights[0] && isDate(S.nights[0].date)) ? S.nights[0].date : iso(new Date());
+    for (let i = 0; i < 4; i++) rows.push([addDays(start, i), "", "", ""]);
+    download("group-stay-pattern-template.csv", toCSV(rows), "text/csv");
+  };
+  function parseCSV(t, sep) {
+    const out = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true; else if (c === sep) { row.push(cell); cell = ""; } else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); out.push(row); row = []; cell = ""; } else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); out.push(row); }
+    return out.filter(r => r.some(x => String(x).trim()));
+  }
+  function normDate(s) {
+    s = String(s || "").trim();
+    if (isDate(s)) return s;
+    let m = s.match(/^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/); if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+    m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/); if (m) return `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+    const d = new Date(s); return isNaN(d) ? "" : iso(d);
+  }
+  function importRows(text) {
+    const sep = text.includes("\t") ? "\t" : ",";
+    const rows = parseCSV(text, sep);
+    if (!rows.length) { alert("Nothing to import."); return; }
+    const head = rows[0].map(x => x.trim().toLowerCase().replace(/[^a-z]/g, ""));
+    let idx = { date: 0, demand: 1, adr: 2, group: 3 };
+    if (head.some(x => x.includes("date") || x.includes("night"))) {
+      const find = (...keys) => head.findIndex(x => keys.some(k => x.includes(k)));
+      idx = { date: find("date", "night"), demand: find("demand", "transientroom"), adr: find("rate", "adr"), group: find("group", "block") };
+      rows.shift();
+    }
+    const num = (r, k) => { const v = idx[k] >= 0 ? String(r[idx[k]] ?? "").replace(/[%$,\s]/g, "") : ""; return v === "" || isNaN(+v) ? NaN : +v; };
+    const out = rows.map(r => ({ date: normDate(idx.date >= 0 ? r[idx.date] : ""), demand: num(r, "demand"), adr: num(r, "adr"), group: num(r, "group") }));
+    if (!out.length) { alert("No rows found. Check the columns: date, transient_demand, transient_rate, group_rooms."); return; }
+    if (out.length > MAX_NIGHTS) alert(`Only the first ${MAX_NIGHTS} nights were kept (the file had ${out.length}).`);
+    S.nights = out.slice(0, MAX_NIGHTS); save(); renderNights(); compute();
+  }
+  $("#imp").onchange = async (ev) => { const f = ev.target.files[0]; if (!f) return; importRows(await f.text()); ev.target.value = ""; };
+  $("#paste-open").onclick = () => { $("#pastebox").style.display = "block"; $("#paste-area").focus(); };
+  $("#paste-cancel").onclick = () => { $("#pastebox").style.display = "none"; $("#paste-area").value = ""; };
+  $("#paste-apply").onclick = () => { const t = $("#paste-area").value; if (!t.trim()) return; importRows(t); $("#pastebox").style.display = "none"; $("#paste-area").value = ""; };
+  $("#add-night").onclick = () => {
+    if (S.nights.length >= MAX_NIGHTS) return;
+    const last = S.nights[S.nights.length - 1];
+    S.nights.push(last ? { date: isDate(last.date) ? addDays(last.date, 1) : "", demand: last.demand, adr: last.adr, group: last.group } : { date: iso(new Date()), demand: 500, adr: 199, group: 50 });
+    save(); renderNights(); compute();
+  };
+
+  // ---------------- buttons ----------------
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset;
+    const names = { hotel: "hotel and costs", nights: "stay pattern", offer: "group's offer", extras: "food, beverage and meeting room" };
+    if (!confirm(`Reset the ${names[sec]} to the sample? Your changes in this section will be lost.`)) return;
+    S[sec] = clone(DEFAULTS[sec]); save(); renderAll();
+  });
+  $("#reset-all").onclick = () => {
+    if (!confirm("Reset every section to the sample? This can't be undone.")) return;
+    S = clone(DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {}
+    renderAll(); $("#saved").textContent = "";
+  };
+  function renderAll() { bindFields(); renderNights(); compute(); }
+
+  chartDefaults();
+  S = load();
+  renderAll();
+})();
+</script>
+</body>
+</html>

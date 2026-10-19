@@ -4,11 +4,67 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Staff Schedule Builder</title>
-<meta name="description" content="Builds a weekly housekeeping schedule from expected workload, checks every labour rule, and outputs to Excel, print and the staff app.">
+<meta name="description" content="A free, live staff schedule builder for hotels: enter the week's workload and your team, build a schedule that follows Ontario hours-of-work rules, edit it, and export to Excel or print.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<style>
+.hero-tool { background: linear-gradient(135deg, #1f4e79 0%, #2a78d6 100%); color: #fff; padding: 34px 0 30px; }
+.hero-tool h1 { color: #fff; font-size: 32px; }
+.hero-tool .lead { color: #e6f0fb; font-size: 17.5px; max-width: 820px; margin: 0; }
+.hero-tool .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.hero-tool .chips span { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 4px 12px; font-size: 13.5px; }
+.howto { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: -18px 0 22px; position: relative; }
+.howto a { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); color: var(--ink); font-size: 14px; }
+.howto a:hover { border-color: var(--brand-2); text-decoration: none; }
+.howto b { display: block; color: var(--brand-2); font-size: 12px; letter-spacing: .05em; text-transform: uppercase; }
+@media (max-width: 860px) { .howto { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px; } }
+.sec { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 22px; }
+.sec-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px 16px; padding: 18px 20px 12px; border-bottom: 1px solid var(--line); }
+.sec-head h2 { font-size: 19px; margin: 2px 0 2px; }
+.sec-head p { margin: 0; color: var(--ink-2); font-size: 14.5px; max-width: 760px; }
+.sec-body { padding: 16px 20px 20px; }
+.num-badge { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12.5px; font-weight: 700; margin-right: 8px; vertical-align: 2px; }
+.btn.sm { padding: 6px 11px; font-size: 13.5px; }
+.btn.reset { color: var(--bad); border-color: #f0c4bf; }
+.btn.reset:hover { border-color: var(--bad); background: var(--bad-soft); }
+.btn.big { padding: 12px 22px; font-size: 16px; font-weight: 600; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px 16px; }
+.field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
+.field small { display: block; color: var(--ink-3); font-size: 12px; margin-top: 3px; }
+input[type=text], input[type=number], input[type=date], select { font: inherit; font-size: 14.5px; color: var(--ink); border: 1px solid var(--line-2); border-radius: 7px; padding: 7px 9px; background: #fff; width: 100%; }
+input:focus, select:focus { outline: 2px solid #b7d3f4; border-color: var(--brand-2); }
+table.edit td { padding: 6px 6px; vertical-align: middle; }
+table.edit th { padding: 8px 6px; }
+table.edit input, table.edit select { padding: 5px 7px; font-size: 14px; }
+table.edit input.w-num { width: 84px; }
+table.edit input.w-name { min-width: 130px; }
+.chipset { display: inline-flex; gap: 3px; flex-wrap: nowrap; }
+.chip { font: inherit; font-size: 12px; font-weight: 600; border: 1px solid var(--line-2); background: #fff; color: var(--ink-2); border-radius: 6px; padding: 3px 6px; cursor: pointer; min-width: 30px; }
+.chip.on { background: var(--brand-soft); border-color: #9cc3ee; color: var(--brand); }
+.chip.off { background: #fff3df; border-color: #f0c98a; color: #8a5300; }
+.chip.na { background: #e4e7eb; border-color: #c4cad1; color: #4a5561; text-decoration: line-through; }
+.xbtn { border: 0; background: none; color: var(--ink-3); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; }
+.xbtn:hover { color: var(--bad); }
+.note { font-size: 13px; color: var(--ink-3); margin: 8px 0 0; }
+.saved { font-size: 13px; color: var(--good); }
+.build-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.warnbox { background: var(--warn-soft); border: 1px solid #f0d29c; color: #6b4300; border-radius: 8px; padding: 10px 14px; font-size: 14px; margin-top: 12px; }
+.sched td.cell { cursor: pointer; }
+.sched td.cell:hover .code { outline: 2px solid var(--brand-2); }
+.sched td.cell select { width: 76px; padding: 2px; font-size: 12.5px; }
+.code.EDIT { box-shadow: inset 0 0 0 2px #2a78d6; }
+.sched tfoot td { font-weight: 600; background: #fafbfc; }
+#t-team thead th { position: sticky; top: 0; z-index: 1; }
+.short { color: var(--bad); font-weight: 700; }
+.okc { color: var(--good); font-weight: 700; }
+@media print {
+  .hero-tool, .howto, .sec.no-print { display: none !important; }
+  .sec { border: 0; box-shadow: none; }
+  .sec-head .toolbar { display: none; }
+}
+</style>
 </head>
 <body>
 <header class="site-header">
@@ -18,179 +74,601 @@
       <a href="index.html">Home</a>
       <a href="revenue.html">Revenue Command Centre</a>
       <a class="active" href="schedule.html">Staff Schedule Builder</a>
+      <a href="tools/index.html">Free tools</a>
+      <a href="swarm/">AI Swarm</a>
       <a href="index.html#proposals">Proposals</a>
       <a href="https://github.com/nihalunfc/hotel-business">Code</a>
     </nav>
   </div>
 </header>
 
-<div class="intro">
+<div class="hero-tool">
   <div class="wrap">
     <h1>Staff Schedule Builder</h1>
-    <p class="lead">Builds next week's housekeeping schedule from the rooms that will actually need cleaning, checks every labour rule, and produces the same schedule for the staff app, the familiar Excel sheet and the printed board.</p>
-    <div class="badge-row">
-      <span class="badge info">Sample: housekeeping at Summit Tower Hotel (620 rooms), 44 staff</span>
-      <span class="badge">Related proposal: H2-05</span>
-    </div>
+    <p class="lead">A free tool for building a week's schedule. Enter how busy the hotel will be and who is on your team, then press <b>Build schedule</b>. You get a schedule that covers the work at the lowest cost, respects day-off requests and follows Ontario's hours-of-work rules. You can change any shift by hand and export it to Excel or print it.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Works for any department</span><span>Loaded with a sample: housekeeping, Summit Tower Hotel, 44 staff</span></div>
+    <p style="margin:16px 0 0"><a class="btn" style="background:#fff;color:#1f4e79;font-weight:600" href="#s-result">See the sample schedule</a></p>
   </div>
 </div>
 
 <main class="wrap">
-  <section class="block no-print">
-    <div class="block-head">
-      <div><span class="step">Step 1</span><h2>Choose a week</h2>
-      <p>The same team and the same rules, tested on three very different weeks.</p></div>
-    </div>
-    <div class="tabs" id="tabs"></div>
-    <p class="muted" id="scenario-sub" style="margin-top:10px"></p>
-  </section>
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-hotel"><b>Step 1</b>Hotel and work standards</a>
+    <a href="#s-shifts"><b>Step 2</b>Shift types</a>
+    <a href="#s-demand"><b>Step 3</b>This week's workload</a>
+    <a href="#s-team"><b>Step 4</b>Your team</a>
+    <a href="#s-rules"><b>Step 5</b>Rules, then build</a>
+  </nav>
 
-  <section class="block no-print">
-    <div class="block-head">
-      <div><span class="step">Step 2</span><h2>The result at a glance</h2>
-      <p>The built schedule compared with a typical fixed pattern, where everyone works the same days every week regardless of how busy the hotel is.</p></div>
+  <!-- 1. Hotel -->
+  <section class="sec no-print" id="s-hotel">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Hotel and work standards</h2><p>How long each type of room takes to clean, and how many supervisors and evening staff the work needs.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="setup">Reset this section</button></div>
     </div>
-    <div class="grid g5" id="kpis"></div>
-    <div class="takeaway" id="kpi-takeaway"></div>
-  </section>
-
-  <section class="block no-print">
-    <div class="block-head">
-      <div><span class="step">Step 3</span><h2>Work needed against staff scheduled, day by day</h2>
-      <p>Cleaning hours come from expected departures (30 minutes per room) and stayovers (20 minutes per room).</p></div>
-      <div class="seg" id="view-toggle"><button data-v="optimized" class="active">Built schedule</button><button data-v="manual">Fixed weekly pattern</button></div>
-    </div>
-    <div class="card"><div class="chart-box"><canvas id="coverage"></canvas></div></div>
-  </section>
-
-  <section class="block">
-    <div class="block-head">
-      <div><span class="step no-print">Step 4</span><h2 id="grid-title">The schedule</h2>
-      <p class="no-print">Colour-coded the same way as the weekly Excel sheet. A red outline marks a shift on a day the employee asked to have off. "Print" marks staff who prefer a paper schedule.</p></div>
-      <div class="toolbar no-print">
-        <a class="btn primary" id="dl" href="#">Download Excel</a>
-        <button class="btn" onclick="window.print()">Print schedule</button>
-        <button class="btn" id="payload-btn">Show staff-app data</button>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="f-hotel">Hotel</label><input type="text" id="f-hotel" data-k="setup.hotel"></div>
+        <div class="field"><label for="f-dept">Department</label><input type="text" id="f-dept" data-k="setup.department"></div>
+        <div class="field"><label for="f-week">Week starting (Monday)</label><input type="date" id="f-week" data-k="setup.weekStart"></div>
+        <div class="field"><label for="f-co">Minutes per departure room</label><input type="number" min="1" id="f-co" data-k="setup.checkoutMin" data-num><small>Full clean after a guest checks out</small></div>
+        <div class="field"><label for="f-so">Minutes per stayover room</label><input type="number" min="0" id="f-so" data-k="setup.stayoverMin" data-num><small>Lighter service while the guest stays</small></div>
+        <div class="field"><label for="f-ph">Productive hours in an 8-hour shift</label><input type="number" min="1" max="8" step="0.25" id="f-ph" data-k="setup.productiveHours" data-num><small>Time actually cleaning, after breaks and set-up</small></div>
+        <div class="field"><label for="f-rpi">Attendants per inspector</label><input type="number" min="1" id="f-rpi" data-k="setup.raPerInspector" data-num></div>
+        <div class="field"><label for="f-ope">Occupied rooms per evening attendant</label><input type="number" min="1" id="f-ope" data-k="setup.occPerEvening" data-num><small>Turndown and guest requests</small></div>
       </div>
     </div>
-    <div class="legend-row" id="legend"></div>
-    <div class="card table-wrap"><table class="sched" id="grid"></table></div>
-    <pre id="payload" class="no-print" style="display:none;margin-top:12px"></pre>
   </section>
 
-  <section class="block grid g2 no-print">
-    <div class="card">
-      <span class="step">Rules</span><h3>Labour rule check</h3>
-      <p class="muted">Every schedule is checked by a separate checker, not by the scheduler itself, against Ontario Employment Standards Act hours-of-work rules.</p>
-      <div class="table-wrap"><table><thead><tr><th>Rule</th><th class="num">Breaks</th><th>Result</th></tr></thead><tbody id="rules"></tbody></table></div>
+  <!-- 2. Shifts -->
+  <section class="sec no-print" id="s-shifts">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Shift types</h2><p>The shifts your team can work. "Room attendant" shifts cover cleaning hours, "Inspector" shifts cover supervision and "Evening" shifts cover turndown.</p></div>
+      <div class="toolbar"><button class="btn sm" id="add-shift">Add shift type</button><button class="btn sm reset" data-reset="shifts">Reset this section</button></div>
     </div>
-    <div class="card">
-      <span class="step">Workload</span><h3>Expected work this week</h3>
-      <p class="muted">Calculated from the sample hotel's bookings.</p>
-      <div class="table-wrap"><table><thead><tr><th>Day</th><th class="num">Departures</th><th class="num">Stayovers</th><th class="num">Cleaning hours</th><th class="num">Inspectors</th><th class="num">Evening</th></tr></thead><tbody id="demand"></tbody></table></div>
+    <div class="sec-body"><div class="table-wrap"><table class="edit" id="t-shifts"><thead><tr><th>Code</th><th>Name</th><th>Role</th><th>Starts</th><th>Ends</th><th class="num">Paid hours</th><th></th></tr></thead><tbody></tbody></table></div>
+    <p class="note">Times use the 24-hour clock. A shift ending after midnight can be entered as, for example, 23:00 to 07:00.</p></div>
+  </section>
+
+  <!-- 3. Demand -->
+  <section class="sec no-print" id="s-demand">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">3</span>This week's workload</h2><p>Enter the rooms occupied the night before and the expected check-outs for each day, from your PMS forecast. The tool works out the cleaning hours and staff needed.</p></div>
+      <div class="toolbar"><label class="muted" style="font-size:13.5px">Load a sample week <select id="sample-week" style="width:auto"></select></label><button class="btn sm reset" data-reset="demand">Reset this section</button></div>
+    </div>
+    <div class="sec-body"><div class="table-wrap"><table class="edit" id="t-demand"><thead><tr><th>Day</th><th class="num">Occupied last night</th><th class="num">Check-outs</th><th class="num">Stayovers</th><th class="num">Cleaning hours</th><th class="num">Attendants</th><th class="num">Inspectors</th><th class="num">Evening</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div></div>
+  </section>
+
+  <!-- 4. Team -->
+  <section class="sec no-print" id="s-team">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">4</span>Your team</h2><p>Who can work which shifts, at what wage. Tap a day to cycle it through <span class="chip on" style="cursor:default">available</span> <span class="chip off" style="cursor:default">asked off</span> <span class="chip na" style="cursor:default">can't work</span>.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="add-emp">Add person</button>
+        <label class="btn sm" style="margin:0">Import CSV<input type="file" id="imp" accept=".csv,text/csv" hidden></label>
+        <button class="btn sm" id="exp-team">Export CSV</button>
+        <button class="btn sm" id="clear-team">Start empty</button>
+        <button class="btn sm reset" data-reset="team">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap" style="max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:8px"><table class="edit" id="t-team"><thead><tr><th>Name</th><th>Contract</th><th class="num">Wage $/h</th><th>Can work</th><th>Mon to Sun</th><th></th></tr></thead><tbody></tbody></table></div>
+      <p class="note" id="team-note"></p>
+      <p class="note">CSV columns: <code>name, contract (FT/PT), wage, shifts (e.g. AM|MID), off (days asked off, e.g. Mon|Sat), unavailable (e.g. Sun)</code>.</p>
     </div>
   </section>
 
-  <details class="tech no-print">
-    <summary>For BI reviewers: the optimization model</summary>
-    <p>The schedule is a mixed-integer program solved with the open-source CBC solver through PuLP (<a href="https://github.com/nihalunfc/hotel-business/blob/main/analytics/hbi/schedule.py">schedule.py</a>). It solves in under a second for 44 employees.</p>
-    <ul>
-      <li><b>Decision variables:</b> one binary per employee, day and allowed shift (AM, MID, short, inspector, evening). Unavailable days have no variables.</li>
-      <li><b>Hard constraints:</b> one shift per day; at least 11 hours between consecutive shifts (stricter than the 8-hour between-shift rule, and it also guarantees 11 hours off per day); at most 5 shifts for full-time and 4 for part-time, which guarantees 24 consecutive hours off; at most 48 hours in the week.</li>
-      <li><b>Soft constraints (penalized):</b> uncovered cleaning hours, missing inspectors or evening staff, hours above 44 (overtime at 1.5 times pay), full-time staff below 32 hours, shifts on requested days off, and the maximum number of weekend shifts any full-time employee works (fairness).</li>
-      <li><b>Objective:</b> minimize wages plus overtime premium plus penalties.</li>
-      <li><b>Comparison:</b> both schedules are scored with the same evaluator. Uncovered work is costed as call-in hours at 1.5 times pay.</li>
-      <li><b>Outputs:</b> a colour-coded Excel workbook with live SUM formulas (<a href="https://github.com/nihalunfc/hotel-business/blob/main/analytics/hbi/excel.py">excel.py</a>), a print layout from this page, and a JSON shift list ready to map to a workforce system's schedule import API (validate first, then post).</li>
-    </ul>
+  <!-- 5. Rules -->
+  <section class="sec no-print" id="s-rules">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">5</span>Rules</h2><p>Defaults follow the Ontario <i>Employment Standards Act</i> (hours of work, rest and overtime) plus common union and HR practice. Change them to match your agreement.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="rules">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="r-max">Most hours in a week</label><input type="number" id="r-max" data-k="rules.maxWeek" data-num><small>ESA s.17: 48 without a written agreement</small></div>
+        <div class="field"><label for="r-ot">Overtime after (hours/week)</label><input type="number" id="r-ot" data-k="rules.otAfter" data-num><small>ESA s.22: 44 hours, paid at 1.5&times;</small></div>
+        <div class="field"><label for="r-rest">Hours off between shifts</label><input type="number" id="r-rest" data-k="rules.minRest" data-num><small>ESA requires 8 between shifts and 11 a day</small></div>
+        <div class="field"><label for="r-ft">Most shifts, full-time</label><input type="number" id="r-ft" data-k="rules.maxShiftsFT" data-num></div>
+        <div class="field"><label for="r-pt">Most shifts, part-time</label><input type="number" id="r-pt" data-k="rules.maxShiftsPT" data-num></div>
+        <div class="field"><label for="r-minft">Guaranteed hours, full-time</label><input type="number" id="r-minft" data-k="rules.minHoursFT" data-num><small>Full-timers get topped up to this</small></div>
+        <div class="field"><label for="r-call">Cost of a call-in (&times; wage)</label><input type="number" step="0.1" id="r-call" data-k="rules.callin" data-num><small>Used to price uncovered work</small></div>
+        <div class="field"><label for="r-req">Day-off requests</label><select id="r-req" data-k="rules.requests"><option value="strict">Always honour</option><option value="prefer">Honour unless needed</option></select></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <button class="btn primary big" id="build">Build schedule</button>
+      <span class="muted" style="font-size:14px">Takes under a second. Building again replaces any changes you made by hand.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="sec" id="s-result" hidden>
+    <div class="sec-head">
+      <div><h2 id="res-title">Your schedule</h2><p class="no-print">Tap any shift to change it. The totals, costs and rule check update instantly. A red outline marks a shift on a day the person asked off.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm primary" id="xlsx">Download Excel</button>
+        <button class="btn sm" id="csv">Download CSV</button>
+        <button class="btn sm" onclick="window.print()">Print</button>
+        <button class="btn sm reset" data-reset="result">Clear schedule</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="grid g5 no-print" id="kpis"></div>
+      <div class="takeaway no-print" id="takeaway"></div>
+      <div id="warns"></div>
+      <div class="legend-row" id="legend"></div>
+      <div class="table-wrap"><table class="sched" id="grid"></table></div>
+    </div>
+  </section>
+
+  <section class="grid g2 no-print" id="s-checks" hidden>
+    <div class="card">
+      <h3>Is the work covered?</h3>
+      <p class="muted">Cleaning hours needed against cleaning hours scheduled, day by day.</p>
+      <div class="chart-box"><canvas id="coverage"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Rule check</h3>
+      <p class="muted">Checked separately from the scheduler, so hand edits are checked too.</p>
+      <div class="table-wrap"><table><thead><tr><th>Rule</th><th class="num">Breaks</th><th>Result</th></tr></thead><tbody id="rules-out"></tbody></table></div>
+    </div>
+  </section>
+
+  <details class="tech no-print" style="margin-top:22px">
+    <summary>How the schedule is built (for BI reviewers)</summary>
+    <p>The builder runs entirely in your browser. It fills the hardest shifts first (evening, then inspector, then room attendants), spreading each day's need across the people who are allowed, rested and under their weekly limits. It picks the lowest-cost person, so it avoids overtime, keeps weekend shifts fair, and only uses someone on a requested day off when nobody else can work. Full-timers are then topped up to their guaranteed hours. A separate checker re-tests every rule on the final schedule, including your hand edits.</p>
+    <p>The same problem is also solved exactly as a mixed-integer program with PuLP in the analytics pipeline (<a href="https://github.com/nihalunfc/hotel-business/blob/main/analytics/hbi/schedule.py">schedule.py</a>). Its optimised schedules for the three sample weeks are available as Excel workbooks: <a href="downloads/schedule_coming_week.xlsx">coming week</a>, <a href="downloads/schedule_summer_week.xlsx">peak summer week</a> and <a href="downloads/schedule_winter_week.xlsx">quiet winter week</a>.</p>
+    <p>Your inputs are saved only in this browser (local storage). Nothing is sent anywhere.</p>
   </details>
 </main>
 
-<footer class="site-footer no-print"><div class="wrap">Built by Nihal as a portfolio demonstration. All employees and figures on this page are fictional.</div></footer>
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="assets/common.js"></script>
 <script>
-const DAYNAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const CODE_LABEL = { AM: "AM 07:00-15:30", MID: "MID 09:00-17:30", SH: "Short 09:00-13:00", INS: "Inspector 07:00-15:30", PM: "Evening 15:00-23:00", OFF: "Day off", "N/A": "Not available" };
-let S, current, view = "optimized", chart;
+(() => {
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const KEY = "hbi.scheduleBuilder.v2";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const money = (v) => "$" + Math.round(v).toLocaleString("en-CA");
+  const num1 = (v) => (Math.round(v * 10) / 10).toLocaleString("en-CA");
 
-function render() {
-  const sc = S.scenarios.find(s => s.key === current);
-  const res = sc[view], other = sc[view === "optimized" ? "manual" : "optimized"];
-  const o = sc.optimized.evaluation, m = sc.manual.evaluation;
-  document.getElementById("scenario-sub").textContent = sc.subtitle + ".";
-  document.querySelectorAll("#tabs .tab").forEach(t => t.classList.toggle("active", t.dataset.k === current));
-  document.querySelectorAll("#view-toggle button").forEach(b => b.classList.toggle("active", b.dataset.v === view));
+  // ---------------- defaults (the Summit Tower sample) ----------------
+  let SAMPLE = null, DEFAULTS = null, S = null, chart = null;
+  const BASE_WAGE = (contract, shifts) => contract === "PT" ? 19.25 : shifts.includes("PM") ? 20.25 : shifts[0] === "INS" ? 23.0 : shifts.includes("INS") ? 21.5 : 19.75;
+  const toHM = (h) => String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.round((h % 1) * 60)).padStart(2, "0");
+  const fromHM = (s) => { const [h, m] = String(s || "0:0").split(":").map(Number); return (h || 0) + (m || 0) / 60; };
+  const SHIFT_TIMES = { AM: [7, 15.5], MID: [9, 17.5], SH: [9, 13], INS: [7, 15.5], PM: [15, 23] };
 
-  const rulesOk = sc.optimized.rules.filter(r => r.passed).length;
-  const totalWork = sc.demand.reduce((s, d) => s + d.cleaning_hours, 0);
-  const saving = m.total_cost - o.total_cost;
-  document.getElementById("kpis").innerHTML = [
-    ["Cleaning work this week", fmt.num(totalWork) + " h", `${fmt.num(sc.demand.reduce((s, d) => s + d.departures, 0))} departures expected`],
-    ["Labour rules passed", `${rulesOk} of ${sc.optimized.rules.length}`, "Checked independently of the scheduler"],
-    ["Staff day-off requests honoured", `${o.requests_honoured} of ${o.requests_total}`, `Fixed pattern: ${m.requests_honoured} of ${m.requests_total}`],
-    ["Weekly cost including call-ins", fmt.money(o.total_cost), `Fixed pattern: ${fmt.money(m.total_cost)}`],
-    ["Extra shifts to book in advance", fmt.num(o.extra_shifts_needed), `Fixed pattern leaves ${fmt.num(m.extra_shifts_needed)} uncovered`],
-  ].map(k => `<div class="kpi"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="sub">${k[2]}</div></div>`).join("");
+  function makeDefaults(d) {
+    const sc = d.scenarios[0];
+    return {
+      setup: { hotel: d.hotel, department: d.department, weekStart: sc.week_start, checkoutMin: d.standards.checkout_minutes, stayoverMin: d.standards.stayover_minutes,
+        productiveHours: d.standards.productive_hours, raPerInspector: d.standards.attendants_per_inspector, occPerEvening: d.standards.occupied_rooms_per_evening_attendant },
+      shifts: Object.entries(d.shifts).map(([code, s]) => ({ code, label: s.label.replace(/ \d\d:\d\d-\d\d:\d\d$/, ""), role: s.role, start: toHM(SHIFT_TIMES[code][0]), end: toHM(SHIFT_TIMES[code][1]), paid: s.paid_hours })),
+      demand: sc.demand.map(x => ({ occupied: x.occupied_last_night, departures: x.departures })),
+      team: d.staff.map(e => ({ name: e.name, contract: e.contract, wage: Math.round((BASE_WAGE(e.contract, e.shifts) + 0.18 * Math.min(e.seniority, 15)) * 100) / 100,
+        shifts: e.shifts.slice(), days: DAYS.map((_, i) => e.unavailable.includes(i) ? "na" : e.requested_off.includes(i) ? "off" : "on") })),
+      rules: { maxWeek: 48, otAfter: 44, minRest: 11, maxShiftsFT: 5, maxShiftsPT: 4, minHoursFT: 32, callin: 1.5, requests: "prefer" },
+      result: null,
+    };
+  }
 
-  const short = o.extra_shifts_needed > 0
-    ? ` The team is too small for this week's demand: the schedule shows ${o.extra_shifts_needed} extra shifts to book from on-call or seasonal staff now, instead of finding out on the day.`
-    : " Every hour of expected work is covered with the existing team.";
-  document.getElementById("kpi-takeaway").innerHTML = `<strong>What this means:</strong> the built schedule costs ${fmt.money(Math.abs(saving))} ${saving >= 0 ? "less" : "more"} than the fixed pattern this week, mainly by putting people on the days the work actually is instead of paying overtime to fill gaps.${short}`;
+  // ---------------- storage ----------------
+  let saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; } catch (e) { $("#saved").textContent = ""; }
+    }, 250);
+  }
+  function load() {
+    try { const t = localStorage.getItem(KEY); if (t) { const v = JSON.parse(t); return Object.assign(clone(DEFAULTS), v); } } catch (e) {}
+    return clone(DEFAULTS);
+  }
 
-  // Coverage chart
-  const cov = res.evaluation.coverage;
-  const data = {
-    labels: cov.map((c, i) => `${c.day} ${sc.demand[i].date.slice(5)}`),
-    datasets: [
-      { type: "bar", label: "Cleaning hours needed", data: cov.map(c => c.cleaning_hours_needed), backgroundColor: "#cfd6de" },
-      { type: "bar", label: view === "optimized" ? "Scheduled (built schedule)" : "Scheduled (fixed pattern)", data: cov.map(c => c.cleaning_hours_scheduled), backgroundColor: view === "optimized" ? COLORS.s1 : COLORS.s2 },
-    ],
+  // ---------------- derived workload ----------------
+  function need() {
+    const st = S.setup;
+    return S.demand.map((d, i) => {
+      const occ = Math.max(0, +d.occupied || 0), dep = Math.min(occ, Math.max(0, +d.departures || 0)), stay = occ - dep;
+      const hours = (dep * st.checkoutMin + stay * st.stayoverMin) / 60;
+      const ra = Math.ceil(hours / Math.max(0.5, st.productiveHours) - 1e-9);
+      return { day: i, occ, dep, stay, hours, ra, ins: hours > 0 ? Math.ceil(ra / Math.max(1, st.raPerInspector) - 1e-9) : 0, eve: Math.ceil(occ / Math.max(1, st.occPerEvening) - 1e-9) };
+    });
+  }
+  const shiftMap = () => Object.fromEntries(S.shifts.map(s => {
+    const st = fromHM(s.start); let en = fromHM(s.end); if (en <= st) en += 24;
+    return [s.code, { ...s, st, en, paid: +s.paid || 0 }];
+  }));
+  const productive = (sh) => sh.role === "RA" ? sh.paid * S.setup.productiveHours / 8 : 0;
+
+  // ---------------- scheduler ----------------
+  function build() {
+    const SH = shiftMap(), R = S.rules, N = need();
+    const team = S.team.map((e, i) => ({ ...e, i, wage: +e.wage || 0 }));
+    const grid = team.map(() => Array(7).fill("OFF"));
+    team.forEach((e, i) => e.days.forEach((v, d) => { if (v === "na") grid[i][d] = "N/A"; }));
+    const hours = Array(team.length).fill(0), count = Array(team.length).fill(0), wkend = Array(team.length).fill(0);
+    const maxShifts = (e) => e.contract === "FT" ? R.maxShiftsFT : R.maxShiftsPT;
+    const restOK = (i, d, code) => {
+      const s = SH[code];
+      const prev = d > 0 ? SH[grid[i][d - 1]] : null, next = d < 6 ? SH[grid[i][d + 1]] : null;
+      if (prev && (24 + s.st) - prev.en < R.minRest) return false;
+      if (next && (24 + next.st) - s.en < R.minRest) return false;
+      return true;
+    };
+    const can = (i, d, code, allowOff) => {
+      const e = team[i], s = SH[code];
+      if (!s || !e.shifts.includes(code) || grid[i][d] !== "OFF") return false;
+      if (e.days[d] === "na") return false;
+      if (e.days[d] === "off" && !(allowOff && R.requests === "prefer")) return false;
+      if (count[i] + 1 > maxShifts(e) || count[i] + 1 > 6) return false;
+      if (hours[i] + s.paid > R.maxWeek) return false;
+      return restOK(i, d, code);
+    };
+    const cost = (i, d, code) => {
+      const e = team[i], s = SH[code];
+      const over = Math.max(0, hours[i] + s.paid - R.otAfter) - Math.max(0, hours[i] - R.otAfter);
+      let c = e.wage * s.paid + 0.5 * e.wage * over;
+      if (e.days[d] === "off") c += 1000;                                    // last resort only
+      if (e.contract === "FT" && hours[i] < R.minHoursFT) c -= 2 * e.wage;    // full-timers need their hours anyway
+      if (d >= 5) c += 6 * wkend[i];                                          // spread weekends fairly
+      c += 3 * e.shifts.filter(x => SH[x] && SH[x].role !== s.role).length;  // keep multi-skilled people free
+      return c;
+    };
+    const assign = (i, d, code) => { grid[i][d] = code; hours[i] += SH[code].paid; count[i] += 1; if (d >= 5) wkend[i] += 1; };
+    const pick = (d, codes) => {
+      for (const allowOff of [false, true]) {
+        let best = null;
+        team.forEach((_, i) => codes.forEach(code => { if (can(i, d, code, allowOff)) { const c = cost(i, d, code); if (!best || c < best.c) best = { i, code, c }; } }));
+        if (best) return best;
+      }
+      return null;
+    };
+    const codesOf = (role) => S.shifts.filter(s => s.role === role).map(s => s.code);
+    // 1) evening and inspector shifts, scarcest role first
+    for (const [role, key] of [["EVE", "eve"], ["INSP", "ins"]]) {
+      const codes = codesOf(role); if (!codes.length) continue;
+      const left = N.map(n => n[key]);
+      let progress = true;
+      while (progress) {
+        progress = false;
+        const order = [...left.keys()].filter(d => left[d] > 0).sort((a, b) => left[b] - left[a]);
+        for (const d of order) { const p = pick(d, codes); if (p) { assign(p.i, p.d ?? d, p.code); left[d]--; progress = true; } }
+      }
+    }
+    // 2) room attendant hours, one shift per day per pass, busiest day first
+    const raCodes = codesOf("RA").sort((a, b) => SH[b].paid - SH[a].paid);
+    const fullCodes = raCodes.filter(c => SH[c].paid >= 6), shortCodes = raCodes.filter(c => SH[c].paid < 6);
+    const left = N.map(n => n.hours);
+    let progress = true;
+    while (progress) {
+      progress = false;
+      const order = [...left.keys()].filter(d => left[d] > 0.01).sort((a, b) => left[b] - left[a]);
+      for (const d of order) {
+        const small = shortCodes.length && left[d] <= Math.max(...shortCodes.map(c => productive(SH[c]))) + 0.01;
+        const p = pick(d, small ? shortCodes.concat(fullCodes) : fullCodes.concat(shortCodes));
+        if (p) { assign(p.i, d, p.code); left[d] -= productive(SH[p.code]); progress = true; }
+      }
+    }
+    // 2b) move room-attendant shifts from days with spare cover to days that are short
+    const unassign = (i, d) => { const c = grid[i][d]; hours[i] -= SH[c].paid; count[i] -= 1; if (d >= 5) wkend[i] -= 1; grid[i][d] = "OFF"; };
+    const rebalance = () => {
+      let moved = true, guard = 500;
+      while (moved && guard-- > 0) {
+        moved = false;
+        const shortDays = [...left.keys()].filter(d => left[d] > 0.5).sort((a, b) => left[b] - left[a]);
+        for (const b of shortDays) {
+          for (let i = 0; i < team.length && left[b] > 0.5; i++) {
+            for (let a = 0; a < 7; a++) {
+              const code = grid[i][a], s = SH[code];
+              if (!s || s.role !== "RA" || a === b || -left[a] + 1e-9 < productive(s)) continue;
+              unassign(i, a);
+              const alt = [code].concat(raCodes.filter(c => c !== code)).find(c => can(i, b, c, false));
+              if (alt) { assign(i, b, alt); left[a] += productive(s); left[b] -= productive(SH[alt]); moved = true; break; }
+              assign(i, a, code);
+            }
+          }
+        }
+      }
+    };
+    rebalance();
+    // 3) top full-timers up to their guaranteed hours, on the days with the least spare cover
+    team.forEach((e, i) => {
+      if (e.contract !== "FT") return;
+      let guard = 7;
+      while (hours[i] < R.minHoursFT && guard-- > 0) {
+        const opts = [];
+        for (let d = 0; d < 7; d++) e.shifts.forEach(code => { if (can(i, d, code, false)) opts.push({ d, code, slack: -left[d] }); });
+        if (!opts.length) break;
+        opts.sort((a, b) => a.slack - b.slack);
+        const o = opts[0]; assign(i, o.d, o.code); left[o.d] -= productive(SH[o.code]);
+      }
+    });
+    rebalance();
+    S.result = { grid: Object.fromEntries(grid.map((g, i) => [i, g])), edited: [], builtAt: new Date().toISOString() };
+    save(); renderResult();
+    document.getElementById("s-result").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // ---------------- evaluator (independent of the builder) ----------------
+  function evaluate(gridArr) {
+    const SH = shiftMap(), R = S.rules, N = need();
+    const team = S.team;
+    const res = { cov: [], wages: 0, ot: 0, otCost: 0, short: 0, missIns: 0, missEve: 0, reqTotal: 0, reqKept: 0, hours: [], rules: [] };
+    const avgWage = team.length ? team.reduce((s, e) => s + (+e.wage || 0), 0) / team.length : 20;
+    for (let d = 0; d < 7; d++) {
+      let ra = 0, ins = 0, eve = 0, people = 0;
+      team.forEach((e, i) => { const s = SH[gridArr[i]?.[d]]; if (!s) return; people++; if (s.role === "RA") ra += productive(s); if (s.role === "INSP") ins++; if (s.role === "EVE") eve++; });
+      const n = N[d];
+      res.cov.push({ need: n.hours, have: ra, ins, eve, insNeed: n.ins, eveNeed: n.eve, people });
+      res.short += Math.max(0, n.hours - ra); res.missIns += Math.max(0, n.ins - ins); res.missEve += Math.max(0, n.eve - eve);
+    }
+    const breaks = { rest: 0, week: 0, dayoff: 0, short3: 0, unavail: 0, maxShifts: 0 };
+    team.forEach((e, i) => {
+      const g = gridArr[i] || [];
+      let h = 0, n = 0;
+      g.forEach((c, d) => {
+        const s = SH[c]; if (e.days[d] === "off") { res.reqTotal += 0; }
+        if (!s) return; h += s.paid; n++; res.wages += s.paid * (+e.wage || 0);
+        if (s.paid < 3) breaks.short3++;
+        if (e.days[d] === "na") breaks.unavail++;
+        const nx = SH[g[d + 1]]; if (nx && (24 + nx.st) - s.en < R.minRest) breaks.rest++;
+      });
+      e.days.forEach((v, d) => { if (v === "off") { res.reqTotal++; if (!SH[g[d]]) res.reqKept++; } });
+      if (h > R.maxWeek) breaks.week++;
+      if (n >= 7) breaks.dayoff++;
+      if (n > (e.contract === "FT" ? R.maxShiftsFT : R.maxShiftsPT)) breaks.maxShifts++;
+      const over = Math.max(0, h - R.otAfter); res.ot += over; res.otCost += over * 0.5 * (+e.wage || 0);
+      res.hours.push(h);
+    });
+    const callinHours = res.short + 8 * (res.missIns + res.missEve);
+    res.callinCost = callinHours * avgWage * R.callin;
+    res.total = res.wages + res.otCost + res.callinCost;
+    res.extraShifts = Math.ceil(res.short / Math.max(0.5, S.setup.productiveHours) - 1e-9) + res.missIns + res.missEve;
+    res.rules = [
+      [`At least ${R.minRest} hours off between shifts`, breaks.rest],
+      ["At least 24 hours in a row off each week", breaks.dayoff],
+      [`No more than ${R.maxWeek} hours in the week`, breaks.week],
+      ["Within each person's shift limit for their contract", breaks.maxShifts],
+      ["No shift shorter than 3 hours", breaks.short3],
+      ["No shifts on days someone can't work", breaks.unavail],
+    ];
+    return res;
+  }
+
+  // A common fixed pattern for comparison: everyone works the same consecutive days every week.
+  function fixedPattern() {
+    const SH = shiftMap();
+    return S.team.map((e, i) => {
+      const n = e.contract === "FT" ? S.rules.maxShiftsFT : S.rules.maxShiftsPT;
+      const code = e.shifts.find(c => SH[c]) || "OFF";
+      const startDay = i % 7;
+      return DAYS.map((_, d) => e.days[d] === "na" ? "N/A" : ((d - startDay + 7) % 7) < n ? code : "OFF");
+    });
+  }
+
+  // ---------------- rendering: inputs ----------------
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const [sec, key] = el.dataset.k.split(".");
+      el.value = S[sec][key];
+      el.oninput = () => { S[sec][key] = el.hasAttribute("data-num") ? +el.value : el.value; save(); if (sec === "setup") renderDemand(); if (S.result) renderResult(); };
+    });
+  }
+  function renderShifts() {
+    const tb = $("#t-shifts tbody");
+    tb.innerHTML = S.shifts.map((s, i) => `<tr>
+      <td><input type="text" value="${esc(s.code)}" data-i="${i}" data-f="code" style="width:70px"></td>
+      <td><input type="text" value="${esc(s.label)}" data-i="${i}" data-f="label" class="w-name"></td>
+      <td><select data-i="${i}" data-f="role"><option value="RA"${s.role === "RA" ? " selected" : ""}>Room attendant</option><option value="INSP"${s.role === "INSP" ? " selected" : ""}>Inspector</option><option value="EVE"${s.role === "EVE" ? " selected" : ""}>Evening</option><option value="OTHER"${s.role === "OTHER" ? " selected" : ""}>Other</option></select></td>
+      <td><input type="text" value="${esc(s.start)}" data-i="${i}" data-f="start" style="width:76px" placeholder="07:00"></td>
+      <td><input type="text" value="${esc(s.end)}" data-i="${i}" data-f="end" style="width:76px" placeholder="15:30"></td>
+      <td class="num"><input type="number" step="0.5" min="0" value="${s.paid}" data-i="${i}" data-f="paid" class="w-num"></td>
+      <td><button class="xbtn" data-del="${i}" title="Remove">×</button></td></tr>`).join("");
+    tb.querySelectorAll("[data-f]").forEach(el => el.oninput = () => {
+      const s = S.shifts[+el.dataset.i], f = el.dataset.f, old = s.code;
+      s[f] = f === "paid" ? +el.value : el.value;
+      if (f === "code") S.team.forEach(e => { e.shifts = e.shifts.map(c => c === old ? el.value : c); });
+      save(); if (f === "code" || f === "role") renderTeam(); if (S.result) renderResult();
+    });
+    tb.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { const code = S.shifts[+b.dataset.del].code; S.shifts.splice(+b.dataset.del, 1); S.team.forEach(e => e.shifts = e.shifts.filter(c => c !== code)); save(); renderShifts(); renderTeam(); if (S.result) renderResult(); });
+  }
+  function renderDemand() {
+    const N = need();
+    const tb = $("#t-demand tbody");
+    tb.innerHTML = S.demand.map((d, i) => {
+      const n = N[i], date = dayDate(i);
+      return `<tr><td><b>${DAYS[i]}</b> <span class="muted">${date}</span></td>
+        <td class="num"><input type="number" min="0" value="${d.occupied}" data-i="${i}" data-f="occupied" class="w-num"></td>
+        <td class="num"><input type="number" min="0" value="${d.departures}" data-i="${i}" data-f="departures" class="w-num"></td>
+        <td class="num">${n.stay}</td><td class="num"><b>${num1(n.hours)}</b></td><td class="num">${n.ra}</td><td class="num">${n.ins}</td><td class="num">${n.eve}</td></tr>`;
+    }).join("");
+    const t = N.reduce((a, n) => ({ dep: a.dep + n.dep, stay: a.stay + n.stay, hours: a.hours + n.hours, ra: a.ra + n.ra, ins: a.ins + n.ins, eve: a.eve + n.eve }), { dep: 0, stay: 0, hours: 0, ra: 0, ins: 0, eve: 0 });
+    $("#t-demand tfoot").innerHTML = `<tr><td><b>Week</b></td><td></td><td class="num"><b>${t.dep}</b></td><td class="num"><b>${t.stay}</b></td><td class="num"><b>${num1(t.hours)}</b></td><td class="num"><b>${t.ra}</b> shifts</td><td class="num"><b>${t.ins}</b></td><td class="num"><b>${t.eve}</b></td></tr>`;
+    tb.querySelectorAll("[data-f]").forEach(el => el.onchange = el.oninput = () => {
+      S.demand[+el.dataset.i][el.dataset.f] = +el.value; save();
+      clearTimeout(el._t); el._t = setTimeout(() => { renderDemand(); if (S.result) renderResult(); const nx = document.querySelector(`#t-demand [data-i="${el.dataset.i}"][data-f="${el.dataset.f}"]`); }, 600);
+    });
+  }
+  function dayDate(i) {
+    const d = new Date((S.setup.weekStart || "2026-01-05") + "T12:00:00"); if (isNaN(d)) return "";
+    d.setDate(d.getDate() + i); return d.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+  }
+  function renderTeam() {
+    const codes = S.shifts.map(s => s.code);
+    const tb = $("#t-team tbody");
+    tb.innerHTML = S.team.map((e, i) => `<tr>
+      <td><input type="text" class="w-name" value="${esc(e.name)}" data-i="${i}" data-f="name"></td>
+      <td><select data-i="${i}" data-f="contract" style="width:76px"><option${e.contract === "FT" ? " selected" : ""}>FT</option><option${e.contract === "PT" ? " selected" : ""}>PT</option></select></td>
+      <td class="num"><input type="number" step="0.25" min="0" class="w-num" value="${e.wage}" data-i="${i}" data-f="wage"></td>
+      <td><span class="chipset">${codes.map(c => `<button class="chip${e.shifts.includes(c) ? " on" : ""}" data-i="${i}" data-sh="${esc(c)}">${esc(c)}</button>`).join("")}</span></td>
+      <td><span class="chipset">${DAYS.map((dn, d) => `<button class="chip ${e.days[d]}" data-i="${i}" data-day="${d}" title="${dn}: ${{ on: "available", off: "asked off", na: "can't work" }[e.days[d]]}">${dn[0]}${dn[1]}</button>`).join("")}</span></td>
+      <td><button class="xbtn" data-del="${i}" title="Remove">×</button></td></tr>`).join("");
+    tb.querySelectorAll("[data-f]").forEach(el => el.oninput = () => { const e = S.team[+el.dataset.i]; e[el.dataset.f] = el.dataset.f === "wage" ? +el.value : el.value; save(); if (S.result) renderResult(); });
+    tb.querySelectorAll("[data-sh]").forEach(b => b.onclick = () => { const e = S.team[+b.dataset.i], c = b.dataset.sh; e.shifts = e.shifts.includes(c) ? e.shifts.filter(x => x !== c) : e.shifts.concat(c); b.classList.toggle("on"); save(); });
+    tb.querySelectorAll("[data-day]").forEach(b => b.onclick = () => {
+      const e = S.team[+b.dataset.i], d = +b.dataset.day, nx = { on: "off", off: "na", na: "on" }[e.days[d]];
+      e.days[d] = nx; b.className = "chip " + nx; b.title = DAYS[d] + ": " + { on: "available", off: "asked off", na: "can't work" }[nx]; save(); if (S.result) renderResult();
+    });
+    tb.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { const i = +b.dataset.del; S.team.splice(i, 1); if (S.result) { const g = S.team.map((_, j) => S.result.grid[j < i ? j : j + 1]); S.result.grid = Object.fromEntries(g.map((x, j) => [j, x])); } save(); renderTeam(); if (S.result) renderResult(); });
+    const ft = S.team.filter(e => e.contract === "FT").length;
+    $("#team-note").textContent = `${S.team.length} people: ${ft} full-time, ${S.team.length - ft} part-time.`;
+  }
+
+  // ---------------- rendering: result ----------------
+  function gridArray() { return S.team.map((_, i) => (S.result.grid[i] || Array(7).fill("OFF"))); }
+  function renderResult() {
+    if (!S.result) { $("#s-result").hidden = true; $("#s-checks").hidden = true; return; }
+    $("#s-result").hidden = false; $("#s-checks").hidden = false;
+    const SH = shiftMap(), g = gridArray(), ev = evaluate(g), fx = evaluate(fixedPattern());
+    const N = need();
+    $("#res-title").textContent = `${S.setup.department || "Team"} schedule: ${S.setup.hotel || ""}, week of ${dayDate(0)}`;
+    const rulesBroken = ev.rules.filter(r => r[1] > 0).length;
+    $("#kpis").innerHTML = [
+      ["Weekly cost", money(ev.total), `Wages ${money(ev.wages)} · overtime ${money(ev.otCost)} · call-ins ${money(ev.callinCost)}`],
+      ["Work covered", `${num1(100 * (1 - ev.short / Math.max(1e-9, N.reduce((s, n) => s + n.hours, 0))))}%`, ev.short > 0.05 ? `${num1(ev.short)} cleaning hours short` : "Every cleaning hour covered"],
+      ["Day-off requests kept", `${ev.reqKept} of ${ev.reqTotal}`, ev.reqTotal - ev.reqKept ? "Red outlines show the exceptions" : "All honoured"],
+      ["Rules passed", `${ev.rules.length - rulesBroken} of ${ev.rules.length}`, rulesBroken ? "See the rule check below" : "Checked independently"],
+      ["Overtime", `${num1(ev.ot)} h`, `${S.team.filter((_, i) => ev.hours[i] > 0).length} of ${S.team.length} people scheduled`],
+    ].map(k => `<div class="kpi"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="sub">${k[2]}</div></div>`).join("");
+    const saving = fx.total - ev.total;
+    $("#takeaway").innerHTML = `<strong>What this means:</strong> compared with a fixed pattern (everyone works the same days every week), this schedule costs <b>${money(Math.abs(saving))} ${saving >= 0 ? "less" : "more"}</b>, ${Math.abs(fx.short - ev.short) < 0.5 ? "covers the same cleaning hours" : `covers ${num1(Math.abs(fx.short - ev.short))} ${ev.short < fx.short ? "more" : "fewer"} cleaning hours`}, and keeps ${ev.reqKept} day-off requests against ${fx.reqKept}.` +
+      (ev.extraShifts > 0 ? ` Your team is <b>${ev.extraShifts} shifts short</b> for this week's workload. Book them from on-call or agency staff now, not on the day.` : " The team covers the full workload.");
+    const warns = [];
+    if (!S.team.length) warns.push("Add your team in Step 4, then build again.");
+    if (S.result.edited.length) warns.push(`${S.result.edited.length} shift${S.result.edited.length > 1 ? "s were" : " was"} changed by hand (blue outline). Building again will replace them.`);
+    $("#warns").innerHTML = warns.map(w => `<div class="warnbox">${w}</div>`).join("");
+    $("#legend").innerHTML = S.shifts.map(s => `<span><span class="code ${esc(s.code)}">${esc(s.code)}</span>${esc(s.label)} ${esc(s.start)} to ${esc(s.end)}</span>`).join("") + `<span><span class="code OFF">OFF</span>Day off</span><span><span class="code NA">N/A</span>Can't work</span>`;
+    let html = `<thead><tr><th class="name">Name</th><th>Type</th>${DAYS.map((d, i) => `<th>${d}<br><span class="muted" style="font-weight:400">${dayDate(i)}</span></th>`).join("")}<th class="num">Hours</th></tr></thead><tbody>`;
+    S.team.forEach((e, i) => {
+      html += `<tr><td class="name">${esc(e.name)}</td><td>${e.contract}</td>` + g[i].map((c, d) => {
+        const known = SH[c] || c === "OFF" || c === "N/A";
+        const cls = (c === "N/A" ? "NA" : known ? c : "OFF") + (e.days[d] === "off" && SH[c] ? " req" : "") + (S.result.edited.includes(i + ":" + d) ? " EDIT" : "");
+        return `<td class="cell" data-i="${i}" data-d="${d}"><span class="code ${esc(cls)}">${esc(c)}</span></td>`;
+      }).join("") + `<td class="num"><b>${ev.hours[i]}</b>${ev.hours[i] > S.rules.otAfter ? ' <span class="short">OT</span>' : ""}</td></tr>`;
+    });
+    html += `</tbody><tfoot><tr><td class="name">On shift</td><td></td>${ev.cov.map(c => `<td>${c.people}</td>`).join("")}<td></td></tr>
+      <tr><td class="name">Cleaning cover</td><td></td>${ev.cov.map(c => `<td class="${c.have + 0.05 >= c.need ? "okc" : "short"}">${num1(c.have)}/${num1(c.need)}</td>`).join("")}<td></td></tr>
+      <tr><td class="name">Inspectors</td><td></td>${ev.cov.map(c => `<td class="${c.ins >= c.insNeed ? "okc" : "short"}">${c.ins}/${c.insNeed}</td>`).join("")}<td></td></tr>
+      <tr><td class="name">Evening</td><td></td>${ev.cov.map(c => `<td class="${c.eve >= c.eveNeed ? "okc" : "short"}">${c.eve}/${c.eveNeed}</td>`).join("")}<td></td></tr></tfoot>`;
+    $("#grid").innerHTML = html;
+    $("#grid").querySelectorAll("td.cell").forEach(td => td.onclick = () => editCell(td));
+    $("#rules-out").innerHTML = ev.rules.map(([r, n]) => `<tr><td>${r}</td><td class="num">${n}</td><td><span class="pill ${n ? "fail" : "pass"}">${n ? "Fail" : "Pass"}</span></td></tr>`).join("");
+    if (window.Chart) {
+      if (chart) chart.destroy();
+      chart = new Chart($("#coverage"), { type: "bar", data: { labels: DAYS.map((d, i) => `${d} ${dayDate(i)}`), datasets: [
+        { label: "Cleaning hours needed", data: ev.cov.map(c => +c.need.toFixed(1)), backgroundColor: "#cfd6de" },
+        { label: "Scheduled", data: ev.cov.map(c => +c.have.toFixed(1)), backgroundColor: COLORS.s1 }] },
+        options: { scales: { y: gridScale({ min: 0, title: { display: true, text: "Hours" } }), x: gridScale({ grid: { display: false } }) } } });
+    }
+  }
+  function editCell(td) {
+    if (td.querySelector("select")) return;
+    const i = +td.dataset.i, d = +td.dataset.d, e = S.team[i];
+    const cur = S.result.grid[i][d];
+    const opts = ["OFF"].concat(e.shifts.filter(c => S.shifts.some(s => s.code === c)), e.days[d] === "na" ? ["N/A"] : []);
+    if (!opts.includes(cur)) opts.push(cur);
+    td.innerHTML = `<select>${opts.map(o => `<option${o === cur ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+    const sel = td.querySelector("select"); sel.focus();
+    const done = () => { const v = sel.value; if (v !== cur) { S.result.grid[i][d] = v; const k = i + ":" + d; if (!S.result.edited.includes(k)) S.result.edited.push(k); save(); } renderResult(); };
+    sel.onchange = done; sel.onblur = done;
+  }
+
+  // ---------------- import / export ----------------
+  function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  const csvCell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  function scheduleRows() {
+    const g = gridArray(), ev = evaluate(g);
+    const rows = [["Name", "Contract", ...DAYS.map((d, i) => `${d} ${dayDate(i)}`), "Hours"]];
+    S.team.forEach((e, i) => rows.push([e.name, e.contract, ...g[i], ev.hours[i]]));
+    rows.push(["On shift", "", ...ev.cov.map(c => c.people), ""]);
+    rows.push(["Cleaning hours scheduled / needed", "", ...ev.cov.map(c => `${num1(c.have)} / ${num1(c.need)}`), ""]);
+    return rows;
+  }
+  $("#csv").onclick = () => download("schedule.csv", scheduleRows().map(r => r.map(csvCell).join(",")).join("\n"), "text/csv");
+  $("#xlsx").onclick = () => {
+    if (!window.XLSX) { $("#csv").click(); return; }
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(scheduleRows()); ws["!cols"] = [{ wch: 22 }, { wch: 9 }, ...DAYS.map(() => ({ wch: 11 })), { wch: 7 }];
+    XLSX.utils.book_append_sheet(wb, ws, "Schedule");
+    const N = need();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Day", "Occupied last night", "Check-outs", "Stayovers", "Cleaning hours", "Attendants", "Inspectors", "Evening"],
+      ...N.map((n, i) => [`${DAYS[i]} ${dayDate(i)}`, n.occ, n.dep, n.stay, +n.hours.toFixed(1), n.ra, n.ins, n.eve])]), "Workload");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Code", "Name", "Role", "Starts", "Ends", "Paid hours"], ...S.shifts.map(s => [s.code, s.label, s.role, s.start, s.end, s.paid])]), "Shift types");
+    XLSX.writeFile(wb, "schedule.xlsx");
   };
-  if (chart) chart.destroy();
-  chart = new Chart(document.getElementById("coverage"), {
-    data, options: { scales: { y: gridScale({ min: 0, title: { display: true, text: "Hours" } }), x: gridScale({ grid: { display: false } }) },
-      plugins: { tooltip: { callbacks: { afterBody: items => { const c = cov[items[0].dataIndex]; return c.gap_hours < 0 ? `Short by ${(-c.gap_hours).toFixed(1)} hours` : `Covered (+${c.gap_hours.toFixed(1)} hours)`; } } } } },
+  $("#exp-team").onclick = () => download("team.csv", [["name", "contract", "wage", "shifts", "off", "unavailable"]].concat(S.team.map(e => [e.name, e.contract, e.wage, e.shifts.join("|"),
+    DAYS.filter((_, d) => e.days[d] === "off").join("|"), DAYS.filter((_, d) => e.days[d] === "na").join("|")])).map(r => r.map(csvCell).join(",")).join("\n"), "text/csv");
+  $("#imp").onchange = async (ev) => {
+    const f = ev.target.files[0]; if (!f) return;
+    const text = await f.text();
+    const rows = parseCSV(text); const head = rows.shift().map(h => h.trim().toLowerCase());
+    const col = (r, k) => (r[head.indexOf(k)] ?? "").trim();
+    const dayIdx = (s) => s.split(/[|;\s]+/).map(x => DAYS.findIndex(d => d.toLowerCase() === x.slice(0, 3).toLowerCase())).filter(x => x >= 0);
+    const team = rows.filter(r => r.some(x => x.trim())).map(r => {
+      const off = dayIdx(col(r, "off")), na = dayIdx(col(r, "unavailable"));
+      return { name: col(r, "name") || "Unnamed", contract: /^p/i.test(col(r, "contract")) ? "PT" : "FT", wage: +col(r, "wage") || 20,
+        shifts: col(r, "shifts").split(/[|;\s]+/).filter(Boolean), days: DAYS.map((_, d) => na.includes(d) ? "na" : off.includes(d) ? "off" : "on") };
+    });
+    if (!team.length) { alert("No rows found. Check the column names."); return; }
+    S.team = team; S.result = null; save(); renderTeam(); renderResult(); ev.target.value = "";
+  };
+  function parseCSV(t) {
+    const out = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true; else if (c === ",") { row.push(cell); cell = ""; } else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); out.push(row); row = []; cell = ""; } else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); out.push(row); }
+    return out;
+  }
+
+  // ---------------- buttons ----------------
+  $("#add-emp").onclick = () => { S.team.push({ name: "New person", contract: "FT", wage: 20, shifts: S.shifts.filter(s => s.role === "RA").slice(0, 2).map(s => s.code), days: DAYS.map(() => "on") }); save(); renderTeam(); $("#t-team tbody tr:last-child input").focus(); };
+  $("#clear-team").onclick = () => { if (!confirm("Remove everyone from the team list? You can add people or import a CSV after.")) return; S.team = []; S.result = null; save(); renderTeam(); renderResult(); };
+  $("#add-shift").onclick = () => { S.shifts.push({ code: "NEW", label: "New shift", role: "RA", start: "08:00", end: "16:00", paid: 7.5 }); save(); renderShifts(); renderTeam(); };
+  $("#build").onclick = build;
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset;
+    const names = { setup: "hotel and work standards", shifts: "shift types", demand: "workload", team: "team", rules: "rules", result: "schedule" };
+    if (!confirm(`Reset the ${names[sec]} to the sample? Your changes in this section will be lost.`)) return;
+    S[sec] = clone(DEFAULTS[sec]);
+    if (sec === "team" || sec === "shifts") S.result = null;
+    save(); renderAll();
   });
+  $("#reset-all").onclick = () => { if (!confirm("Reset every section and clear the schedule? This can't be undone.")) return; S = clone(DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {} renderAll(); $("#saved").textContent = ""; };
+  function renderAll() { bindFields(); renderShifts(); renderDemand(); renderTeam(); renderResult(); }
 
-  // Grid
-  document.getElementById("grid-title").textContent = `${view === "optimized" ? "Built schedule" : "Fixed weekly pattern"}: ${sc.title}`;
-  document.getElementById("legend").innerHTML = Object.entries(CODE_LABEL).map(([k, v]) => `<span><span class="code ${k === "N/A" ? "NA" : k}">${k}</span>${v}</span>`).join("");
-  const days = sc.demand.map(d => `${d.day}<br><span class="muted" style="font-weight:400">${d.date.slice(5)}</span>`);
-  const hoursOf = s => (S.shifts[s] ? S.shifts[s].paid_hours : 0);
-  let html = `<thead><tr><th class="name">Employee</th><th>Type</th>${days.map(d => `<th>${d}</th>`).join("")}<th>Hours</th></tr></thead><tbody>`;
-  S.staff.forEach(e => {
-    const g = res.grid[e.id];
-    const hrs = g.reduce((s, c) => s + hoursOf(c), 0);
-    html += `<tr><td class="name">${e.name}${e.prefers_printed ? '<span class="tag">Print</span>' : ""}</td><td>${e.contract}</td>` +
-      g.map((c, d) => `<td><span class="code ${c === "N/A" ? "NA" : c}${e.requested_off.includes(d) && S.shifts[c] ? " req" : ""}" title="${CODE_LABEL[c] || c}">${c}</span></td>`).join("") +
-      `<td><b>${hrs}</b></td></tr>`;
-  });
-  const staffed = d => S.staff.filter(e => S.shifts[res.grid[e.id][d]]).length;
-  html += `<tr><td class="name"><b>Staff on shift</b></td><td></td>${DAYNAMES.map((_, d) => `<td><b>${staffed(d)}</b></td>`).join("")}<td></td></tr></tbody>`;
-  document.getElementById("grid").innerHTML = html;
-
-  document.getElementById("dl").href = sc.excel;
-  document.getElementById("dl").style.display = view === "optimized" ? "" : "none";
-  document.getElementById("payload").textContent =
-    "// Shift list prepared for a workforce system's schedule import API.\n// Field names are mapped to the property's configuration during setup; validate first, then post.\n" +
-    JSON.stringify({ validate_only: true, shifts: sc.payload_preview }, null, 2);
-
-  document.getElementById("rules").innerHTML = res.rules.map(r => `<tr><td>${r.rule}</td><td class="num">${r.violations}</td><td><span class="pill ${r.passed ? "pass" : "fail"}">${r.passed ? "Pass" : "Fail"}</span></td></tr>`).join("");
-  document.getElementById("demand").innerHTML = sc.demand.map(d => `<tr><td>${d.day} ${d.date.slice(5)}</td><td class="num">${d.departures}</td><td class="num">${d.stayovers}</td><td class="num">${d.cleaning_hours}</td><td class="num">${d.inspectors_needed}</td><td class="num">${d.evening_needed}</td></tr>`).join("");
-}
-
-(async function () {
-  chartDefaults();
-  S = await loadJSON("data/schedule.json");
-  current = S.scenarios[0].key;
-  document.getElementById("tabs").innerHTML = S.scenarios.map(s => `<button class="tab" data-k="${s.key}">${s.title}</button>`).join("");
-  document.querySelectorAll("#tabs .tab").forEach(t => t.addEventListener("click", () => { current = t.dataset.k; render(); }));
-  document.querySelectorAll("#view-toggle button").forEach(b => b.addEventListener("click", () => { view = b.dataset.v; render(); }));
-  document.getElementById("payload-btn").addEventListener("click", () => {
-    const p = document.getElementById("payload"); p.style.display = p.style.display === "none" ? "block" : "none";
-  });
-  render();
+  // ---------------- start ----------------
+  (async function () {
+    chartDefaults();
+    SAMPLE = await loadJSON("data/schedule.json");
+    DEFAULTS = makeDefaults(SAMPLE);
+    S = load();
+    const sw = $("#sample-week");
+    sw.innerHTML = `<option value="">Choose…</option>` + SAMPLE.scenarios.map(s => `<option value="${s.key}">${esc(s.title)}</option>`).join("");
+    sw.onchange = () => {
+      const sc = SAMPLE.scenarios.find(s => s.key === sw.value); if (!sc) return;
+      S.demand = sc.demand.map(x => ({ occupied: x.occupied_last_night, departures: x.departures })); S.setup.weekStart = sc.week_start;
+      save(); bindFields(); renderDemand(); if (S.result) renderResult(); sw.value = "";
+    };
+    renderAll();
+    if (!S.result) build();
+    window.scrollTo(0, 0);
+  })();
 })();
 </script>
 </body>

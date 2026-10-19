@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Housekeeping Board</title>
+<meta name="description" content="A free housekeeping board for hotels: load today's rooms and attendants, get balanced, floor-by-floor room assignments in priority order, print a board card per attendant and track progress live.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.rooms-scroll { max-height: 440px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+.rooms-scroll th { position: sticky; top: 0; z-index: 1; }
+table.edit input.w-room { width: 74px; }
+table.edit input.w-floor { width: 58px; }
+table.edit input[type=time] { font: inherit; font-size: 14px; border: 1px solid var(--line-2); border-radius: 7px; padding: 4px 6px; width: 124px; }
+input[type=time] { font: inherit; font-size: 14.5px; color: var(--ink); border: 1px solid var(--line-2); border-radius: 7px; padding: 6px 8px; background: #fff; }
+table.edit input[type=checkbox], .cards input[type=checkbox], #t-board input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--good); cursor: pointer; }
+textarea { font: inherit; font-size: 13.5px; width: 100%; min-height: 110px; border: 1px solid var(--line-2); border-radius: 7px; padding: 8px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.paste-box { margin-top: 12px; background: #fafbfc; border: 1px dashed var(--line-2); border-radius: 8px; padding: 12px; }
+.tagx { display: inline-block; font-size: 11.5px; font-weight: 700; border-radius: 4px; padding: 1px 6px; margin-right: 3px; white-space: nowrap; }
+.tagx.vip { background: #e9e2f8; color: #3f2a85; }
+.tagx.early { background: #fff3df; color: #8a5300; }
+.type { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 4px; padding: 1px 7px; white-space: nowrap; }
+.type.DEP { background: #dcebfb; color: #12406f; }
+.type.SO { background: #dff3e4; color: #145c33; }
+.type.VC { background: #f2f2f2; color: #4a5561; }
+.type.OOO { background: #d9d9d9; color: #4a5561; text-decoration: line-through; }
+.st { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.st.ok { color: var(--good); } .st.risk { color: var(--warn); } .st.late { color: var(--bad); } .st.done { color: var(--ink-3); } .st.na { color: var(--ink-3); font-weight: 500; }
+tr.is-done td { color: var(--ink-3); }
+tr.is-done td .rn { text-decoration: line-through; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.bcard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+.bcard header { background: var(--brand); color: #fff; padding: 10px 14px; }
+.bcard header b { font-size: 16px; display: block; }
+.bcard header span { font-size: 12.5px; color: #dbe8f7; }
+.bcard table { font-size: 13px; }
+.bcard th, .bcard td { padding: 5px 8px; vertical-align: middle; }
+.bcard .foot { padding: 8px 14px; font-size: 12.5px; color: var(--ink-2); border-top: 1px solid var(--line); background: #fafbfc; }
+.bar { height: 10px; background: #e9edf1; border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--good); border-radius: 99px; }
+.prog-big { height: 16px; margin: 6px 0 14px; }
+.prog-row { display: grid; grid-template-columns: minmax(110px, 180px) 1fr minmax(120px, auto); gap: 6px 14px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.prog-row .r { text-align: right; color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+@media (max-width: 640px) { .prog-row { grid-template-columns: 1fr; } .prog-row .r { text-align: left; } }
+.reassign-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 10px; }
+.filters select { width: auto; }
+.chart-box.wl { height: 340px; }
+.board-scroll { max-height: 640px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+.board-scroll th { position: sticky; top: 0; z-index: 1; }
+@media print { .board-scroll, .rooms-scroll { max-height: none; overflow: visible; } }
+@media print {
+  body.print-cards .print-hide { display: none !important; }
+  .bcard { box-shadow: none; border: 1px solid #999; margin-bottom: 12px; }
+  .bcard header, .type, .tagx { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cards { grid-template-columns: 1fr 1fr; }
+  body.print-cards .cards { grid-template-columns: 1fr; }
+  body.print-cards .bcard { page-break-after: always; }
+  .chart-box { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Housekeeping Board</h1>
+    <p class="lead">Turns today's room list and the attendants on shift into fair, floor-by-floor room assignments, with early check-ins and VIPs cleaned first. Print a board card for each attendant, tick rooms off as they are done, and rebuild the plan for the rooms left with one button.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Loaded with a sample: Summit Tower Hotel, floors 3 to 12, 120 rooms</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-rooms"><b>Step 1</b>Today's rooms</a>
+    <a href="#s-team"><b>Step 2</b>Attendants on shift</a>
+    <a href="#s-std"><b>Step 3</b>Time standards</a>
+    <a href="#s-progress"><b>Step 4</b>Track progress</a>
+    <a href="#s-cards"><b>Step 5</b>Print board cards</a>
+  </nav>
+
+  <!-- 1. Rooms -->
+  <section class="sec no-print" id="s-rooms">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Today's rooms</h2><p>One row per room from your PMS (property management system) room status report. <b>Departure</b> = guest checks out today, needs a full clean. <b>Stayover</b> = guest stays, needs a lighter service. <b>Vacant clean</b> and <b>out of order</b> rooms need no cleaning.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="add-room">Add room</button>
+        <label class="btn sm" style="margin:0">Import CSV<input type="file" id="imp" accept=".csv,text/csv,.txt" hidden></label>
+        <button class="btn sm" id="tpl">Download template</button>
+        <button class="btn sm" id="show-paste">Paste from Excel</button>
+        <button class="btn sm" id="clear-rooms">Start empty</button>
+        <button class="btn sm reset" data-reset="rooms">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="paste-box" id="paste-box" hidden>
+        <label for="paste" style="font-weight:600;font-size:14px">Copy the rows from Excel or Google Sheets and paste them here</label>
+        <p class="note" style="margin:2px 0 8px">Columns in this order: room, floor, status, check-out time, next arrival time, VIP (yes/no), early check-in (yes/no). A header row is fine; it is skipped. Floor can be blank: it is taken from the room number.</p>
+        <textarea id="paste" placeholder="1204	12	departure	10:00	12:30	yes	yes"></textarea>
+        <div class="toolbar" style="margin-top:8px"><button class="btn sm primary" id="paste-go">Replace room list with pasted rows</button><button class="btn sm" id="paste-add">Add pasted rows</button><button class="btn sm" id="paste-cancel">Close</button></div>
+      </div>
+      <p class="note" id="rooms-summary" style="margin:0 0 10px"></p>
+      <div class="rooms-scroll table-wrap"><table class="edit" id="t-rooms"><thead><tr><th>Room</th><th>Floor</th><th>Status</th><th>Expected check-out</th><th>Next arrival</th><th>VIP</th><th>Early check-in</th><th></th></tr></thead><tbody></tbody></table></div>
+      <p class="note">CSV columns: <code>room, floor, status, checkout, arrival, vip, early</code>. Status can be written in full or as DEP / SO / VC / OOO. Times use the 24-hour clock (14:30). Leave check-out blank to use the hotel's standard check-out time; leave arrival blank when no one is due in.</p>
+      <div id="rooms-warn"></div>
+    </div>
+  </section>
+
+  <!-- 2. Team -->
+  <section class="sec no-print" id="s-team">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Attendants on shift</h2><p>Who is cleaning today, when they start and finish, and the floors they know best (for example <code>3-4</code> or <code>5, 7</code>; leave blank for any floor).</p></div>
+      <div class="toolbar"><button class="btn sm" id="add-att">Add attendant</button><button class="btn sm reset" data-reset="team">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap"><table class="edit" id="t-team"><thead><tr><th>Name</th><th>Starts</th><th>Ends</th><th>Preferred floors</th><th class="num">Paid minutes</th><th></th></tr></thead><tbody></tbody></table></div>
+      <div id="team-warn"></div>
+    </div>
+  </section>
+
+  <!-- 3. Standards -->
+  <section class="sec no-print" id="s-std">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">3</span>Time standards</h2><p>How long each job takes in your hotel. Use your own averages; the sample uses common full-service figures.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="std">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="f-dep">Minutes per departure room</label><input type="number" min="5" max="180" id="f-dep" data-k="std.depMin" data-num><small>Full clean after check-out</small></div>
+        <div class="field"><label for="f-so">Minutes per stayover room</label><input type="number" min="1" max="120" id="f-so" data-k="std.soMin" data-num><small>Lighter daily service</small></div>
+        <div class="field"><label for="f-tr">Floor-change travel minutes</label><input type="number" min="0" max="60" id="f-tr" data-k="std.travelMin" data-num><small>Moving cart and linen to another floor</small></div>
+        <div class="field"><label for="f-ins">Inspection minutes</label><input type="number" min="0" max="60" id="f-ins" data-k="std.inspectMin" data-num><small>From clean to released as ready</small></div>
+        <div class="field"><label for="f-brk">Unpaid break (minutes)</label><input type="number" min="0" max="90" id="f-brk" data-k="std.breakMin" data-num><small>Taken mid-shift</small></div>
+        <div class="field"><label for="f-vip">VIP rooms ready early by (minutes)</label><input type="number" min="0" max="240" id="f-vip" data-k="std.vipBuffer" data-num><small>Time for amenities and a manager check</small></div>
+        <div class="field"><label for="f-co">Standard check-out time</label><input type="time" id="f-co" data-k="std.stdCheckout"><small>Used when a departure has no time</small></div>
+        <div class="field"><label for="f-sof">Stayovers can start from</label><input type="time" id="f-sof" data-k="std.soFrom"><small>When most guests are out</small></div>
+        <div class="field"><label for="f-sob">Stayovers done by</label><input type="time" id="f-sob" data-k="std.soBy"><small>Your service promise</small></div>
+      </div>
+      <div id="std-warn"></div>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <span class="muted" style="font-size:14px">The board rebuilds itself as you change anything above. Rooms you tick as done stay done.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="sec" id="s-result">
+    <div class="sec-head">
+      <div><h2 id="res-title">Today's board</h2><p class="no-print">The plan in one look. Ready time = when the room is cleaned and inspected. A room is <b>at risk</b> when it will be ready less than 30 minutes before the guest arrives, and <b>late</b> when it will be ready after.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm primary" id="print-cards">Print board cards</button>
+        <button class="btn sm" id="csv">Download CSV</button>
+        <button class="btn sm" onclick="window.print()">Print everything</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="print-hide">
+        <div class="grid g5" id="kpis"></div>
+        <div class="takeaway" id="takeaway"></div>
+        <div id="plan-warn"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Progress -->
+  <section class="sec print-hide" id="s-progress">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">4</span>Live progress</h2><p>Tick a room when it is done (here, in the table below or on a board card). If the day changes (a sick call, a late check-out, an extra early arrival), press <b>Reassign</b> to rebuild the order for the rooms that are left.</p></div>
+      <div class="toolbar no-print"><button class="btn sm reset" id="clear-done">Untick all rooms</button></div>
+    </div>
+    <div class="sec-body">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:14.5px"><b id="prog-label"></b><span class="muted" id="prog-now"></span></div>
+      <div class="bar prog-big"><i id="prog-bar" style="width:0"></i></div>
+      <div id="prog-rows"></div>
+      <div class="reassign-bar no-print">
+        <label for="re-from" style="font-size:14px;font-weight:600">Rebuild from</label>
+        <input type="time" id="re-from">
+        <button class="btn primary" id="reassign">Reassign remaining rooms</button>
+        <button class="btn sm" id="full-day">Back to the full-day plan</button>
+        <span class="note" id="re-note" style="margin:0"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cards -->
+  <section class="sec" id="s-cards">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">5</span>Board cards</h2><p class="no-print">One card per attendant, in the order to clean. Expected finish assumes the standard minutes and includes travel between floors and waiting for check-outs.</p></div>
+    </div>
+    <div class="sec-body"><div class="cards" id="cards"></div></div>
+  </section>
+
+  <section class="grid g2 print-hide" style="margin-bottom:22px">
+    <div class="card">
+      <h3>Workload balance</h3>
+      <p class="muted">Minutes of work given to each attendant against the time they have on shift (after the break).</p>
+      <div class="chart-box wl"><canvas id="wl-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Workload by attendant</h3>
+      <p class="muted">The same numbers as a table.</p>
+      <div class="table-wrap"><table><thead><tr><th>Attendant</th><th class="num">Rooms</th><th class="num">Work min</th><th class="num">Shift min</th><th class="num">Load</th><th class="num">Floors</th></tr></thead><tbody id="wl-table"></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="sec print-hide" id="s-table">
+    <div class="sec-head">
+      <div><h2>Every room</h2><p class="no-print">Who has each room, when it should be ready and how that compares with the guest's arrival.</p></div>
+    </div>
+    <div class="sec-body">
+      <div class="filters no-print">
+        <label class="muted" style="font-size:13.5px">Show <select id="flt"><option value="all">All rooms</option><option value="clean">Rooms to clean</option><option value="risk">At risk or late</option><option value="open">Not done yet</option><option value="arr">With an arrival today</option></select></label>
+        <label class="muted" style="font-size:13.5px">Attendant <select id="flt-who"></select></label>
+        <label class="muted" style="font-size:13.5px">Sort by <select id="srt"><option value="room">Room number</option><option value="ready">Ready time</option><option value="margin">Margin (tightest first)</option><option value="who">Attendant order</option></select></label>
+      </div>
+      <div class="table-wrap board-scroll"><table id="t-board"><thead><tr><th>Done</th><th>Room</th><th class="num">Floor</th><th>Type</th><th>Flags</th><th>Attendant</th><th class="num">Order</th><th class="num">Check-out</th><th class="num">Ready est.</th><th class="num">Arrival</th><th class="num">Margin</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+      <p class="note" id="board-count"></p>
+    </div>
+  </section>
+
+  <details class="tech no-print">
+    <summary>How it's calculated</summary>
+    <p><b>Which rooms need work.</b> Departures take the departure minutes and cannot start before the guest's expected check-out time. Stayovers take the stayover minutes and cannot start before the "stayovers can start from" time. Vacant clean and out-of-order rooms need no cleaning.</p>
+    <p><b>Deadline for each room.</b> Ready by = next arrival time, minus the VIP lead time for VIP rooms. A departure with no arrival is due by 18:00 for ordering purposes only. A stayover is due by your "stayovers done by" time. An early check-in with no arrival time entered is treated as 12:00.</p>
+    <p><b>Building the order.</b> The tool simulates the shift minute by minute. Whenever an attendant becomes free, it scores every room still waiting and gives them the best one. The score adds up: minutes they would wait for a check-out; a penalty for changing floor (travel minutes plus 40, plus 4 per floor of distance, to keep each attendant on as few floors as possible); 40 if the floor is not one of their preferred floors; an urgency term from the room's spare time before its deadline (half a point per minute for the first two hours, then a tenth, so rooms needed soonest come first but a room due tonight does not pull someone off their floor); minus 45 for a VIP; minus 45 for an early check-in; plus 30 for stayovers so departures with arrivals go first; plus 200 if the room would end after their shift. Because the next room always goes to whoever is free first, the work spreads evenly across shifts. A break is added at each shift's midpoint. Ready time = finish + inspection minutes.</p>
+    <p><b>Flags.</b> Margin = arrival minus ready time. Late = negative margin. At risk = under 30 minutes. "After shift" = the room only fits if someone stays past their end time; add an attendant or approve overtime.</p>
+    <p><b>Reassign.</b> Rooms ticked as done keep their attendant. Every other room is rebuilt from the time you choose (now, by default), starting each attendant from the floor of their last finished room. Attendants whose shift has ended get no new rooms unless nobody else is on.</p>
+    <p><b>Limits.</b> This is a fast rule-based plan (a heuristic), not a mathematical optimum. It does not know about do-not-disturb signs, room size, suite credits, linen runs or how fast each person works. Treat the times as estimates and adjust by hand where you know better. Your data stays in this browser (local storage). Nothing is sent anywhere.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.housekeeping-board.v1";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const STATUS = { DEP: "Departure", SO: "Stayover", VC: "Vacant clean", OOO: "Out of order" };
+  const toMin = (s) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(s || "").trim()); if (!m) return null; const h = +m[1], mi = +m[2]; if (h > 23 || mi > 59) return null; return h * 60 + mi; };
+  const hm = (m) => { if (m == null || !isFinite(m)) return "-"; m = Math.round(m); const h = Math.floor(m / 60) % 24, mi = ((m % 60) + 60) % 60; return String(h).padStart(2, "0") + ":" + String(mi).padStart(2, "0"); };
+  const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  const hrs = (m) => (Math.round(m / 6) / 10).toLocaleString("en-CA") + " h";
+
+  // ---------------- sample: Summit Tower Hotel, floors 3 to 12 ----------------
+  function makeSample() {
+    let seed = 20261019;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    const pick = (a) => a[Math.floor(rnd() * a.length)];
+    const rooms = [];
+    const ooo = ["507", "914", "1003"];
+    for (let f = 3; f <= 12; f++) for (let n = 1; n <= 12; n++) {
+      const room = String(f * 100 + n);
+      const r = { room, floor: f, status: "SO", co: "", arr: "", vip: false, early: false };
+      if (ooo.includes(room)) { r.status = "OOO"; rooms.push(r); continue; }
+      const p = rnd();
+      r.status = p < 0.38 ? "DEP" : p < 0.82 ? "SO" : "VC";
+      if (r.status === "DEP") {
+        r.co = pick(["07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:00", "11:00", "11:00", "11:00", "12:00"]);
+        if (rnd() < 0.72) r.arr = pick(["14:00", "15:00", "15:00", "15:30", "16:00", "16:00", "16:30", "17:00", "18:00", "19:00", "20:00"]);
+        if (rnd() < 0.14) { r.early = true; r.arr = pick(["11:30", "12:00", "12:30", "13:00"]); r.co = pick(["07:30", "08:00", "08:30", "09:00"]); }
+        if (r.arr && rnd() < (f === 12 ? 0.45 : 0.08)) r.vip = true;
+      } else if (r.status === "SO") {
+        if (rnd() < (f === 12 ? 0.3 : 0.04)) r.vip = true;
+      } else if (rnd() < 0.5) r.arr = pick(["13:00", "15:00", "16:00", "17:00", "19:00"]);
+      rooms.push(r);
+    }
+    return rooms;
+  }
+  const DEFAULTS = {
+    rooms: makeSample(),
+    team: [
+      { name: "Maria Santos", start: "08:00", end: "16:30", floors: "3-4" },
+      { name: "Priya Nair", start: "08:00", end: "16:30", floors: "5-6" },
+      { name: "Ana Lopez", start: "08:00", end: "16:30", floors: "7-8" },
+      { name: "Grace Kim", start: "07:30", end: "16:00", floors: "9-10" },
+      { name: "Lucy Chen", start: "08:00", end: "16:30", floors: "11-12" },
+      { name: "Joseph Mensah", start: "09:00", end: "17:30", floors: "" },
+    ],
+    std: { depMin: 30, soMin: 15, travelMin: 4, inspectMin: 10, breakMin: 30, vipBuffer: 60, stdCheckout: "11:00", soFrom: "09:00", soBy: "16:00" },
+    board: { from: null, done: {}, items: [] },
+    ui: { flt: "all", who: "", srt: "room" },
+  };
+
+  // ---------------- storage ----------------
+  let S, saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; } catch (e) { $("#saved").textContent = ""; }
+    }, 250);
+  }
+  function load() {
+    try { const t = localStorage.getItem(KEY); if (t) { const v = JSON.parse(t); const o = Object.assign(clone(DEFAULTS), v); o.std = Object.assign(clone(DEFAULTS.std), v.std || {}); o.board = Object.assign(clone(DEFAULTS.board), v.board || {}); o.ui = Object.assign(clone(DEFAULTS.ui), v.ui || {}); if (!Array.isArray(o.rooms)) o.rooms = clone(DEFAULTS.rooms); if (!Array.isArray(o.team)) o.team = clone(DEFAULTS.team); return o; } } catch (e) {}
+    return clone(DEFAULTS);
+  }
+
+  // ---------------- input cleaning ----------------
+  const floorOf = (room) => { const d = String(room).replace(/\D/g, ""); return d.length > 2 ? +d.slice(0, -2) : 1; };
+  function parseFloors(s) {
+    const out = new Set();
+    String(s || "").split(/[,;\s]+/).forEach(p => {
+      const m = /^(\d+)\s*-\s*(\d+)$/.exec(p); if (m) { const a = +m[1], b = +m[2]; for (let i = Math.min(a, b); i <= Math.max(a, b) && i - Math.min(a, b) < 200; i++) out.add(i); }
+      else if (/^\d+$/.test(p)) out.add(+p);
+    });
+    return out;
+  }
+  function std() {
+    const s = S.std, w = [];
+    const n = (v, lo, hi, def, label) => { const x = +v; if (v === "" || !isFinite(x) || x < lo || x > hi) { w.push(`${label} must be between ${lo} and ${hi}. Using ${def} for now.`); return def; } return x; };
+    const t = (v, def, label) => { const x = toMin(v); if (x == null) { w.push(`${label} is not a valid time. Using ${def} for now.`); return toMin(def); } return x; };
+    const o = {
+      dep: n(s.depMin, 5, 180, 30, "Minutes per departure room"), so: n(s.soMin, 1, 120, 15, "Minutes per stayover room"),
+      travel: n(s.travelMin, 0, 60, 4, "Floor-change travel minutes"), insp: n(s.inspectMin, 0, 60, 10, "Inspection minutes"),
+      brk: n(s.breakMin, 0, 90, 30, "Break minutes"), vip: n(s.vipBuffer, 0, 240, 60, "VIP lead time"),
+      co: t(s.stdCheckout, "11:00", "Standard check-out time"), soFrom: t(s.soFrom, "09:00", "Stayover start time"), soBy: t(s.soBy, "16:00", "Stayovers done by"),
+    };
+    o.warn = w; return o;
+  }
+  function cleanRooms() {
+    const seen = new Set(), dup = new Set(), bad = [];
+    const list = [];
+    S.rooms.forEach(r => {
+      const room = String(r.room || "").trim(); if (!room) return;
+      if (seen.has(room)) { dup.add(room); return; } seen.add(room);
+      let floor = +r.floor; if (!isFinite(floor) || r.floor === "" || r.floor == null) floor = floorOf(room);
+      const status = STATUS[r.status] ? r.status : "SO";
+      if (r.co && toMin(r.co) == null) bad.push(room + " check-out");
+      if (r.arr && toMin(r.arr) == null) bad.push(room + " arrival");
+      list.push({ room, floor: Math.max(0, Math.round(floor)), status, co: toMin(r.co), arr: toMin(r.arr), vip: !!r.vip, early: !!r.early });
+    });
+    return { list, dup: [...dup], bad };
+  }
+  function cleanTeam() {
+    const w = [];
+    const list = S.team.map((a, i) => {
+      const st = toMin(a.start), en = toMin(a.end);
+      const name = String(a.name || "").trim() || `Attendant ${i + 1}`;
+      if (st == null || en == null) { w.push(`${esc(name)}: start or end time is missing, so they get no rooms.`); return null; }
+      if (en <= st) { w.push(`${esc(name)}: the shift ends before it starts. Day shifts only; check the times.`); return null; }
+      return { name, st, en, prefs: parseFloors(a.floors), floorsTxt: a.floors || "" };
+    }).filter(Boolean);
+    const names = new Set(); list.forEach(a => { let n = a.name, k = 2; while (names.has(n)) n = `${a.name} (${k++})`; a.name = n; names.add(n); });
+    return { list, warn: w };
+  }
+
+  // ---------------- planner ----------------
+  let P = null; // last computed plan view
+  function build() {
+    const T = std(), R = cleanRooms(), A = cleanTeam();
+    const byRoom = Object.fromEntries(R.list.map(r => [r.room, r]));
+    const done = S.board.done || {};
+    Object.keys(done).forEach(k => { if (!byRoom[k] || !["DEP", "SO"].includes(byRoom[k].status)) delete done[k]; });
+    const from = S.board.from;
+    const prev = Object.fromEntries((S.board.items || []).map(x => [x.room, x]));
+    const job = (r) => {
+      const dur = r.status === "DEP" ? T.dep : T.so;
+      const release = r.status === "DEP" ? (r.co ?? T.co) : T.soFrom;
+      let arr = r.arr; if (r.early && arr == null) arr = 12 * 60;
+      let due = r.status === "DEP" ? (arr != null ? arr - T.insp - (r.vip ? T.vip : 0) : 18 * 60 - T.insp) : T.soBy - (r.vip ? T.vip : 0);
+      return { ...r, dur, release, arrEff: r.status === "DEP" ? arr : null, due };
+    };
+    const items = [];
+    const att = A.list.map(a => {
+      const brkAt = a.st + (a.en - a.st) / 2;
+      const t0 = from == null ? a.st : Math.max(a.st, from);
+      return { ...a, t: t0, floor: null, brkTaken: from != null && from >= brkAt, brkAt, seq: 0, load: 0 };
+    });
+    const attBy = Object.fromEntries(att.map(a => [a.name, a]));
+    // In a rebuild, rooms already done stay with whoever did them. In the full-day plan, every room is planned (done ones keep their tick).
+    if (from != null) R.list.forEach(r => {
+      if (!done[r.room]) return;
+      const p = prev[r.room], j = job(r);
+      const it = p ? { ...p } : { room: r.room, who: "", seq: 0, start: null, finish: null, travel: 0, wait: 0 };
+      it.dur = j.dur; it.ready = it.finish != null ? it.finish + T.insp : null; it.done = true;
+      items.push(it);
+      const a = attBy[it.who]; if (a) { a.seq = Math.max(a.seq, it.seq || 0); a.load += j.dur; a.floor = byRoom[r.room].floor; }
+    });
+    const todo = R.list.filter(r => (r.status === "DEP" || r.status === "SO") && (from == null || !done[r.room])).map(job);
+    let eligible = att.filter(a => a.en > (from ?? 0));
+    if (!eligible.length) eligible = att;
+    const overrun = [];
+    if (eligible.length) {
+      while (todo.length) {
+        // next free attendant: earliest time among those still inside their shift, else least overrun
+        let inside = eligible.filter(a => a.t < a.en - 5);
+        let a = (inside.length ? inside : eligible).reduce((b, x) => (inside.length ? x.t < b.t : (x.t - x.en) < (b.t - b.en)) ? x : b);
+        if (!a.brkTaken && a.t >= a.brkAt) { a.t += T.brk; a.brkTaken = true; }
+        let best = null;
+        for (let i = 0; i < todo.length; i++) {
+          const j = todo[i];
+          const change = a.floor != null && a.floor !== j.floor;
+          const travel = change ? T.travel : 0;
+          const start = Math.max(a.t + travel, j.release);
+          const wait = start - a.t - travel;
+          const ready = start + j.dur + T.insp;
+          const slack = Math.max(-120, Math.min(480, j.due - (start + j.dur)));
+          const urg = slack < 120 ? slack * 0.5 : 60 + (slack - 120) * 0.1;
+          let c = wait + (change ? T.travel + 40 + 4 * Math.min(5, Math.abs(a.floor - j.floor)) : 0) + (a.prefs.size && !a.prefs.has(j.floor) ? 40 : 0) + urg;
+          if (start + j.dur > a.en) c += 200;
+          if (j.vip) c -= 45; if (j.early) c -= 45; if (j.status === "SO") c += 30;
+          if (!best || c < best.c || (c === best.c && j.room < best.j.room)) best = { c, i, j, start, wait, travel, ready };
+        }
+        const { j } = best; todo.splice(best.i, 1);
+        // a break that would fall inside this room: take it first
+        let start = best.start;
+        if (!a.brkTaken && start + j.dur > a.brkAt + 20) { a.t = Math.max(a.t, a.brkAt) + T.brk; a.brkTaken = true; start = Math.max(a.t + best.travel, j.release); }
+        const finish = start + j.dur;
+        a.seq += 1; a.load += j.dur + best.travel;
+        items.push({ room: j.room, who: a.name, seq: a.seq, start, finish, ready: finish + T.insp, dur: j.dur, travel: best.travel, wait: Math.max(0, start - a.t - best.travel), done: !!done[j.room] });
+        if (finish > a.en) overrun.push(j.room);
+        a.t = finish; a.floor = j.floor;
+      }
+    }
+    S.board.items = items;
+    P = { T, R, A, items, att, overrun, from };
+    view();
+  }
+  function view() {
+    const { T, R, A } = P, done = S.board.done, items = S.board.items;
+    P.items = items;
+    const job = (r) => { let arr = r.arr; if (r.early && arr == null) arr = 12 * 60; return { arrEff: r.status === "DEP" ? arr : null }; };
+    const itemBy = Object.fromEntries(items.map(x => [x.room, x]));
+    const rows = R.list.map(r => {
+      const j = job(r), it = itemBy[r.room];
+      const a = it ? A.list.find(x => x.name === it.who) : null;
+      let state = "na", margin = null, label = STATUS[r.status] === "Out of order" ? "No clean (out of order)" : "No clean needed";
+      if (r.status === "DEP" || r.status === "SO") {
+        if (done[r.room]) { state = "done"; label = "Done" + (typeof done[r.room] === "string" ? " " + done[r.room] : ""); }
+        else if (!it) { state = "late"; label = "Unassigned"; }
+        else {
+          const arr = r.status === "DEP" ? j.arrEff : null;
+          if (arr != null) margin = arr - it.ready - (r.vip ? T.vip : 0);
+          const afterShift = a && it.finish > a.en;
+          if (margin != null && margin < 0) { state = "late"; label = "Late"; }
+          else if (margin != null && margin < 30) { state = "risk"; label = "At risk"; }
+          else if (r.status === "SO" && it.finish > T.soBy) { state = "risk"; label = "After service time"; }
+          else { state = "ok"; label = "On track"; }
+          if (afterShift) { state = state === "ok" ? "risk" : state; label += ", after shift"; }
+        }
+      } else if (r.status === "VC" && r.arr != null) { state = "ok"; label = "Ready now"; }
+      return { ...r, it, arrShow: r.status === "DEP" ? j.arrEff : r.arr, margin, state, label, coShow: r.status === "DEP" ? (r.co ?? T.co) : null };
+    });
+    P.rows = rows;
+    save();
+    renderResults();
+  }
+
+  // ---------------- input rendering ----------------
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const [sec, k] = el.dataset.k.split(".");
+      el.value = S[sec][k] ?? "";
+      el.oninput = () => { S[sec][k] = el.hasAttribute("data-num") ? (el.value === "" ? "" : +el.value) : el.value; schedule(); };
+    });
+  }
+  let buildTimer;
+  function schedule() { save(); clearTimeout(buildTimer); buildTimer = setTimeout(build, 250); }
+
+  function renderRooms() {
+    const tb = $("#t-rooms tbody");
+    tb.innerHTML = S.rooms.map((r, i) => `<tr data-i="${i}">
+      <td><input type="text" class="w-room" data-f="room" value="${esc(r.room)}" aria-label="Room number"></td>
+      <td><input type="number" class="w-floor" data-f="floor" min="0" value="${esc(r.floor)}" aria-label="Floor"></td>
+      <td><select data-f="status" aria-label="Status">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}"${r.status === k ? " selected" : ""}>${v}</option>`).join("")}</select></td>
+      <td><input type="time" data-f="co" value="${esc(r.co)}" aria-label="Expected check-out"${r.status !== "DEP" ? " disabled" : ""}></td>
+      <td><input type="time" data-f="arr" value="${esc(r.arr)}" aria-label="Next arrival"${r.status === "OOO" || r.status === "SO" ? " disabled" : ""}></td>
+      <td><input type="checkbox" data-f="vip"${r.vip ? " checked" : ""} aria-label="VIP"></td>
+      <td><input type="checkbox" data-f="early"${r.early ? " checked" : ""} aria-label="Early check-in"></td>
+      <td><button class="xbtn" data-del title="Remove room">&times;</button></td></tr>`).join("") ||
+      `<tr><td colspan="8" class="muted">No rooms yet. Add a room, import a CSV or paste from Excel.</td></tr>`;
+    roomsSummary();
+  }
+  function roomsSummary() {
+    const c = { DEP: 0, SO: 0, VC: 0, OOO: 0 }; S.rooms.forEach(r => c[r.status] = (c[r.status] || 0) + 1);
+    $("#rooms-summary").innerHTML = `<b>${S.rooms.length}</b> rooms: ${c.DEP} departures, ${c.SO} stayovers, ${c.VC} vacant clean, ${c.OOO} out of order. ${S.rooms.filter(r => r.vip).length} VIP, ${S.rooms.filter(r => r.early).length} early check-in.`;
+  }
+  $("#t-rooms tbody").addEventListener("input", (e) => {
+    const tr = e.target.closest("tr[data-i]"); if (!tr) return;
+    const r = S.rooms[+tr.dataset.i], f = e.target.dataset.f; if (!f) return;
+    if (e.target.type === "checkbox") r[f] = e.target.checked;
+    else if (f === "floor") r[f] = e.target.value === "" ? "" : Math.max(0, Math.round(+e.target.value));
+    else r[f] = e.target.value;
+    if (f === "room" && (r.floor === "" || r.floor == null)) r.floor = floorOf(r.room);
+    if (f === "status") { const row = tr; row.querySelector('[data-f="co"]').disabled = r.status !== "DEP"; row.querySelector('[data-f="arr"]').disabled = r.status === "OOO" || r.status === "SO"; if (r.status === "DEP" && !r.co) { r.co = S.std.stdCheckout || "11:00"; row.querySelector('[data-f="co"]').value = r.co; } }
+    roomsSummary(); schedule();
+  });
+  $("#t-rooms tbody").addEventListener("change", (e) => { if (e.target.type === "checkbox") return; });
+  $("#t-rooms tbody").addEventListener("click", (e) => {
+    if (!e.target.matches("[data-del]")) return;
+    const i = +e.target.closest("tr").dataset.i; S.rooms.splice(i, 1); renderRooms(); schedule();
+  });
+
+  function renderTeam() {
+    $("#t-team tbody").innerHTML = S.team.map((a, i) => {
+      const st = toMin(a.start), en = toMin(a.end);
+      const paid = st != null && en != null && en > st ? (en - st) - (+S.std.breakMin || 0) : null;
+      return `<tr data-i="${i}">
+      <td><input type="text" class="w-name" data-f="name" value="${esc(a.name)}" aria-label="Name"></td>
+      <td><input type="time" data-f="start" value="${esc(a.start)}" aria-label="Start time"></td>
+      <td><input type="time" data-f="end" value="${esc(a.end)}" aria-label="End time"></td>
+      <td><input type="text" data-f="floors" value="${esc(a.floors)}" placeholder="Any floor" style="min-width:110px" aria-label="Preferred floors"></td>
+      <td class="num" data-paid>${paid == null ? "-" : paid}</td>
+      <td><button class="xbtn" data-del title="Remove attendant">&times;</button></td></tr>`;
+    }).join("") || `<tr><td colspan="6" class="muted">Nobody on shift yet. Add at least one attendant to build the board.</td></tr>`;
+  }
+  $("#t-team tbody").addEventListener("input", (e) => {
+    const tr = e.target.closest("tr[data-i]"); if (!tr) return;
+    const a = S.team[+tr.dataset.i], f = e.target.dataset.f; if (!f) return;
+    const oldName = a.name; a[f] = e.target.value;
+    if (f === "name") (S.board.items || []).forEach(x => { if (x.who === oldName) x.who = a.name; });
+    const st = toMin(a.start), en = toMin(a.end);
+    tr.querySelector("[data-paid]").textContent = st != null && en != null && en > st ? (en - st) - (+S.std.breakMin || 0) : "-";
+    schedule();
+  });
+  $("#t-team tbody").addEventListener("click", (e) => {
+    if (!e.target.matches("[data-del]")) return;
+    S.team.splice(+e.target.closest("tr").dataset.i, 1); renderTeam(); schedule();
+  });
+
+  // ---------------- results rendering ----------------
+  let chart = null;
+  const flags = (r) => (r.vip ? `<span class="tagx vip">VIP</span>` : "") + (r.early ? `<span class="tagx early">Early</span>` : "");
+  function renderResults() {
+    const { T, R, A, rows, items, att, overrun } = P;
+    // warnings
+    const tw = A.warn.slice();
+    $("#team-warn").innerHTML = tw.length ? `<div class="warnbox">${tw.join("<br>")}</div>` : "";
+    const rw = [];
+    if (R.dup.length) rw.push(`Room ${R.dup.map(esc).join(", ")} is listed more than once. Only the first row is used.`);
+    if (R.bad.length) rw.push(`These times could not be read and were ignored: ${R.bad.slice(0, 8).map(esc).join(", ")}${R.bad.length > 8 ? "…" : ""}. Use the 24-hour clock, like 14:30.`);
+    $("#rooms-warn").innerHTML = rw.length ? `<div class="warnbox">${rw.join("<br>")}</div>` : "";
+    $("#std-warn").innerHTML = T.warn.length ? `<div class="warnbox">${T.warn.join("<br>")}</div>` : "";
+
+    const clean = rows.filter(r => r.status === "DEP" || r.status === "SO");
+    const deps = clean.filter(r => r.status === "DEP").length, sos = clean.length - deps;
+    const doneN = clean.filter(r => r.state === "done").length;
+    const late = clean.filter(r => r.state === "late").length, risk = clean.filter(r => r.state === "risk").length;
+    const workMin = clean.reduce((s, r) => s + (r.status === "DEP" ? T.dep : T.so), 0);
+    const capMin = A.list.reduce((s, a) => s + Math.max(0, a.en - a.st - T.brk), 0);
+    const lastReady = items.length ? Math.max(...items.filter(x => x.ready != null).map(x => x.ready)) : null;
+    const arrRooms = clean.filter(r => r.status === "DEP" && r.arrShow != null);
+    const firstArr = arrRooms.length ? Math.min(...arrRooms.map(r => r.arrShow)) : null;
+    const load = capMin ? workMin / capMin : 0;
+
+    $("#res-title").textContent = `Today's board: ${clean.length} rooms to clean, ${A.list.length} attendant${A.list.length === 1 ? "" : "s"}`;
+    $("#kpis").innerHTML = [
+      ["Rooms to clean", fmt.num(clean.length), `${deps} departures, ${sos} stayovers`],
+      ["Work vs time on shift", capMin ? fmt.pct(load, 0) : "-", `${hrs(workMin)} of work, ${hrs(capMin)} available`],
+      ["Rooms late or at risk", `<span style="color:${late ? "var(--bad)" : risk ? "var(--warn)" : "var(--good)"}">${late + risk}</span>`, `${late} late, ${risk} at risk`],
+      ["Last room ready", lastReady != null ? hm(lastReady) : "-", firstArr != null ? `First arrival ${hm(firstArr)}` : "No arrivals entered"],
+      ["Done so far", clean.length ? fmt.pct(doneN / clean.length, 0) : "-", `${doneN} of ${clean.length} rooms`],
+    ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+
+    let msg;
+    if (!A.list.length) msg = "Add at least one attendant on shift (step 2) and the board will build itself.";
+    else if (!clean.length) msg = "No rooms need cleaning today. Add departures or stayovers in step 1.";
+    else {
+      const parts = [];
+      if (load > 1) parts.push(`there are about <b>${hrs(workMin - capMin)}</b> more work than time on shift, so roughly <b>${Math.ceil((workMin - capMin) / Math.max(60, (capMin / A.list.length) || 480))}</b> more attendant${Math.ceil((workMin - capMin) / 480) === 1 ? "" : "s"} (or approved overtime) would cover it`);
+      else if (load > 0.92) parts.push(`the team is nearly full (${fmt.pct(load, 0)} of shift time), so one sick call would put rooms at risk`);
+      else parts.push(`the team has spare time (work fills ${fmt.pct(load, 0)} of shift time)${load < 0.7 ? ", so you could send someone home early or give deep-cleaning tasks" : ""}`);
+      if (late) parts.push(`<b>${late}</b> room${late === 1 ? " is" : "s are"} expected to be ready after the guest arrives: call the front desk to offer a later check-in or move the guest`);
+      else if (risk) parts.push(`<b>${risk}</b> room${risk === 1 ? " is" : "s are"} tight (under 30 minutes spare): keep an eye on ${risk === 1 ? "it" : "them"}`);
+      else parts.push("every room with an arrival is expected to be ready in time");
+      msg = parts.join("; ") + ".";
+      msg = msg.charAt(0).toUpperCase() + msg.slice(1);
+    }
+    $("#takeaway").innerHTML = `<strong>What this means:</strong> ${msg}`;
+    const pw = [];
+    if (overrun.length) pw.push(`${overrun.length} room${overrun.length === 1 ? "" : "s"} (${overrun.slice(0, 10).join(", ")}${overrun.length > 10 ? "…" : ""}) only fit if an attendant stays past their shift end.`);
+    if (P.from != null) pw.push(`Showing a plan rebuilt from ${hm(P.from)}. Rooms already ticked as done keep their attendant.`);
+    $("#plan-warn").innerHTML = pw.length ? `<div class="warnbox">${pw.join("<br>")}</div>` : "";
+
+    renderProgress(); renderCards(); renderChart(); renderTable();
+  }
+
+  function attStats() {
+    const { T, A, items } = P;
+    return A.list.map(a => {
+      const mine = items.filter(x => x.who === a.name).sort((x, y) => (x.seq || 0) - (y.seq || 0));
+      const doneN = mine.filter(x => x.done).length;
+      const remain = mine.filter(x => !x.done).reduce((s, x) => s + x.dur + (x.travel || 0), 0);
+      const dep = mine.filter(x => P.rows.find(r => r.room === x.room)?.status === "DEP").reduce((s, x) => s + x.dur, 0);
+      const so = mine.reduce((s, x) => s + x.dur, 0) - dep;
+      const travel = mine.reduce((s, x) => s + (x.travel || 0), 0);
+      const lastFin = mine.length ? Math.max(...mine.map(x => x.finish || 0)) : null;
+      const floors = [...new Set(mine.map(x => P.rows.find(r => r.room === x.room)?.floor))].filter(f => f != null).sort((p, q) => p - q);
+      return { a, mine, doneN, remain, dep, so, travel, cap: Math.max(0, a.en - a.st - T.brk), lastFin, floors };
+    });
+  }
+
+  function renderProgress() {
+    const st = attStats(), clean = P.rows.filter(r => r.status === "DEP" || r.status === "SO");
+    const doneN = clean.filter(r => r.state === "done").length;
+    const remain = st.reduce((s, x) => s + x.remain, 0);
+    $("#prog-label").textContent = `${doneN} of ${clean.length} rooms done${clean.length ? " (" + fmt.pct(doneN / clean.length, 0) + ")" : ""}, about ${hrs(remain)} of work left`;
+    $("#prog-bar").style.width = clean.length ? (100 * doneN / clean.length) + "%" : "0";
+    const n = nowMin();
+    const due = P.items.filter(x => x.finish != null && x.finish <= n).length;
+    $("#prog-now").textContent = `At ${hm(n)} the plan expected ${due} room${due === 1 ? "" : "s"} done.`;
+    $("#prog-rows").innerHTML = st.map(x => `<div class="prog-row"><div><b>${esc(x.a.name)}</b><br><span class="muted" style="font-size:12.5px">${hm(x.a.st)} to ${hm(x.a.en)}</span></div>
+      <div><div class="bar"><i style="width:${x.mine.length ? 100 * x.doneN / x.mine.length : 0}%"></i></div><span class="muted" style="font-size:12.5px">${x.doneN} of ${x.mine.length} rooms done</span></div>
+      <div class="r"><b>${x.remain} min</b> left<br>${x.mine.length ? "finish about " + hm(x.lastFin) : "no rooms"}${x.lastFin > x.a.en ? ' <span class="st late">past shift</span>' : ""}</div></div>`).join("") ||
+      `<p class="muted">No attendants on shift.</p>`;
+    const un = P.items.filter(x => x.done && !x.who).length;
+    if (un) $("#prog-rows").insertAdjacentHTML("beforeend", `<p class="note">${un} room${un === 1 ? " was" : "s were"} ticked done without an attendant (for example after an attendant was removed).</p>`);
+  }
+
+  function renderCards() {
+    const st = attStats(), rowBy = Object.fromEntries(P.rows.map(r => [r.room, r]));
+    $("#cards").innerHTML = st.map(x => {
+      const lines = x.mine.map(it => {
+        const r = rowBy[it.room];
+        return `<tr class="${it.done ? "is-done" : ""}"><td class="num">${it.seq || ""}</td><td><b class="rn">${esc(it.room)}</b></td><td><span class="type ${r.status}">${r.status === "DEP" ? "Dep" : "Stay"}</span></td><td>${flags(r)}${r.status === "DEP" && r.arrShow != null ? `<span class="muted" style="font-size:12px;white-space:nowrap">in ${hm(r.arrShow)}</span>` : ""}</td><td class="num">${hm(it.finish)}</td><td><input type="checkbox" data-done="${esc(it.room)}"${it.done ? " checked" : ""} aria-label="Room ${esc(it.room)} done"></td></tr>`;
+      }).join("");
+      const cr = x.mine.length ? Math.round((x.dep + x.so) / Math.max(1, P.T.dep) * 10) / 10 : 0;
+      return `<article class="bcard"><header><b>${esc(x.a.name)}</b><span>${hm(x.a.st)} to ${hm(x.a.en)} · ${x.floors.length ? "Floor" + (x.floors.length > 1 ? "s " : " ") + x.floors.join(", ") : "No rooms"} · ${x.mine.length} rooms</span></header>
+        ${x.mine.length ? `<table><thead><tr><th class="num">#</th><th>Room</th><th>Type</th><th>Flags</th><th class="num">Finish</th><th>Done</th></tr></thead><tbody>${lines}</tbody></table>` : `<p class="muted" style="padding:12px 14px;margin:0">No rooms assigned.</p>`}
+        <div class="foot">${x.dep + x.so} min cleaning, ${x.travel} min travel, about ${cr} departure-room equivalents. Expected last finish ${hm(x.lastFin)}. Break ${P.T.brk} min around ${hm(x.a.st + (x.a.en - x.a.st) / 2)}.</div></article>`;
+    }).join("") || `<p class="muted">Add attendants in step 2 to see their board cards.</p>`;
+  }
+
+  function renderChart() {
+    const st = attStats();
+    $("#wl-table").innerHTML = st.map(x => {
+      const w = x.dep + x.so + x.travel, l = x.cap ? w / x.cap : 0;
+      return `<tr><td>${esc(x.a.name)}</td><td class="num">${x.mine.length}</td><td class="num">${w}</td><td class="num">${x.cap}</td><td class="num"><span class="${l > 1 ? "short" : ""}">${fmt.pct(l, 0)}</span></td><td class="num">${x.floors.join(", ") || "-"}</td></tr>`;
+    }).join("") || `<tr><td colspan="6" class="muted">No attendants.</td></tr>`;
+    if (!window.Chart) { $("#wl-chart").parentElement.innerHTML = `<p class="muted">The chart could not load. The table shows the same numbers.</p>`; return; }
+    const labels = st.map(x => x.a.name);
+    const spare = st.map(x => Math.max(0, x.cap - x.dep - x.so - x.travel));
+    const data = {
+      labels,
+      datasets: [
+        { label: "Departures", data: st.map(x => x.dep), backgroundColor: COLORS.s1, borderColor: "#fff", borderWidth: 2, stack: "w" },
+        { label: "Stayovers", data: st.map(x => x.so), backgroundColor: COLORS.s3, borderColor: "#fff", borderWidth: 2, stack: "w" },
+        { label: "Travel", data: st.map(x => x.travel), backgroundColor: COLORS.s4, borderColor: "#fff", borderWidth: 2, stack: "w" },
+        { label: "Spare shift time", data: spare, backgroundColor: "#e4e7eb", borderColor: "#fff", borderWidth: 2, stack: "w" },
+      ],
+    };
+    if (chart) { chart.data = data; chart.update("none"); return; }
+    chart = new Chart($("#wl-chart"), {
+      type: "bar", data,
+      options: { indexAxis: "y", plugins: { legend: { position: "bottom" }, tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.raw} min` } } },
+        scales: { x: gridScale({ stacked: true, title: { display: true, text: "Minutes" } }), y: gridScale({ stacked: true, grid: { display: false } }) } },
+    });
+  }
+
+  function renderTable() {
+    const u = S.ui, rowsAll = P.rows;
+    const whoSel = $("#flt-who");
+    whoSel.innerHTML = `<option value="">Everyone</option>` + P.A.list.map(a => `<option${u.who === a.name ? " selected" : ""}>${esc(a.name)}</option>`).join("");
+    $("#flt").value = u.flt; $("#srt").value = u.srt;
+    let rows = rowsAll.filter(r => {
+      if (u.who && r.it?.who !== u.who) return false;
+      if (u.flt === "clean") return r.status === "DEP" || r.status === "SO";
+      if (u.flt === "risk") return r.state === "risk" || r.state === "late";
+      if (u.flt === "open") return (r.status === "DEP" || r.status === "SO") && r.state !== "done";
+      if (u.flt === "arr") return r.arrShow != null;
+      return true;
+    });
+    const k = { room: (r) => [r.floor, +r.room.replace(/\D/g, "") || 0], ready: (r) => [r.it?.ready ?? 1e9, 0], margin: (r) => [r.margin ?? 1e9, r.it?.ready ?? 1e9], who: (r) => [r.it ? P.A.list.findIndex(a => a.name === r.it.who) : 999, r.it?.seq ?? 0] }[u.srt] || ((r) => [0, 0]);
+    rows = rows.slice().sort((a, b) => { const x = k(a), y = k(b); return x[0] - y[0] || x[1] - y[1] || a.room.localeCompare(b.room); });
+    $("#t-board tbody").innerHTML = rows.map(r => {
+      const can = r.status === "DEP" || r.status === "SO";
+      return `<tr class="${r.state === "done" ? "is-done" : ""}">
+      <td>${can ? `<input type="checkbox" data-done="${esc(r.room)}"${r.state === "done" ? " checked" : ""} aria-label="Room ${esc(r.room)} done">` : ""}</td>
+      <td><b class="rn">${esc(r.room)}</b></td><td class="num">${r.floor}</td><td><span class="type ${r.status}">${STATUS[r.status]}</span></td><td>${flags(r)}</td>
+      <td>${r.it?.who ? esc(r.it.who) : can ? "-" : ""}</td><td class="num">${r.it?.seq || ""}</td><td class="num">${r.coShow != null ? hm(r.coShow) : ""}</td>
+      <td class="num">${r.it && r.it.ready != null ? hm(r.it.ready) : ""}</td><td class="num">${r.arrShow != null ? hm(r.arrShow) : ""}</td>
+      <td class="num">${r.margin != null && r.state !== "done" ? (r.margin >= 0 ? "+" : "") + Math.round(r.margin) + " min" : ""}</td>
+      <td><span class="st ${r.state}">${r.label}</span></td></tr>`;
+    }).join("") || `<tr><td colspan="12" class="muted">No rooms match this filter.</td></tr>`;
+    $("#board-count").textContent = `Showing ${rows.length} of ${rowsAll.length} rooms. Margin for VIP rooms is measured against the VIP ready-by time.`;
+  }
+  $("#flt").onchange = (e) => { S.ui.flt = e.target.value; save(); renderTable(); };
+  $("#flt-who").onchange = (e) => { S.ui.who = e.target.value; save(); renderTable(); };
+  $("#srt").onchange = (e) => { S.ui.srt = e.target.value; save(); renderTable(); };
+
+  // done ticks (event delegation for cards and table)
+  document.addEventListener("change", (e) => {
+    const room = e.target.dataset?.done; if (room == null) return;
+    if (e.target.checked) S.board.done[room] = hm(nowMin()); else delete S.board.done[room];
+    // ticking does not reshuffle the plan: mark in place
+    const it = S.board.items.find(x => x.room === room); if (it) it.done = e.target.checked;
+    view();
+  });
+
+  // ---------------- reassign ----------------
+  $("#reassign").onclick = () => {
+    const v = $("#re-from").value; let t = v ? toMin(v) : nowMin();
+    const A = cleanTeam().list;
+    if (!A.length) { $("#re-note").textContent = "Add attendants first."; return; }
+    const lastEnd = Math.max(...A.map(a => a.en)), firstSt = Math.min(...A.map(a => a.st));
+    if (t >= lastEnd) { $("#re-note").textContent = `Every shift has ended by ${hm(t)}. Pick an earlier time in "Rebuild from".`; return; }
+    if (t < firstSt) t = firstSt;
+    S.board.from = t; $("#re-note").textContent = `Rebuilt from ${hm(t)}: ${Object.keys(S.board.done).length} done rooms kept, the rest re-ordered.`;
+    build();
+  };
+  $("#full-day").onclick = () => { S.board.from = null; $("#re-note").textContent = "Showing the full-day plan from each shift's start."; build(); };
+  $("#clear-done").onclick = () => { if (!confirm("Untick every room? The progress for today will be cleared.")) return; S.board.done = {}; S.board.items.forEach(x => x.done = false); view(); };
+
+  // ---------------- import / export ----------------
+  function parseCSV(t) {
+    const out = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true; else if (c === "," || c === "\t") { row.push(cell); cell = ""; } else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); out.push(row); row = []; cell = ""; } else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); out.push(row); }
+    return out.filter(r => r.some(x => String(x).trim()));
+  }
+  const statusOf = (s) => { s = String(s || "").trim().toLowerCase(); if (/^(dep|d$|c\/o|co$|check.?out|vd)/.test(s)) return "DEP"; if (/^(so|s$|stay|occ|od)/.test(s)) return "SO"; if (/^(vc|vacant|v$|clean|vr|ready|vi)/.test(s)) return "VC"; if (/^(ooo|out|oos|o$)/.test(s)) return "OOO"; return null; };
+  const yes = (s) => /^(y|yes|true|1|x|✓)$/i.test(String(s || "").trim());
+  const normTime = (s) => { s = String(s || "").trim(); if (!s) return ""; let m = /^(\d{1,2})[:.h]?(\d{2})?\s*(am|pm)?$/i.exec(s); if (!m) return null; let h = +m[1], mi = +(m[2] || 0); if (m[3]) { if (/pm/i.test(m[3]) && h < 12) h += 12; if (/am/i.test(m[3]) && h === 12) h = 0; } if (h > 23 || mi > 59) return null; return String(h).padStart(2, "0") + ":" + String(mi).padStart(2, "0"); };
+  function rowsToRooms(rows) {
+    if (!rows.length) return { rooms: [], skipped: 0 };
+    let head = rows[0].map(h => String(h).trim().toLowerCase());
+    let map;
+    if (head.some(h => /room/.test(h))) {
+      const find = (re) => head.findIndex(h => re.test(h));
+      map = { room: find(/room/), floor: find(/floor/), status: find(/status|type/), co: find(/check.?out|departure time|^co$/), arr: find(/arriv|check.?in time|eta/), vip: find(/vip/), early: find(/early/) };
+      rows = rows.slice(1);
+    } else map = { room: 0, floor: 1, status: 2, co: 3, arr: 4, vip: 5, early: 6 };
+    let skipped = 0;
+    const rooms = rows.map(r => {
+      const g = (k) => (map[k] >= 0 ? String(r[map[k]] ?? "").trim() : "");
+      const room = g("room"); if (!room) { skipped++; return null; }
+      const status = statusOf(g("status")) || "SO";
+      const co = normTime(g("co")), arr = normTime(g("arr"));
+      const fl = g("floor");
+      return { room, floor: fl !== "" && isFinite(+fl) ? Math.round(+fl) : floorOf(room), status, co: co || (status === "DEP" ? (S.std.stdCheckout || "11:00") : ""), arr: arr || "", vip: yes(g("vip")), early: yes(g("early")) };
+    }).filter(Boolean);
+    return { rooms, skipped };
+  }
+  function applyRooms(res, mode) {
+    if (!res.rooms.length) { alert("No rooms found. Check the columns: room, floor, status, check-out, arrival, VIP, early."); return false; }
+    if (mode === "add") { const have = new Set(S.rooms.map(r => r.room)); res.rooms.forEach(r => { const i = S.rooms.findIndex(x => x.room === r.room); if (i >= 0) S.rooms[i] = r; else S.rooms.push(r); }); }
+    else { S.rooms = res.rooms; S.board = { from: null, done: {}, items: [] }; }
+    renderRooms(); schedule();
+    return true;
+  }
+  $("#imp").onchange = async (ev) => {
+    const f = ev.target.files[0]; if (!f) return;
+    const res = rowsToRooms(parseCSV(await f.text()));
+    if (applyRooms(res, "replace")) alert(`Imported ${res.rooms.length} rooms${res.skipped ? `, skipped ${res.skipped} rows with no room number` : ""}.`);
+    ev.target.value = "";
+  };
+  function download(name, text) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + text], { type: "text/csv;charset=utf-8" })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  const csvCell = (v) => { v = String(v ?? ""); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  $("#tpl").onclick = () => download("housekeeping-rooms-template.csv", "room,floor,status,checkout,arrival,vip,early\n301,3,departure,10:00,15:00,no,no\n302,3,stayover,,,no,no\n303,3,departure,08:30,12:00,yes,yes\n304,3,vacant clean,,16:00,no,no\n305,3,out of order,,,no,no\n");
+  $("#show-paste").onclick = () => { $("#paste-box").hidden = false; $("#paste").focus(); };
+  $("#paste-cancel").onclick = () => { $("#paste-box").hidden = true; };
+  $("#paste-go").onclick = () => { const res = rowsToRooms(parseCSV($("#paste").value)); if (applyRooms(res, "replace")) { $("#paste").value = ""; $("#paste-box").hidden = true; } };
+  $("#paste-add").onclick = () => { const res = rowsToRooms(parseCSV($("#paste").value)); if (applyRooms(res, "add")) { $("#paste").value = ""; $("#paste-box").hidden = true; } };
+  $("#add-room").onclick = () => {
+    const last = S.rooms[S.rooms.length - 1]; const next = last && /^\d+$/.test(last.room) ? String(+last.room + 1) : "";
+    S.rooms.push({ room: next, floor: next ? floorOf(next) : "", status: "DEP", co: S.std.stdCheckout || "11:00", arr: "", vip: false, early: false });
+    renderRooms(); schedule(); const rs = $(".rooms-scroll"); rs.scrollTop = rs.scrollHeight; $("#t-rooms tbody tr:last-child input").focus();
+  };
+  $("#clear-rooms").onclick = () => { if (!confirm("Remove every room from the list? You can then import a CSV, paste from Excel or add rooms one by one.")) return; S.rooms = []; S.board = { from: null, done: {}, items: [] }; renderRooms(); schedule(); };
+  $("#add-att").onclick = () => { S.team.push({ name: `Attendant ${S.team.length + 1}`, start: "08:00", end: "16:30", floors: "" }); renderTeam(); schedule(); $("#t-team tbody tr:last-child input").select(); };
+  $("#csv").onclick = () => {
+    const head = ["Room", "Floor", "Type", "VIP", "Early check-in", "Attendant", "Order", "Check-out", "Start est.", "Ready est.", "Arrival", "Margin (min)", "Status"];
+    const lines = P.rows.map(r => [r.room, r.floor, STATUS[r.status], r.vip ? "yes" : "", r.early ? "yes" : "", r.it?.who || "", r.it?.seq || "", r.coShow != null ? hm(r.coShow) : "", r.it?.start != null ? hm(r.it.start) : "", r.it?.ready != null ? hm(r.it.ready) : "", r.arrShow != null ? hm(r.arrShow) : "", r.margin != null && r.state !== "done" ? Math.round(r.margin) : "", r.label].map(csvCell).join(","));
+    download(`housekeeping-board-${new Date().toISOString().slice(0, 10)}.csv`, [head.join(","), ...lines].join("\n"));
+  };
+  $("#print-cards").onclick = () => { document.body.classList.add("print-cards"); window.print(); };
+  window.addEventListener("afterprint", () => document.body.classList.remove("print-cards"));
+
+  // ---------------- resets ----------------
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset;
+    const names = { rooms: "room list", team: "attendants", std: "time standards" };
+    if (!confirm(`Reset the ${names[sec]} to the sample? Your changes in this section will be lost.`)) return;
+    S[sec] = clone(DEFAULTS[sec]);
+    if (sec === "rooms") S.board = clone(DEFAULTS.board);
+    renderAll();
+  });
+  $("#reset-all").onclick = () => { if (!confirm("Reset every section, clear all ticks and go back to the sample? This can't be undone.")) return; S = clone(DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {} renderAll(); $("#saved").textContent = ""; };
+  function renderAll() { bindFields(); renderRooms(); renderTeam(); build(); }
+
+  // ---------------- start ----------------
+  chartDefaults();
+  S = load();
+  renderAll();
+  setInterval(() => { if (P) renderProgress(); }, 60000);
+})();
+</script>
+</body>
+</html>

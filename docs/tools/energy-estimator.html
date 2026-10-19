@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peak-Energy Savings Estimator</title>
+<meta name="description" content="A free estimator for Ontario hotels: see whether you qualify for Class A under the Industrial Conservation Initiative, how many kW you can shift off the province's 5 peak hours, what that saves on the Global Adjustment, and a peak-day playbook for your team.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.kpi .value.sm { font-size: 22px; }
+.kpi.good { border-color: #b7e0c7; background: var(--good-soft); }
+.kpi.warn { border-color: #f0d29c; background: var(--warn-soft); }
+.kpi.bad { border-color: #f0c4bf; background: var(--bad-soft); }
+.assume { font-size: 12px; color: var(--warn); font-weight: 600; }
+.range-row { display: flex; align-items: center; gap: 12px; }
+.range-row input[type=range] { flex: 1; min-width: 0; accent-color: var(--brand-2); }
+.range-row output { font-weight: 700; min-width: 120px; }
+table.edit input.w-pct { width: 70px; }
+table.edit input.w-how { min-width: 220px; }
+.bar-in { height: 8px; border-radius: 4px; background: var(--brand-2); min-width: 2px; }
+.bar-track { background: var(--line); border-radius: 4px; width: 120px; }
+.card .muted { font-size: 13.5px; }
+.playbook { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 960px) { .playbook { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .playbook { grid-template-columns: 1fr; } }
+.pb-col { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #fff; }
+.pb-col h3 { font-size: 15px; margin-bottom: 2px; }
+.pb-col .when { font-size: 12.5px; color: var(--brand-2); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.pb-col label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; padding: 6px 0; border-top: 1px dashed var(--line); cursor: pointer; }
+.pb-col label:first-of-type { border-top: 0; }
+.pb-col input[type=checkbox] { margin-top: 4px; accent-color: var(--good); flex: none; }
+.pb-col label.done span { color: var(--ink-3); text-decoration: line-through; }
+.pb-col small { display: block; color: var(--ink-3); font-size: 12px; }
+.swarm { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; box-shadow: var(--shadow); }
+.swarm p { margin: 0; color: var(--ink-2); font-size: 14.5px; max-width: 760px; }
+.res-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+.res-head h2 { margin: 0; font-size: 21px; }
+.res-head p { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; }
+table.prof input { width: 100px; text-align: right; }
+.pos { color: var(--good); font-weight: 600; }
+.neg { color: var(--bad); font-weight: 600; }
+.chart-empty { display: grid; place-items: center; height: 100%; color: var(--ink-3); font-size: 14px; text-align: center; }
+@media print {
+  .pb-col input[type=checkbox] { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .chart-box { height: 230px; }
+  .card, .pb-col { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Peak-Energy Savings Estimator</h1>
+    <p class="lead">Ontario charges big electricity users part of their bill based on how much power they draw in the province's 5 busiest hours of the year. This tool shows whether your hotel qualifies, how many kilowatts you could move out of those hours, what that is worth each year, and gives your team a simple playbook for peak days.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Ontario Global Adjustment and ICI</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-hotel"><b>Step 1</b>Your hotel's demand</a>
+    <a href="#s-equip"><b>Step 2</b>Equipment you can shift</a>
+    <a href="#s-resp"><b>Step 3</b>How well you'll respond</a>
+    <a href="#s-assume"><b>Step 4</b>Check the assumptions</a>
+    <a href="#s-results"><b>Step 5</b>Savings and playbook</a>
+  </nav>
+
+  <div class="takeaway no-print" style="margin:0 0 22px"><strong>The short version:</strong> Ontario's <b>Global Adjustment (GA)</b> is a large charge on every electricity bill that pays for the province's power plants and contracts. Most hotels pay it per kWh (<b>Class B</b>). Larger users can choose <b>Class A</b> under the <b>Industrial Conservation Initiative (ICI)</b>: they pay GA according to their <b>peak demand factor</b>, which is their share of Ontario's demand in the 5 highest-demand hours of the year (usually hot summer weekday afternoons). Cut your load in those 5 hours and next year's GA bill drops for twelve months.</div>
+
+  <!-- 1. Hotel -->
+  <section class="sec no-print" id="s-hotel">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Your hotel's demand</h2><p>Peak demand is the most power (kW) the hotel draws at one time, shown on your electricity bill or utility portal. The monthly profile is optional but makes the eligibility check more accurate.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="hotel">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="f-name">Hotel</label><input type="text" id="f-name" data-k="hotel.name"></div>
+        <div class="field"><label for="f-avg">Average monthly peak demand (kW)</label><input type="number" min="0" step="10" id="f-avg" data-k="hotel.avgPeak" data-num><small>Average of the 12 monthly peaks on your bills. Used when the profile below is switched off.</small></div>
+        <div class="field"><label for="f-peakhr">Your demand during the province's peak hours (kW)</label><input type="number" min="0" step="10" id="f-peakhr" data-k="hotel.peakHourKW" data-num><small>Usually a hot July or August weekday around 5 pm. Your summer peak is a good guess. <a href="#" id="use-summer">Use my summer peak</a></small></div>
+        <div class="field"><label for="f-useprof">Monthly profile</label><select id="f-useprof" data-k="hotel.useProfile"><option value="yes">Use the monthly profile below</option><option value="no">Ignore it, use the average above</option></select></div>
+      </div>
+      <div class="grid g2" style="margin-top:16px">
+        <div>
+          <div class="table-wrap"><table class="edit prof" id="t-prof"><thead><tr><th>Month</th><th class="num">Peak demand (kW)</th><th class="num">Energy used (kWh)</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+          <p class="note">Leave a month blank if you don't have it; averages use the months you enter. <button class="btn sm" id="prof-clear" style="margin-left:6px">Clear profile</button></p>
+        </div>
+        <div class="card" style="box-shadow:none">
+          <h3>Monthly peak demand</h3><p class="muted">Against the Class A thresholds set in Step 4.</p>
+          <div class="chart-box"><canvas id="c-prof"></canvas></div>
+        </div>
+      </div>
+      <div id="hotel-warn"></div>
+    </div>
+  </section>
+
+  <!-- 2. Equipment -->
+  <section class="sec no-print" id="s-equip">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Equipment you can shift</h2><p>For each system, the power it draws on a hot afternoon (kW) and the share you could turn down or move to another time for one peak hour without hurting guests.</p></div>
+      <div class="toolbar"><button class="btn sm" id="add-eq">Add equipment</button><button class="btn sm reset" data-reset="equip">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap"><table class="edit" id="t-eq"><thead><tr><th>Equipment</th><th class="num">Load on a hot afternoon (kW)</th><th class="num">% you can shift</th><th class="num">kW cut</th><th>How</th><th></th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <div id="eq-warn"></div>
+    </div>
+  </section>
+
+  <!-- 3. Response -->
+  <section class="sec no-print" id="s-resp">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">3</span>How well you'll respond</h2><p>Nobody knows the peak hours in advance. Alert services flag likely peak days, so hotels act on 10 to 15 alerts a summer to be sure of catching the 5 that count.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="resp">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="field"><label for="f-rel">Share of the peak hours you expect to catch</label>
+        <div class="range-row"><input type="range" min="0" max="100" step="5" id="f-rel" data-k="resp.reliability" data-num><output id="rel-out"></output></div>
+        <small>Be honest: missing one peak costs a fifth of the year's saving. With an alert service and a written playbook, 80% (4 of 5) is a realistic target; 100% takes automation.</small></div>
+      <div class="fields" style="margin-top:14px">
+        <div class="field"><label for="f-alerts">Alert days you act on per year</label><input type="number" min="0" max="60" id="f-alerts" data-k="resp.alerts" data-num><small>Drives the extra pre-cooling cost</small></div>
+        <div class="field"><label for="f-hours">Hours you cut load on each alert</label><input type="number" min="1" max="8" step="0.5" id="f-hours" data-k="resp.hours" data-num><small>Peaks usually fall between 4 pm and 7 pm</small></div>
+        <div class="field"><label for="f-setup">One-time setup cost ($, optional)</label><input type="number" min="0" step="500" id="f-setup" data-k="resp.setup" data-num><small>Controls programming, alert service, staff training. Enter 0 to skip payback.</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Assumptions -->
+  <section class="sec no-print" id="s-assume">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">4</span>Assumptions</h2><p>Reasonable starting values for recent years. <b>These are assumptions: check them with your utility or energy advisor</b>, because GA costs change every year and the ICI rules are reviewed by the province.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="assume">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="a-ga">Class A GA cost per kW of peak demand, per year ($)</label><input type="number" min="0" step="10" id="a-ga" data-k="assume.gaPerKw" data-num><small class="assume">Assumption, check with your utility.</small><small>What one kW drawn during the peak hours adds to a full year of GA charges.</small></div>
+        <div class="field"><label for="a-peaks">Number of peak hours that set the charge</label><input type="number" min="1" max="20" id="a-peaks" data-k="assume.peaks" data-num><small class="assume">Assumption, check with your utility.</small><small>5 under the ICI rules this tool was built on (base period May 1 to April 30).</small></div>
+        <div class="field"><label for="a-up">Class A threshold (average peak, kW)</label><input type="number" min="0" step="50" id="a-up" data-k="assume.upper" data-num><small class="assume">Assumption, check with your utility.</small><small>Above this you can opt in to Class A (above 5 MW it is automatic).</small></div>
+        <div class="field"><label for="a-low">Lower opt-in threshold (kW)</label><input type="number" min="0" step="50" id="a-low" data-k="assume.lower" data-num><small class="assume">Assumption, check with your utility.</small><small>From this up to the threshold above, opt-in has been limited to some sectors.</small></div>
+        <div class="field"><label for="a-b">Class B GA rate ($ per kWh)</label><input type="number" min="0" step="0.005" id="a-b" data-k="assume.classB" data-num><small class="assume">Assumption, check with your utility.</small><small>Used only to compare Class A with staying on Class B.</small></div>
+        <div class="field"><label for="a-rb">Pre-cooling rebound (% of shifted energy used again)</label><input type="number" min="0" max="100" id="a-rb" data-k="assume.rebound" data-num><small class="assume">Assumption, check with your utility.</small><small>Cooling a building ahead of time uses a little extra energy.</small></div>
+        <div class="field"><label for="a-price">Energy price for that extra use ($ per kWh)</label><input type="number" min="0" step="0.01" id="a-price" data-k="assume.price" data-num><small class="assume">Assumption, check with your utility.</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <span class="muted" style="font-size:14px">Results update as you type.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section id="s-results">
+    <div class="res-head">
+      <div><h2 id="res-title">Results</h2><p id="res-sub"></p></div>
+      <div class="toolbar no-print"><button class="btn sm primary" id="csv">Download CSV</button><button class="btn sm" id="xlsx">Download Excel</button><button class="btn sm" onclick="window.print()">Print</button></div>
+    </div>
+    <div class="grid g5" id="kpis"></div>
+    <div class="takeaway" id="takeaway"></div>
+    <div id="res-warn"></div>
+
+    <div class="grid g2" style="margin-top:18px">
+      <div class="card">
+        <h3>Saving vs peaks caught</h3><p class="muted">Annual GA saving under Class A for each number of peak hours you manage to cut, before the pre-cooling cost. The darker bar is your expected result.</p>
+        <div class="chart-box"><canvas id="c-sens"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Where the kW come from</h3><p class="muted">Each system's share of the kilowatts cut during a peak hour.</p>
+        <div class="chart-box"><canvas id="c-eq"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card">
+        <h3>Contribution by equipment</h3><p class="muted">Annual saving each system brings at your expected catch rate.</p>
+        <div class="table-wrap"><table id="t-contrib"></table></div>
+      </div>
+      <div class="card">
+        <h3>Class A or Class B?</h3><p class="muted">A year of GA under each option, using the assumptions in Step 4.</p>
+        <div class="table-wrap"><table id="t-class"></table></div>
+        <p class="note" id="class-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Playbook -->
+  <section class="sec" id="s-playbook" style="margin-top:22px">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">5</span>Peak day playbook</h2><p>Print this for engineering, laundry and the front desk. Tick items off on an alert day; ticks are saved in this browser. Steps for equipment you set to 0 kW are left out.</p></div>
+      <div class="toolbar"><button class="btn sm" onclick="window.print()">Print</button><button class="btn sm reset" data-reset="playbook">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="playbook" id="playbook"></div>
+      <p class="note" id="pb-note"></p>
+    </div>
+  </section>
+
+  <div class="swarm no-print">
+    <p><b>Doing this by hand every alert day is the hard part.</b> An AI agent can watch the IESO demand forecast, decide when to pre-cool and send the playbook to each department automatically.</p>
+    <a class="btn primary" href="https://nihalunfc.github.io/hotel-business/swarm/#energy">See how an AI swarm does this automatically</a>
+  </div>
+
+  <details class="tech no-print">
+    <summary>How it's calculated</summary>
+    <p><b>Class A GA charge.</b> The real charge is your <b>peak demand factor</b> (your demand in the peak hours &divide; Ontario's demand in those hours, averaged over the 5 hours of the May to April base period) &times; the total Global Adjustment for each month of the following year. This tool simplifies that to <b>demand in the peak hours (kW) &times; GA cost per kW-year</b>. The default of $450 per kW-year is a rough figure in line with recent years. It is an assumption, check with your utility: it moves with the province's total GA cost and total peak demand.</p>
+    <p><b>kW cut</b> = sum over equipment of load &times; % you can shift, capped at your demand in the peak hours. <b>Expected peaks caught</b> = share caught &times; number of peak hours. Because the charge uses the average over the peak hours, cutting C kW in k of N hours lowers your average by C &times; k &divide; N. <b>Annual saving</b> = C &times; k &divide; N &times; GA cost per kW-year.</p>
+    <p><b>Pre-cooling cost</b> = alert days &times; hours per alert &times; kW cut &times; rebound % &times; energy price. <b>Net saving</b> = saving minus that cost. <b>Payback</b> = setup cost &divide; net saving.</p>
+    <p><b>Eligibility.</b> The check uses your average monthly peak (from the profile when it is switched on). Above the Class A threshold (1 MW by default) a customer can opt in; above 5 MW Class A is automatic. Between 500 kW and 1 MW, opt-in has historically been limited to certain sectors such as manufacturing and greenhouses, so a hotel in that band should check with its utility. Opting in is usually done once a year, before the base period starts.</p>
+    <p><b>Class B comparison</b> = annual kWh &times; the Class B GA rate. Annual kWh comes from the profile, or is estimated as average peak &times; 8,760 hours &times; 55% load factor when there is no profile.</p>
+    <p><b>Limits.</b> This is an estimate for planning, not a bill calculation. It ignores transmission charges that also use peak demand (which add to the saving), weather-driven changes in your load, and the risk that a missed peak lands on a day you did not get an alert. Your inputs are stored only in this browser.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.energy-estimator.v1";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const money = (v) => (v < 0 ? "-" : "") + "$" + Math.round(Math.abs(v)).toLocaleString("en-CA");
+  const kw = (v) => Math.round(v).toLocaleString("en-CA") + " kW";
+  const EQ_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#8b5cf6", "#9aa4ae"];
+
+  const DEFAULTS = {
+    hotel: { name: "Summit Tower Hotel", avgPeak: 1050, peakHourKW: 1240, useProfile: "yes" },
+    profile: [[985, 528000], [960, 482000], [945, 503000], [930, 489000], [1015, 561000], [1170, 638000], [1290, 721000], [1275, 716000], [1145, 618000], [995, 541000], [950, 502000], [990, 532000]].map(([k, e]) => ({ kw: k, kwh: e })),
+    equip: [
+      { name: "Chillers and cooling plant", kw: 420, pct: 30, how: "Pre-cool 3 hours ahead, then raise set points 1 to 2 °C in lobby, halls and back of house; reset chilled water" },
+      { name: "Laundry", kw: 95, pct: 90, how: "Run washers, dryers and ironers in the morning; pause from 3 pm to 8 pm" },
+      { name: "EV chargers", kw: 66, pct: 100, how: "Pause or throttle charging 4 pm to 8 pm (tell guests at check-in)" },
+      { name: "Pool and spa heating", kw: 40, pct: 100, how: "Heat in the morning; water holds its temperature for a few hours" },
+      { name: "Kitchen prep", kw: 85, pct: 25, how: "Batch-cook and run dish machines before 3 pm; keep only service equipment on" },
+      { name: "Other (fountains, signage, ice machines)", kw: 60, pct: 35, how: "Switch off decorative loads and non-essential pumps; make ice early" },
+    ],
+    resp: { reliability: 80, alerts: 12, hours: 4, setup: 18000 },
+    assume: { gaPerKw: 450, peaks: 5, upper: 1000, lower: 500, classB: 0.07, rebound: 15, price: 0.11 },
+    playbook: {},
+  };
+  let S, charts = {};
+
+  // ---------------- storage ----------------
+  let saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; } catch (e) { $("#saved").textContent = ""; } }, 250);
+  }
+  function load() {
+    try {
+      const t = localStorage.getItem(KEY);
+      if (t) { const v = JSON.parse(t), o = clone(DEFAULTS); for (const k of Object.keys(o)) if (v[k] != null) o[k] = Array.isArray(o[k]) ? v[k] : Object.assign(o[k], v[k]); return o; }
+    } catch (e) {}
+    return clone(DEFAULTS);
+  }
+
+  // ---------------- model ----------------
+  const n = (v) => (v === "" || v == null || !isFinite(+v)) ? null : +v;
+  function compute() {
+    const h = S.hotel, a = S.assume, r = S.resp, warns = [];
+    const prof = S.profile.map(p => ({ kw: n(p.kw), kwh: n(p.kwh) }));
+    const profKw = prof.map(p => p.kw).filter(v => v != null && v >= 0), profKwh = prof.map(p => p.kwh).filter(v => v != null && v >= 0);
+    const useProf = h.useProfile === "yes" && profKw.length > 0;
+    let avg = useProf ? profKw.reduce((s, v) => s + v, 0) / profKw.length : Math.max(0, n(h.avgPeak) || 0);
+    if (h.useProfile === "yes" && !profKw.length) warns.push("The monthly profile is switched on but empty, so the average peak demand from the box above is used.");
+    if (useProf && profKw.length < 12) warns.push(`The profile has ${profKw.length} of 12 months of peak demand. The average uses only those months.`);
+    if (prof.some(p => (p.kw != null && p.kw < 0) || (p.kwh != null && p.kwh < 0))) warns.push("Negative values in the profile were ignored.");
+    let peakHr = n(h.peakHourKW); if (peakHr == null || peakHr < 0) { peakHr = avg; warns.push("Demand during the province's peak hours is missing, so the average peak is used."); }
+    const N = Math.max(1, Math.round(n(a.peaks) || 5));
+    const upper = Math.max(0, n(a.upper) ?? 1000), lower = Math.min(upper, Math.max(0, n(a.lower) ?? 500));
+    const ga = Math.max(0, n(a.gaPerKw) ?? 0);
+    const eq = S.equip.map((e, i) => {
+      const k = Math.max(0, n(e.kw) || 0), p = Math.min(100, Math.max(0, n(e.pct) || 0));
+      return { i, name: e.name || "Unnamed", kw: k, pct: p, cut: k * p / 100 };
+    });
+    if (S.equip.some(e => n(e.kw) < 0 || n(e.pct) < 0 || n(e.pct) > 100)) warns.push("Some equipment values were negative or above 100% and were limited to a valid range.");
+    let cutRaw = eq.reduce((s, e) => s + e.cut, 0), loadSum = eq.reduce((s, e) => s + e.kw, 0);
+    if (loadSum > peakHr * 1.02 && peakHr > 0) warns.push(`The equipment loads add up to ${kw(loadSum)}, more than the hotel's ${kw(peakHr)} during the peak hours. Check the kW figures.`);
+    const cut = Math.min(cutRaw, peakHr);
+    if (cutRaw > peakHr) warns.push("The kW cut was capped at your demand during the peak hours.");
+    const rel = Math.min(100, Math.max(0, n(r.reliability) ?? 0)) / 100;
+    const caught = rel * N;
+    const perPeak = cut / N * ga; // saving per peak hour caught
+    const saving = perPeak * caught;
+    const alerts = Math.max(0, n(r.alerts) || 0), hrs = Math.max(0, n(r.hours) || 0);
+    if (alerts && alerts < caught) warns.push(`You plan to act on ${alerts} alert days but expect to catch ${caught.toFixed(1)} peak hours. Catching a peak needs an alert that day, so you usually need far more alert days than peaks.`);
+    const precool = alerts * hrs * cut * Math.max(0, n(a.rebound) || 0) / 100 * Math.max(0, n(a.price) || 0);
+    const net = saving - precool;
+    const setup = Math.max(0, n(r.setup) || 0);
+    const payback = setup > 0 && net > 0 ? setup / net : null;
+    // eligibility
+    let elig;
+    if (avg > 5000) elig = { cls: "good", short: "Class A (automatic)", text: "Above 5 MW, Class A applies automatically." };
+    else if (avg > upper) elig = { cls: "good", short: "Can opt in to Class A", text: `Average peak of ${kw(avg)} is above the ${kw(upper)} threshold, so the hotel can opt in to Class A.` };
+    else if (avg >= lower) elig = { cls: "warn", short: "Maybe (check sector)", text: `Average peak of ${kw(avg)} is in the ${kw(lower)} to ${kw(upper)} band. Opt-in here has been limited to some sectors; ask your utility whether a hotel qualifies.` };
+    else elig = { cls: "bad", short: "Class B only", text: `Average peak of ${kw(avg)} is below ${kw(lower)}, so the hotel stays on Class B and pays GA per kWh. Peak shifting would not lower GA.` };
+    // Class B vs A
+    const kwh = useProf && profKwh.length ? profKwh.reduce((s, v) => s + v, 0) * 12 / profKwh.length : avg * 8760 * 0.55;
+    const kwhEstimated = !(useProf && profKwh.length);
+    const classB = kwh * Math.max(0, n(a.classB) || 0);
+    const classA0 = peakHr * ga, classA1 = classA0 - saving;
+    const sens = Array.from({ length: N + 1 }, (_, k) => perPeak * k);
+    return { avg, peakHr, N, upper, lower, ga, eq, cut, cutRaw, loadSum, rel, caught, perPeak, saving, precool, net, setup, payback, elig, kwh, kwhEstimated, classB, classA0, classA1, sens, warns, useProf, prof };
+  }
+
+  // ---------------- rendering: inputs ----------------
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const [sec, key] = el.dataset.k.split(".");
+      el.value = S[sec][key];
+      el.oninput = () => { S[sec][key] = el.hasAttribute("data-num") ? (el.value === "" ? "" : +el.value) : el.value; save(); update(); };
+    });
+  }
+  function renderProfile() {
+    $("#t-prof tbody").innerHTML = S.profile.map((p, i) => `<tr><td><b>${MON[i]}</b></td>
+      <td class="num"><input type="number" min="0" step="5" value="${p.kw ?? ""}" data-i="${i}" data-f="kw" aria-label="${MON[i]} peak kW"></td>
+      <td class="num"><input type="number" min="0" step="1000" value="${p.kwh ?? ""}" data-i="${i}" data-f="kwh" aria-label="${MON[i]} kWh" style="width:120px"></td></tr>`).join("");
+    $("#t-prof tbody").querySelectorAll("input").forEach(inp => inp.oninput = () => {
+      S.profile[+inp.dataset.i][inp.dataset.f] = inp.value === "" ? "" : +inp.value;
+      inp.style.borderColor = inp.value !== "" && +inp.value < 0 ? "var(--bad)" : "";
+      save(); update();
+    });
+  }
+  function renderEquip() {
+    $("#t-eq tbody").innerHTML = S.equip.map((e, i) => `<tr>
+      <td><input type="text" class="w-name" value="${esc(e.name)}" data-i="${i}" data-f="name" style="min-width:180px"></td>
+      <td class="num"><input type="number" min="0" step="5" class="w-num" value="${e.kw}" data-i="${i}" data-f="kw"></td>
+      <td class="num"><input type="number" min="0" max="100" step="5" class="w-pct" value="${e.pct}" data-i="${i}" data-f="pct"></td>
+      <td class="num" data-cut="${i}"></td>
+      <td><input type="text" class="w-how" value="${esc(e.how || "")}" data-i="${i}" data-f="how" placeholder="What staff do"></td>
+      <td><button class="xbtn" data-del="${i}" title="Remove">×</button></td></tr>`).join("");
+    $("#t-eq tbody").querySelectorAll("[data-f]").forEach(inp => inp.oninput = () => {
+      const f = inp.dataset.f, v = inp.value;
+      S.equip[+inp.dataset.i][f] = (f === "kw" || f === "pct") ? (v === "" ? "" : +v) : v;
+      inp.style.borderColor = (f === "pct" && (+v < 0 || +v > 100)) || (f === "kw" && +v < 0) ? "var(--bad)" : "";
+      save(); update(f === "name" || f === "how");
+    });
+    $("#t-eq tbody").querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.equip.splice(+b.dataset.del, 1); save(); renderEquip(); update(true); });
+  }
+
+  // ---------------- rendering: results ----------------
+  function update(playbookToo = true) {
+    const R = compute();
+    // equipment table cells and footer
+    R.eq.forEach(e => { const c = document.querySelector(`[data-cut="${e.i}"]`); if (c) c.textContent = kw(e.cut); });
+    $("#t-eq tfoot").innerHTML = `<tr><td><b>Total</b></td><td class="num"><b>${kw(R.loadSum)}</b></td><td class="num">${R.loadSum ? Math.round(R.cutRaw / R.loadSum * 100) + "%" : "-"}</td><td class="num"><b>${kw(R.cutRaw)}</b></td><td class="muted">${R.peakHr ? Math.round(R.cutRaw / R.peakHr * 100) + "% of your demand in the peak hours" : ""}</td><td></td></tr>`;
+    $("#eq-warn").innerHTML = !S.equip.length ? '<div class="warnbox">Add at least one piece of equipment you could turn down during a peak hour.</div>' : "";
+    const pk = R.prof.map(p => p.kw).filter(v => v != null), pe = R.prof.map(p => p.kwh).filter(v => v != null);
+    $("#t-prof tfoot").innerHTML = `<tr><td><b>Average / total</b></td><td class="num"><b>${pk.length ? kw(pk.reduce((s, v) => s + v, 0) / pk.length) : "-"}</b></td><td class="num"><b>${pe.length ? Math.round(pe.reduce((s, v) => s + v, 0)).toLocaleString("en-CA") + " kWh" : "-"}</b></td></tr>`;
+    $("#rel-out").textContent = `${Math.round(R.rel * 100)}% (${R.caught.toFixed(1)} of ${R.N})`;
+    $("#hotel-warn").innerHTML = R.warns.filter(w => /profile|peak hours is missing/.test(w)).map(w => `<div class="warnbox">${w}</div>`).join("");
+
+    $("#res-title").textContent = `${S.hotel.name || "Your hotel"}: peak-hour savings`;
+    $("#res-sub").textContent = `Average peak ${kw(R.avg)}, ${kw(R.peakHr)} in the province's peak hours, cutting ${kw(R.cut)} on ${R.caught.toFixed(1)} of ${R.N} peaks.`;
+    $("#kpis").innerHTML = [
+      [R.elig.cls, "Class A eligibility", R.elig.short, `Average monthly peak ${kw(R.avg)}`, true],
+      ["", "kW cut during a peak", kw(R.cut), R.peakHr ? `${Math.round(R.cut / R.peakHr * 100)}% of your ${kw(R.peakHr)} peak-hour demand` : ""],
+      ["", "Annual GA saving (Class A)", money(R.saving), R.elig.cls === "bad" ? "Only if the hotel were on Class A" : `${money(R.perPeak)} for each peak hour caught`],
+      R.elig.cls === "bad" ? ["bad", "Saving you can get today", "$0", "On Class B, GA is charged per kWh, not by peak hours", true] : ["", "Net of pre-cooling cost", money(R.net), `Pre-cooling and shifting costs ${money(R.precool)} a year`],
+      R.elig.cls === "bad" ? ["", "Simple payback", "Not applicable", "No GA saving while on Class B", true] : ["", "Simple payback", R.setup <= 0 ? "No setup cost" : R.payback == null ? "Never" : R.payback < 1 ? (Math.max(1, Math.round(R.payback * 12)) === 1 ? "1 month" : Math.round(R.payback * 12) + " months") : R.payback.toFixed(1) + " years", R.setup > 0 ? `${money(R.setup)} setup &divide; net saving` : "Enter a setup cost in Step 3", R.setup <= 0 || R.payback == null],
+    ].map(([cls, l, v, s, small]) => `<div class="kpi ${cls}"><div class="label">${l}</div><div class="value${small ? " sm" : ""}">${v}</div><div class="sub">${s}</div></div>`).join("");
+
+    let t = `<strong>What this means:</strong> ${R.elig.text} `;
+    if (R.elig.cls === "bad") t += `If the hotel grows above ${kw(R.lower)}, or the rules change, cutting ${kw(R.cut)} in the peak hours would be worth about ${money(R.saving)} a year.`;
+    else {
+      t += `Cutting <b>${kw(R.cut)}</b> in the peak hours and catching ${R.caught.toFixed(1)} of ${R.N} would lower next year's GA by about <b>${money(R.saving)}</b>, or <b>${money(R.net)}</b> after the extra energy for pre-cooling. `;
+      const top = R.eq.slice().sort((a, b) => b.cut - a.cut)[0];
+      if (top && R.cutRaw > 0) t += `${esc(top.name)} gives the most (${Math.round(top.cut / R.cutRaw * 100)}% of the cut). `;
+      if (R.rel < 1) t += `Catching every peak would add another ${money(R.perPeak * (R.N - R.caught))}. `;
+      if (R.classA1 < R.classB) t += `Class A would cost ${money(R.classB - R.classA1)} less than staying on Class B.`;
+      else t += `<b>Careful:</b> at these figures Class A would cost ${money(R.classA1 - R.classB)} <i>more</i> than Class B. Only opt in if you can cut more at peak times.`;
+    }
+    $("#takeaway").innerHTML = t;
+    $("#res-warn").innerHTML = R.warns.filter(w => !/profile|peak hours is missing/.test(w)).map(w => `<div class="warnbox">${w}</div>`).join("");
+
+    // contribution table
+    const rows = R.eq.filter(e => e.kw > 0 || e.cut > 0);
+    const capF = R.cutRaw > 0 ? R.cut / R.cutRaw : 0;
+    $("#t-contrib").innerHTML = `<thead><tr><th>Equipment</th><th class="num">kW cut</th><th>Share</th><th class="num">Annual saving</th></tr></thead><tbody>` +
+      (rows.length ? rows.map(e => { const share = R.cutRaw ? e.cut / R.cutRaw : 0;
+        return `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${EQ_COLORS[Math.min(e.i, 5)]};margin-right:6px"></span>${esc(e.name)}</td><td class="num">${kw(e.cut * capF)}</td>
+          <td><div class="bar-track"><div class="bar-in" style="width:${(share * 100).toFixed(1)}%"></div></div><span class="muted" style="font-size:12px">${Math.round(share * 100)}%</span></td><td class="num">${money(R.saving * share)}</td></tr>`; }).join("")
+        : `<tr><td colspan="4" class="muted">No equipment entered yet.</td></tr>`) +
+      `</tbody><tfoot><tr><td><b>Total</b></td><td class="num"><b>${kw(R.cut)}</b></td><td></td><td class="num"><b>${money(R.saving)}</b></td></tr></tfoot>`;
+    // class table
+    $("#t-class").innerHTML = `<thead><tr><th>Option</th><th class="num">GA per year</th></tr></thead><tbody>
+      <tr><td>Class B (per kWh, ${Math.round(R.kwh).toLocaleString("en-CA")} kWh${R.kwhEstimated ? " estimated" : ""})</td><td class="num">${money(R.classB)}</td></tr>
+      <tr><td>Class A, doing nothing at peak times</td><td class="num">${money(R.classA0)}</td></tr>
+      <tr><td>Class A, with your peak plan</td><td class="num"><b>${money(R.classA1)}</b></td></tr>
+      <tr><td>Class A with plan, against Class B</td><td class="num"><span class="${R.classA1 <= R.classB ? "pos" : "neg"}">${R.classA1 <= R.classB ? "saves " : "costs "}${money(Math.abs(R.classB - R.classA1))}</span></td></tr></tbody>`;
+    $("#class-note").textContent = R.elig.cls === "bad" ? "Shown for reference: at this size the hotel is on Class B." : "Class A only pays off for a hotel that reliably cuts load in the peak hours. Check both figures with your utility before opting in.";
+
+    renderCharts(R);
+    if (playbookToo) renderPlaybook(R);
+  }
+
+  function renderCharts(R) {
+    if (!window.Chart) { document.querySelectorAll(".chart-box").forEach(b => { if (!b.querySelector(".chart-empty")) b.innerHTML = '<div class="chart-empty">Charts need an internet connection. The tables show the same figures.</div>'; }); return; }
+    // profile
+    const labels = MON;
+    const pd = R.prof.map(p => p.kw);
+    if (charts.prof) charts.prof.destroy();
+    charts.prof = new Chart($("#c-prof"), { type: "bar", data: { labels, datasets: [
+        { label: "Peak demand (kW)", data: pd, backgroundColor: COLORS.s1, order: 2 },
+        { type: "line", label: `Class A threshold (${kw(R.upper)})`, data: labels.map(() => R.upper), borderColor: "#18212b", borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0, order: 1 },
+        { type: "line", label: `Average (${kw(R.avg)})`, data: labels.map(() => Math.round(R.avg)), borderColor: "#1baf7a", borderWidth: 1.5, pointRadius: 0, order: 1 }] },
+      options: { plugins: { legend: { position: "bottom" }, tooltip: { callbacks: { label: (c) => `${c.dataset.label.split(" (")[0]}: ${c.raw == null || c.raw === "" ? "no data" : kw(c.raw)}` } } },
+        scales: { y: gridScale({ beginAtZero: true, ticks: { color: COLORS.ink, callback: (v) => v.toLocaleString("en-CA") } }), x: gridScale({ grid: { display: false } }) } } });
+    // sensitivity
+    const caughtRound = Math.round(R.caught);
+    if (charts.sens) charts.sens.destroy();
+    charts.sens = new Chart($("#c-sens"), { type: "bar", data: { labels: R.sens.map((_, k) => `${k} of ${R.N}`), datasets: [
+        { label: "Annual GA saving", data: R.sens.map(v => Math.round(v)), backgroundColor: R.sens.map((_, k) => k === caughtRound ? "#1f4e79" : "#86b6ef") }] },
+      options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: (c) => `${c[0].label} peak hours caught`, label: (c) => `Saving: ${money(c.raw)} (net ${money(c.raw - R.precool)})` } } },
+        scales: { y: gridScale({ beginAtZero: true, ticks: { color: COLORS.ink, callback: (v) => fmt.compact(v) } }), x: gridScale({ grid: { display: false }, title: { display: true, text: "Peak hours caught" } }) } } });
+    // equipment
+    const eq = R.eq.filter(e => e.cut > 0);
+    if (charts.eq) charts.eq.destroy();
+    charts.eq = new Chart($("#c-eq"), { type: "bar", data: { labels: eq.map(e => e.name.length > 26 ? e.name.slice(0, 25) + "…" : e.name), datasets: [
+        { label: "kW cut", data: eq.map(e => Math.round(e.cut)), backgroundColor: eq.map(e => EQ_COLORS[Math.min(e.i, 5)]) }] },
+      options: { indexAxis: "y", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${kw(c.raw)} (${R.cutRaw ? Math.round(c.raw / R.cutRaw * 100) : 0}% of the cut)` } } },
+        scales: { x: gridScale({ beginAtZero: true, ticks: { color: COLORS.ink, callback: (v) => v + " kW" } }), y: gridScale({ grid: { display: false } }) } } });
+  }
+
+  // ---------------- playbook ----------------
+  function has(re, R) { return R.eq.some(e => re.test(e.name) && e.cut > 0); }
+  function renderPlaybook(R) {
+    const cut = (re) => { const e = R.eq.filter(x => re.test(x.name) && x.cut > 0); return e.length ? kw(e.reduce((s, x) => s + x.cut, 0)) : ""; };
+    const CH = /chill|cool|hvac|air/i, LA = /laund/i, EV = /\bev\b|charg/i, PO = /pool|spa/i, KI = /kitchen|food|f&b/i;
+    const cols = [
+      { id: "before", title: "The day before", when: "Alert forecast arrives", items: [
+        ["b1", "Confirm the alert in the duty log and name one person in charge for tomorrow 3 pm to 8 pm.", ""],
+        ["b2", "Check tomorrow's group arrivals, events and banquets that need full cooling or the kitchen.", ""],
+        has(LA, R) ? ["b3", "Tell laundry to start early and finish dryers and ironers by 2 pm.", cut(LA)] : null,
+        ["b4", "Brief the front desk on what to tell guests (pool hours, EV charging pause).", ""],
+      ] },
+      { id: "pre", title: "3 hours before", when: "About 1 pm to 4 pm", items: [
+        has(CH, R) ? ["p1", "Pre-cool: lower set points 1 to 2 °C in lobby, halls, ballrooms and back of house; run chillers at full output.", cut(CH)] : null,
+        has(PO, R) ? ["p2", "Top up pool and spa water temperature, then set heaters to off from 4 pm.", cut(PO)] : null,
+        has(KI, R) ? ["p3", "Kitchen: finish batch cooking, ovens and dish machine runs before 3:30 pm.", cut(KI)] : null,
+        ["p4", "Make extra ice and pre-chill walk-in coolers.", ""],
+        ["p5", "Close blinds and curtains on sunny sides of public areas and empty rooms.", ""],
+      ] },
+      { id: "during", title: "During the alert", when: "Usually 4 pm to 7 pm", items: [
+        has(CH, R) ? ["d1", "Raise cooling set points 1 to 2 °C in common areas, reset chilled water warmer, stage off one chiller if load allows.", cut(CH)] : null,
+        has(LA, R) ? ["d2", "Laundry: no dryers, washers or ironers running.", cut(LA)] : null,
+        has(EV, R) ? ["d3", "Pause or throttle EV chargers.", cut(EV)] : null,
+        ["d4", "Switch off fountains, decorative lighting, signage and spare elevators where safe.", cut(/other|fountain|sign|light/i)],
+        ["d5", "Set empty rooms to setback mode (no cooling until check-in).", ""],
+        ["d6", "Check the building meter at 4 pm and 6 pm and note the kW.", ""],
+      ] },
+      { id: "after", title: "After the alert", when: "From about 8 pm", items: [
+        ["a1", "Bring systems back one at a time, not all at once (a big restart can create a new spike).", ""],
+        ["a2", "Restart laundry and EV charging after 8 pm.", ""],
+        ["a3", "Log what was done, the kW reached and any guest complaints.", ""],
+        ["a4", "After the season, compare your load in the 5 official peak hours with this plan.", ""],
+      ] },
+    ];
+    let total = 0, done = 0;
+    $("#playbook").innerHTML = cols.map(c => `<div class="pb-col"><div class="when">${c.when}</div><h3>${c.title}</h3>` + c.items.filter(Boolean).map(([id, txt, k]) => {
+      total++; const on = !!S.playbook[id]; if (on) done++;
+      return `<label class="${on ? "done" : ""}"><input type="checkbox" data-pb="${id}"${on ? " checked" : ""}><span>${txt}${k ? `<small>Worth about ${k}</small>` : ""}</span></label>`;
+    }).join("") + `</div>`).join("");
+    $("#pb-note").textContent = `${done} of ${total} steps ticked. Tip: also contact your local utility about transmission charges, which in many areas follow similar peak hours, so the same actions can save more.`;
+    $("#playbook").querySelectorAll("[data-pb]").forEach(cb => cb.onchange = () => { if (cb.checked) S.playbook[cb.dataset.pb] = true; else delete S.playbook[cb.dataset.pb]; save(); renderPlaybook(compute()); });
+  }
+
+  // ---------------- exports ----------------
+  function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  const csvCell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  function resultRows() {
+    const R = compute(), capF = R.cutRaw > 0 ? R.cut / R.cutRaw : 0;
+    return [
+      ["Peak-Energy Savings Estimator", S.hotel.name],
+      ["Average monthly peak (kW)", Math.round(R.avg)], ["Demand in the province's peak hours (kW)", Math.round(R.peakHr)], ["Eligibility", R.elig.short],
+      ["kW cut during a peak", Math.round(R.cut)], ["Peak hours caught (expected)", +R.caught.toFixed(2), "of", R.N],
+      ["Annual GA saving under Class A ($)", Math.round(R.saving)], ["Pre-cooling cost ($)", Math.round(R.precool)], ["Net annual saving ($)", Math.round(R.net)],
+      ["Setup cost ($)", R.setup], ["Payback (years)", R.payback == null ? "" : +R.payback.toFixed(2)],
+      ["GA per year, Class B ($)", Math.round(R.classB)], ["GA per year, Class A with plan ($)", Math.round(R.classA1)],
+      [],
+      ["Equipment", "Load (kW)", "% shiftable", "kW cut", "Annual saving ($)", "How"],
+      ...R.eq.map(e => [e.name, e.kw, e.pct, Math.round(e.cut * capF), Math.round(R.cutRaw ? R.saving * e.cut / R.cutRaw : 0), S.equip[e.i].how || ""]),
+      [],
+      ["Peak hours caught", "Annual saving ($)", "Net of pre-cooling ($)"], ...R.sens.map((v, k) => [k, Math.round(v), Math.round(v - R.precool)]),
+      [],
+      ["Assumptions (check with your utility)"], ["GA cost per kW-year ($)", S.assume.gaPerKw], ["Peak hours", S.assume.peaks], ["Class A threshold (kW)", S.assume.upper], ["Lower opt-in threshold (kW)", S.assume.lower],
+      ["Class B GA rate ($/kWh)", S.assume.classB], ["Pre-cooling rebound (%)", S.assume.rebound], ["Energy price ($/kWh)", S.assume.price],
+    ];
+  }
+  $("#csv").onclick = () => download("peak-energy-savings.csv", resultRows().map(r => r.map(csvCell).join(",")).join("\n"), "text/csv");
+  $("#xlsx").onclick = () => {
+    if (!window.XLSX) { $("#csv").click(); return; }
+    const wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet(resultRows()); ws["!cols"] = [{ wch: 42 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 16 }, { wch: 60 }];
+    XLSX.utils.book_append_sheet(wb, ws, "Estimate");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Month", "Peak demand (kW)", "Energy (kWh)"], ...S.profile.map((p, i) => [MON[i], p.kw, p.kwh])]), "Monthly profile");
+    XLSX.writeFile(wb, "peak-energy-savings.xlsx");
+  };
+
+  // ---------------- buttons ----------------
+  $("#use-summer").onclick = (e) => {
+    e.preventDefault();
+    const s = [5, 6, 7, 8].map(i => n(S.profile[i].kw)).filter(v => v != null);
+    if (!s.length) { alert("Enter June to September in the monthly profile first."); return; }
+    S.hotel.peakHourKW = Math.max(...s); save(); bindFields(); update();
+  };
+  $("#prof-clear").onclick = () => { if (!confirm("Clear all 12 months of the profile?")) return; S.profile = MON.map(() => ({ kw: "", kwh: "" })); S.hotel.useProfile = "no"; save(); renderAll(); };
+  $("#add-eq").onclick = () => { S.equip.push({ name: "New equipment", kw: 20, pct: 50, how: "" }); save(); renderEquip(); update(); $("#t-eq tbody tr:last-child input").focus(); };
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset;
+    const names = { hotel: "hotel demand and monthly profile", equip: "equipment list", resp: "response settings", assume: "assumptions", playbook: "playbook ticks" };
+    if (!confirm(`Reset the ${names[sec]} to the sample? Your changes in this section will be lost.`)) return;
+    if (sec === "hotel") { S.hotel = clone(DEFAULTS.hotel); S.profile = clone(DEFAULTS.profile); } else S[sec] = clone(DEFAULTS[sec]);
+    save(); renderAll();
+  });
+  $("#reset-all").onclick = () => { if (!confirm("Reset every section back to the sample? This can't be undone.")) return; S = clone(DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {} renderAll(); $("#saved").textContent = ""; };
+  function renderAll() { bindFields(); renderProfile(); renderEquip(); update(); }
+
+  chartDefaults();
+  S = load();
+  renderAll();
+})();
+</script>
+</body>
+</html>

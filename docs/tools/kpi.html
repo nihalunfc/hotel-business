@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hotel KPI Dashboard</title>
+<meta name="description" content="A free hotel KPI dashboard: upload your daily rooms and revenue data (or use the sample) to see occupancy, ADR, RevPAR, TRevPAR and GOPPAR against last period, last year and budget, for one hotel or a whole portfolio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.howto.h4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 860px) { .howto.h4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi .def { font-size: 12px; color: var(--ink-3); margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 6px; line-height: 1.4; }
+.kpi .cmp { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.kpi.na .value { color: var(--ink-3); font-size: 20px; }
+.src-status { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 14.5px; margin-bottom: 12px; }
+.src-status b { color: var(--brand); }
+.seg { flex-wrap: wrap; }
+.seg button { white-space: nowrap; }
+.ctl-row { display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: flex-end; }
+.ctl-row .field { min-width: 160px; }
+textarea { font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; width: 100%; min-height: 120px; border: 1px solid var(--line-2); border-radius: 7px; padding: 8px; }
+.res-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+.res-head h2 { margin: 0; font-size: 21px; }
+.res-head p { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; }
+.card h3 { margin-bottom: 2px; }
+.card .muted { font-size: 13.5px; margin-bottom: 10px; }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 12px; align-items: flex-start; margin-bottom: 6px; }
+.chart-empty { display: grid; place-items: center; height: 100%; color: var(--ink-3); font-size: 14px; text-align: center; }
+table.budget input { width: 78px; padding: 4px 6px; font-size: 14px; text-align: right; }
+table.budget td, table.budget th { padding: 7px 8px; vertical-align: middle; white-space: nowrap; }
+table.budget tfoot td, table.mt tfoot td { font-weight: 600; background: #fafbfc; }
+.pos { color: var(--good); font-weight: 600; }
+.neg { color: var(--bad); font-weight: 600; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
+th.sortable { cursor: pointer; }
+th.sortable:hover { color: var(--brand-2); }
+tr.sel td { background: var(--brand-soft); }
+.issues { margin: 6px 0 0 18px; padding: 0; }
+.mt td.mo { white-space: nowrap; }
+@media (max-width: 640px) { .kpi .value { font-size: 26px; } }
+@media print {
+  .grid.g5 { grid-template-columns: repeat(5, 1fr); }
+  .chart-box { height: 240px; }
+  .card { break-inside: avoid; margin-bottom: 14px; }
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Hotel KPI Dashboard</h1>
+    <p class="lead">Drop in your daily rooms and revenue numbers and see how each hotel is really doing: occupancy, average rate and revenue per room, compared with the last period, last year and your budget. It opens with two years of sample data for five Niagara hotels.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Your data never leaves this browser</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto h4 no-print" aria-label="Steps">
+    <a href="#s-data"><b>Step 1</b>Load your data or use the sample</a>
+    <a href="#s-period"><b>Step 2</b>Pick a period and hotel</a>
+    <a href="#s-results"><b>Step 3</b>Read the results</a>
+    <a href="#s-budget"><b>Step 4</b>Check against budget</a>
+  </nav>
+
+  <!-- 1. Data -->
+  <section class="sec no-print" id="s-data">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Your data</h2><p>One row per hotel per day: date, rooms available, rooms sold and room revenue. Total revenue, GOP (gross operating profit) and a hotel name column are optional. Most PMS night-audit exports work as they are.</p></div>
+      <div class="toolbar">
+        <label class="btn sm primary" style="margin:0">Import CSV<input type="file" id="imp" accept=".csv,.txt,.tsv,text/csv" hidden></label>
+        <button class="btn sm" id="paste-toggle">Paste from Excel</button>
+        <button class="btn sm" id="tpl">Download template</button>
+        <button class="btn sm" id="exp-clean">Download cleaned data</button>
+        <button class="btn sm reset" data-reset="data">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="src-status" id="src-status"></div>
+      <div id="paste-box" hidden>
+        <label class="field" for="paste" style="display:block"><span style="font-size:13px;font-weight:600;color:var(--ink-2)">Copy the cells in Excel or Google Sheets (with the header row) and paste them here</span></label>
+        <textarea id="paste" placeholder="date&#9;hotel&#9;rooms_available&#9;rooms_sold&#9;room_revenue&#10;2026-10-01&#9;My Hotel&#9;200&#9;151&#9;27930.50"></textarea>
+        <div class="toolbar" style="margin-top:8px"><button class="btn sm primary" id="paste-go">Use pasted data</button><button class="btn sm" id="paste-cancel">Cancel</button></div>
+      </div>
+      <div id="import-report"></div>
+      <p class="note">Columns are matched by name, in any order. Accepted names include <code>date</code>, <code>rooms_available</code> (or <code>available</code>, <code>capacity</code>), <code>rooms_sold</code> (or <code>occupied</code>, <code>room nights</code>), <code>room_revenue</code> (or <code>rooms revenue</code>), <code>total_revenue</code>, <code>gop</code> and <code>hotel</code> (or <code>property</code>). Dollar signs, thousands separators, semicolons, tabs and most date formats are handled.</p>
+    </div>
+  </section>
+
+  <!-- 2. Period -->
+  <section class="sec no-print" id="s-period">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Period and hotel</h2><p>Periods count back from the latest date in your data. "Previous period" is the same number of days just before it.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="view">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="ctl-row">
+        <div class="field"><label>Period</label><div class="seg" id="presets"></div></div>
+      </div>
+      <div class="ctl-row" style="margin-top:12px">
+        <div class="field" id="custom-from-f"><label for="from">From</label><input type="date" id="from"></div>
+        <div class="field" id="custom-to-f"><label for="to">To</label><input type="date" id="to"></div>
+        <div class="field"><label for="prop">Hotel</label><select id="prop"></select></div>
+        <div class="field"><label for="lymode">"Last year" means</label><select id="lymode"><option value="dow">Same weekdays (364 days back)</option><option value="date">Same calendar dates</option></select></div>
+      </div>
+      <div id="period-warn"></div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section id="s-results">
+    <div class="res-head">
+      <div><h2 id="res-title">Results</h2><p id="res-sub"></p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm primary" id="xlsx">Download Excel</button>
+        <button class="btn sm" id="csv-month">Monthly table CSV</button>
+        <button class="btn sm" onclick="window.print()">Print</button>
+      </div>
+    </div>
+    <div class="grid g5" id="kpis"></div>
+    <div class="takeaway" id="takeaway"></div>
+    <div id="res-warn"></div>
+
+    <div class="grid g2" style="margin-top:18px">
+      <div class="card">
+        <div class="card-head">
+          <div><h3 id="trend-title">Trend</h3><p class="muted" id="trend-sub"></p></div>
+          <div class="toolbar no-print">
+            <select id="metric" style="width:auto" aria-label="Measure to chart"></select>
+            <select id="trendby" style="width:auto" aria-label="Lines"><option value="total">One line + last year</option><option value="hotel">One line per hotel</option></select>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="c-trend"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3 id="dow-title">Day-of-week pattern</h3><p class="muted">Which nights carry the hotel, for the same period. Uses the measure chosen on the left.</p></div></div>
+        <div class="chart-box"><canvas id="c-dow"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-head">
+        <div><h3>Portfolio comparison</h3><p class="muted">Every hotel for the selected period. RevPAR index = the hotel's RevPAR against the portfolio's (100 = average). Click a column to sort, click a hotel to focus on it.</p></div>
+        <div class="toolbar no-print"><button class="btn sm" id="csv-port">Download CSV</button></div>
+      </div>
+      <div class="table-wrap"><table id="t-port"></table></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-head">
+        <div><h3 id="month-title">Month by month</h3><p class="muted">Every month in the data for the selected hotel. Change is RevPAR against the same month a year earlier.</p></div>
+        <div class="toolbar no-print"><button class="btn sm" id="csv-month2">Download CSV</button></div>
+      </div>
+      <div class="table-wrap"><table class="mt" id="t-month"></table></div>
+    </div>
+  </section>
+
+  <!-- 3. Budget -->
+  <section class="sec" id="s-budget" style="margin-top:22px">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">3</span>Budget vs actual</h2><p>Type the budgeted occupancy and ADR for each month. Budget revenue, actuals and the variance update as you type. Each hotel and year keeps its own budget.</p></div>
+      <div class="toolbar">
+        <select id="b-hotel" style="width:auto" aria-label="Budget hotel"></select>
+        <select id="b-year" style="width:auto" aria-label="Budget year"></select>
+        <button class="btn sm" id="b-fill">Fill from last year</button>
+        <button class="btn sm" id="b-csv">Download CSV</button>
+        <button class="btn sm reset" data-reset="budget">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="grid g4" id="b-kpis" style="margin-bottom:14px"></div>
+      <div class="table-wrap"><table class="budget" id="t-budget"></table></div>
+      <div class="takeaway" id="b-takeaway"></div>
+      <p class="note">Rate effect = (actual ADR minus budget ADR) &times; actual rooms sold. Volume effect = (actual rooms sold minus budget rooms sold) &times; budget ADR. The two add up to the room revenue variance. "Fill from last year" copies last year's actual occupancy and ADR, with ADR up 3%.</p>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <span class="muted" style="font-size:14px">Everything recalculates as you change it.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <details class="tech no-print">
+    <summary>How it's calculated</summary>
+    <p><b>Occupancy</b> = rooms sold &divide; rooms available. <b>ADR</b> (average daily rate) = room revenue &divide; rooms sold. <b>RevPAR</b> (revenue per available room) = room revenue &divide; rooms available, which equals occupancy &times; ADR. <b>TRevPAR</b> (total revenue per available room) = total revenue (rooms, food and drink, spa, parking and so on) &divide; rooms available. <b>GOPPAR</b> (gross operating profit per available room) = GOP &divide; rooms available. Every ratio is calculated from the summed totals of the period, never by averaging daily ratios, so a quiet Tuesday does not count as much as a sold-out Saturday.</p>
+    <p><b>Portfolio figures</b> add up rooms and revenue across the hotels first, then divide. Bigger hotels therefore weigh more, as they do in your profit and loss.</p>
+    <p><b>Comparisons.</b> The previous period is the same number of days ending the day before the period starts. "Last year" is either 364 days earlier (so a Saturday is compared with a Saturday, the usual STR practice) or the same calendar dates. A comparison is left blank when there is no data for it, rather than guessed.</p>
+    <p><b>TRevPAR and GOPPAR</b> use only the days that have those figures, divided by the rooms available on those same days. If some days are missing them, the tile says how many days were used.</p>
+    <p><b>Messy data.</b> The importer detects commas, semicolons or tabs, matches column names loosely, strips $ signs and thousands separators, reads ISO, US (MM/DD/YYYY), day-first (DD/MM/YYYY, when a day above 12 shows the file is day-first), written-out and Excel serial dates. Rows with no date, negative numbers or more rooms sold than available are skipped and listed. If the same hotel and date appear twice the rows are added together (exports split by market segment look like this). The report under Step 1 says exactly what was done.</p>
+    <p><b>Sample data</b> is generated in your browser with a fixed random seed: five fictional hotels in a Niagara-style market (busy July and August, quiet January and February, strong Friday and Saturday nights, a few event spikes) for two years. It is fictional and only for trying the tool. Your own data is stored only in this browser (local storage) and nothing is uploaded anywhere.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.kpi.v1";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const ALL = "__all";
+  const HOTEL_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#8b5cf6"];
+  const LY_COLOR = "#9aa4ae";
+
+  // ---------------- dates as whole days since 1970-01-01 (UTC, no time-zone drift) ----------------
+  const dayOf = (y, m, d) => Math.round(Date.UTC(y, m, d) / 864e5);
+  const ymd = (n) => { const t = new Date(n * 864e5); return [t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()]; };
+  const iso = (n) => { const [y, m, d] = ymd(n); return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`; };
+  const fromIso = (s) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return m ? dayOf(+m[1], +m[2] - 1, +m[3]) : null; };
+  const dowOf = (n) => (new Date(n * 864e5).getUTCDay() + 6) % 7; // 0 = Monday
+  const nice = (n, withYear = true) => { const [y, m, d] = ymd(n); return `${MON[m]} ${d}${withYear ? ", " + y : ""}`; };
+  const shiftYear = (n, k) => { const [y, m, d] = ymd(n); const last = new Date(Date.UTC(y + k, m + 1, 0)).getUTCDate(); return dayOf(y + k, m, Math.min(d, last)); };
+
+  // ---------------- sample data: fixed seed, Niagara-style season ----------------
+  const SAMPLE_HOTELS = [
+    { name: "Summit Tower Hotel", rooms: 620, adr: 1.00, occ: 0.00, spend: 0.36, fixed: 52, margin: 0.60 },
+    { name: "Grand Terrace Resort", rooms: 520, adr: 1.14, occ: -0.02, spend: 0.52, fixed: 60, margin: 0.58 },
+    { name: "Riverside Suites", rooms: 380, adr: 0.90, occ: 0.03, spend: 0.14, fixed: 34, margin: 0.66 },
+    { name: "Harbour Lights Hotel", rooms: 300, adr: 0.84, occ: -0.04, spend: 0.20, fixed: 33, margin: 0.63 },
+    { name: "Parkview Inn", rooms: 240, adr: 0.66, occ: 0.01, spend: 0.07, fixed: 24, margin: 0.68 },
+  ];
+  const SAMPLE_END = dayOf(2026, 9, 18), SAMPLE_START = dayOf(2024, 9, 19);
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function makeSample() {
+    const rnd = mulberry32(20261019);
+    const gauss = () => { let s = 0; for (let i = 0; i < 4; i++) s += rnd(); return (s - 2) / 0.577; };
+    // monthly base occupancy and ADR for a Niagara-style market (Jan..Dec)
+    const occM = [0.47, 0.53, 0.58, 0.63, 0.72, 0.84, 0.93, 0.94, 0.79, 0.72, 0.58, 0.55];
+    const adrM = [146, 152, 158, 172, 205, 262, 318, 324, 238, 205, 165, 172];
+    const dowO = [-0.07, -0.06, -0.03, 0.01, 0.09, 0.12, -0.06]; // Mon..Sun
+    const dowA = [0.93, 0.92, 0.95, 0.99, 1.08, 1.14, 0.97];
+    const events = {}; // occupancy lift and rate lift on special days
+    for (const y of [2024, 2025, 2026]) {
+      events[dayOf(y, 11, 31)] = [0.25, 1.35]; events[dayOf(y, 6, 1)] = [0.12, 1.15];
+      events[dayOf(y, 1, 14)] = [0.18, 1.12]; events[dayOf(y, 9, 31)] = [0.08, 1.05];
+      // Civic holiday and Labour Day long weekends
+      for (const m of [7, 8]) { let d = dayOf(y, m, 1); while (dowOf(d) !== 0) d++; events[d - 2] = [0.06, 1.12]; events[d - 1] = [0.08, 1.15]; }
+    }
+    const rows = [];
+    SAMPLE_HOTELS.forEach((h, hi) => {
+      let ooo = 0; // rooms out of order (renovation blocks)
+      for (let d = SAMPLE_START; d <= SAMPLE_END; d++) {
+        const [y, m] = ymd(d), w = dowOf(d), yrs = (d - SAMPLE_START) / 365;
+        const ev = events[d] || [0, 1];
+        if (rnd() < 0.01) ooo = Math.round(h.rooms * (0.01 + rnd() * 0.04)); else if (rnd() < 0.08) ooo = 0;
+        const avail = h.rooms - ooo;
+        let occ = occM[m] + dowO[w] * (m >= 5 && m <= 7 ? 0.45 : 1) + h.occ + ev[0] + 0.012 * yrs + gauss() * 0.035;
+        occ = Math.max(0.18, Math.min(0.995, occ));
+        const sold = Math.min(avail, Math.round(avail * occ));
+        const adr = adrM[m] * dowA[w] * h.adr * ev[1] * (1 + 0.035 * yrs) * (1 + 0.25 * (occ - occM[m])) * (1 + gauss() * 0.025);
+        const rev = Math.round(sold * adr * 100) / 100;
+        const total = Math.round(rev * (1 + h.spend * (0.9 + rnd() * 0.2)) * 100) / 100;
+        const gop = Math.round(total * h.margin - h.rooms * h.fixed * (0.95 + rnd() * 0.1));
+        rows.push({ d, h: hi, a: avail, s: sold, r: rev, t: total, g: gop });
+      }
+    });
+    return { hotels: SAMPLE_HOTELS.map(h => h.name), rows };
+  }
+
+  // ---------------- state ----------------
+  const DEFAULT_VIEW = { preset: "30", from: "", to: "", prop: ALL, lymode: "dow", metric: "revpar", trendby: "total", sort: "revpar", sortDir: -1 };
+  const DEFAULTS = { source: "sample", upload: null, uploadName: "", report: null, view: clone(DEFAULT_VIEW), budgets: {}, bHotel: "", bYear: 0 };
+  let S, D, IDX, SAMPLE_DATA, charts = {};
+
+  let saveTimer, saveFailed = false;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; saveFailed = false; }
+      catch (e) {
+        saveFailed = true;
+        // the data file may be too large for browser storage: keep the settings at least
+        try { localStorage.setItem(KEY, JSON.stringify(Object.assign({}, S, { upload: null, source: "sample", report: null }))); } catch (e2) {}
+        $("#saved").textContent = "Settings saved; your data file is too big to keep in this browser, so import it again after a refresh.";
+      }
+    }, 250);
+  }
+  function load() {
+    try { const t = localStorage.getItem(KEY); if (t) { const v = JSON.parse(t); const o = Object.assign(clone(DEFAULTS), v); o.view = Object.assign(clone(DEFAULT_VIEW), v.view || {}); return o; } } catch (e) {}
+    return clone(DEFAULTS);
+  }
+
+  // ---------------- data index ----------------
+  // upload is stored compactly: { hotels: [...], rows: [[day, hotelIdx, avail, sold, rev, total|null, gop|null], ...] }
+  function activeData() {
+    if (S.source === "upload" && S.upload && S.upload.rows && S.upload.rows.length) {
+      return { hotels: S.upload.hotels, rows: S.upload.rows.map(r => ({ d: r[0], h: r[1], a: r[2], s: r[3], r: r[4], t: r[5], g: r[6] })) };
+    }
+    return SAMPLE_DATA;
+  }
+  function buildIndex() {
+    D = activeData();
+    IDX = D.hotels.map(() => new Map());
+    let min = Infinity, max = -Infinity, hasT = false, hasG = false;
+    D.rows.forEach(r => { IDX[r.h].set(r.d, r); if (r.d < min) min = r.d; if (r.d > max) max = r.d; if (r.t != null) hasT = true; if (r.g != null) hasG = true; });
+    D.min = min; D.max = max; D.hasT = hasT; D.hasG = hasG;
+  }
+  const hotelList = (prop) => prop === ALL ? D.hotels.map((_, i) => i) : [D.hotels.indexOf(prop)].filter(i => i >= 0);
+  function agg(hs, from, to, filter) {
+    const o = { a: 0, s: 0, r: 0, t: 0, ta: 0, g: 0, ga: 0, days: 0, tDays: 0, gDays: 0, rows: 0 };
+    if (from == null || to == null || to < from) return o;
+    for (const h of hs) {
+      const m = IDX[h];
+      for (let d = from; d <= to; d++) {
+        const r = m.get(d); if (!r) continue;
+        if (filter && !filter(d)) continue;
+        o.rows++; o.a += r.a; o.s += r.s; o.r += r.r;
+        if (r.t != null) { o.t += r.t; o.ta += r.a; o.tDays++; }
+        if (r.g != null) { o.g += r.g; o.ga += r.a; o.gDays++; }
+      }
+    }
+    return o;
+  }
+  const M = {
+    occ: { label: "Occupancy", f: (o) => o.a ? o.s / o.a : null, fmt: (v) => fmt.pct(v), mode: "points", axis: (v) => Math.round(v * 100) + "%" },
+    adr: { label: "ADR", f: (o) => o.s ? o.r / o.s : null, fmt: (v) => fmt.money(v, 2), axis: (v) => "$" + Math.round(v) },
+    revpar: { label: "RevPAR", f: (o) => o.a ? o.r / o.a : null, fmt: (v) => fmt.money(v, 2), axis: (v) => "$" + Math.round(v) },
+    trevpar: { label: "TRevPAR", f: (o) => o.ta ? o.t / o.ta : null, fmt: (v) => fmt.money(v, 2), axis: (v) => "$" + Math.round(v), needs: "t" },
+    goppar: { label: "GOPPAR", f: (o) => o.ga ? o.g / o.ga : null, fmt: (v) => fmt.money(v, 2), axis: (v) => "$" + Math.round(v), needs: "g" },
+  };
+  const DEFS = {
+    occ: "Share of rooms you could sell that were sold.",
+    adr: "Average daily rate: room revenue per room sold.",
+    revpar: "Revenue per available room: room revenue per room you could have sold. Occupancy and rate in one number.",
+    trevpar: "Total revenue per available room: all revenue (rooms, food, spa, parking) per room.",
+    goppar: "Gross operating profit per available room: what each room earns after running costs.",
+  };
+  const metricOK = (k) => !M[k].needs || (M[k].needs === "t" ? D.hasT : D.hasG);
+
+  // ---------------- period ----------------
+  const PRESETS = [["7", "Last 7 days"], ["30", "Last 30 days"], ["90", "Last 90 days"], ["mtd", "Month to date"], ["ytd", "Year to date"], ["365", "Last 12 months"], ["custom", "Custom"]];
+  function period() {
+    const v = S.view, end = D.max, warn = [];
+    let from, to;
+    if (v.preset === "custom") {
+      from = fromIso(v.from); to = fromIso(v.to);
+      if (from == null || to == null) { from = end - 29; to = end; warn.push("Pick both a start and an end date for a custom period. Showing the last 30 days for now."); }
+      if (to < from) { const t = from; from = to; to = t; warn.push("The end date was before the start date, so they were swapped."); }
+      if (to > end) warn.push(`Your data ends on ${nice(end)}. Days after that are not counted.`);
+      if (from < D.min) warn.push(`Your data starts on ${nice(D.min)}. Days before that are not counted.`);
+      from = Math.max(from, D.min); to = Math.min(to, end);
+      if (to < from) { from = end - 29; to = end; warn.push("That period has no data, so the last 30 days are shown."); }
+    } else if (v.preset === "mtd") { const [y, m] = ymd(end); from = dayOf(y, m, 1); to = end; }
+    else if (v.preset === "ytd") { const [y] = ymd(end); from = dayOf(y, 0, 1); to = end; }
+    else { const n = +v.preset || 30; from = end - n + 1; to = end; }
+    const len = to - from + 1;
+    const prev = [from - len, from - 1];
+    const ly = v.lymode === "date" ? [shiftYear(from, -1), shiftYear(to, -1)] : [from - 364, to - 364];
+    return { from, to, len, prev, ly, warn };
+  }
+
+  // ---------------- import (messy data friendly) ----------------
+  const ALIASES = {
+    date: ["date", "day", "stay date", "stay_date", "business date", "business_date", "night", "date of stay", "night of"],
+    hotel: ["hotel", "property", "hotel name", "property name", "site", "location", "name"],
+    a: ["rooms available", "rooms_available", "available", "available rooms", "avail", "rooms avail", "capacity", "inventory", "room inventory", "supply", "total rooms", "rooms"],
+    s: ["rooms sold", "rooms_sold", "sold", "occupied", "rooms occupied", "occupied rooms", "room nights", "roomnights", "rn", "demand"],
+    r: ["room revenue", "room_revenue", "rooms revenue", "revenue", "room rev", "rooms rev", "accommodation revenue", "room revenue cad"],
+    t: ["total revenue", "total_revenue", "total rev", "hotel revenue", "total"],
+    g: ["gop", "gross operating profit", "gross_operating_profit", "g o p"],
+  };
+  const normH = (h) => String(h || "").toLowerCase().replace(/^﻿/, "").replace(/\(.*?\)|\$|cad/g, " ").replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
+  function parseDelimited(t) {
+    t = t.replace(/^﻿/, "");
+    const first = t.split(/\r?\n/).filter(l => l.trim()).slice(0, 12).join("\n"); // title lines above the table are common
+    const counts = [[",", (first.match(/,/g) || []).length], [";", (first.match(/;/g) || []).length], ["\t", (first.match(/\t/g) || []).length]];
+    const sep = counts.sort((a, b) => b[1] - a[1])[0][1] ? counts[0][0] : ",";
+    const out = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true; else if (c === sep) { row.push(cell); cell = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); out.push(row); row = []; cell = ""; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); out.push(row); }
+    return { rows: out.filter(r => r.some(x => String(x).trim())), sep };
+  }
+  function parseNum(v, sep) {
+    let s = String(v ?? "").trim();
+    if (!s || /^(-|n\/?a|null|none|—)$/i.test(s)) return null;
+    let neg = false;
+    if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
+    s = s.replace(/[$€£\s]|CAD|C\$/gi, "").replace(/ /g, "");
+    const pct = s.endsWith("%"); if (pct) s = s.slice(0, -1);
+    if (sep === ";" && /^-?\d{1,3}(\.\d{3})*(,\d+)?$/.test(s)) s = s.replace(/\./g, "").replace(",", "."); // European 1.234,56
+    else if (sep === ";" && /^-?\d+,\d+$/.test(s)) s = s.replace(",", ".");
+    else s = s.replace(/,/g, "");
+    if (s.startsWith("-")) { neg = !neg; s = s.slice(1); }
+    if (!/^\d*\.?\d+(e[+-]?\d+)?$/i.test(s)) return NaN;
+    let n = parseFloat(s); if (pct) n /= 100;
+    return neg ? -n : n;
+  }
+  function detectDayFirst(vals) {
+    for (const v of vals) { const m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/.exec(String(v).trim()); if (m && +m[1] > 12) return true; if (m && +m[2] > 12) return false; }
+    return false;
+  }
+  function parseDate(v, dayFirst) {
+    let s = String(v ?? "").trim(); if (!s) return null;
+    let m;
+    if ((m = /^(\d{4})[\-\/.](\d{1,2})[\-\/.](\d{1,2})/.exec(s))) return valid(+m[1], +m[2] - 1, +m[3]);
+    if ((m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/.exec(s))) {
+      let y = +m[3]; if (y < 100) y += 2000;
+      return dayFirst ? valid(y, +m[2] - 1, +m[1]) : valid(y, +m[1] - 1, +m[2]);
+    }
+    if (/^\d{5}(\.\d+)?$/.test(s)) { const n = Math.floor(+s); if (n > 20000 && n < 80000) return n - 25569; } // Excel serial
+    if ((m = /^(\d{1,2})[\s\-]([A-Za-z]{3,})[\s\-,]+(\d{2,4})$/.exec(s))) { const mi = MON.findIndex(x => x.toLowerCase() === m[2].slice(0, 3).toLowerCase()); let y = +m[3]; if (y < 100) y += 2000; if (mi >= 0) return valid(y, mi, +m[1]); }
+    if ((m = /^(?:[A-Za-z]{3,},?\s+)?([A-Za-z]{3,})\.?\s+(\d{1,2}),?\s+(\d{4})/.exec(s))) { const mi = MON.findIndex(x => x.toLowerCase() === m[1].slice(0, 3).toLowerCase()); if (mi >= 0) return valid(+m[3], mi, +m[2]); }
+    return null;
+    function valid(y, mo, d) { if (mo < 0 || mo > 11 || d < 1 || d > 31 || y < 1990 || y > 2100) return null; const n = dayOf(y, mo, d); return ymd(n)[2] === d ? n : null; }
+  }
+  function importText(text, name) {
+    const { rows, sep } = parseDelimited(text);
+    if (rows.length < 2) return fail("The file has no data rows. It needs a header row and at least one row of numbers.");
+    // header may not be the first row (titles above the table): use the first row that names a date and a sold/revenue column
+    let hi = rows.findIndex((r, i) => i < 15 && r.map(normH).some(h => ALIASES.date.includes(h)) && r.map(normH).some(h => ALIASES.s.includes(h) || ALIASES.r.includes(h)));
+    if (hi < 0) hi = 0;
+    const head = rows[hi].map(normH);
+    const col = {};
+    for (const [k, names] of Object.entries(ALIASES)) {
+      let i = head.findIndex(h => names.includes(h));
+      if (i < 0) i = head.findIndex(h => names.some(n => n.length > 3 && h.includes(n)) && !Object.values(col).includes(head.indexOf(h)));
+      if (i >= 0 && !Object.values(col).includes(i)) col[k] = i;
+    }
+    const missing = ["date", "a", "s", "r"].filter(k => col[k] == null).map(k => ({ date: "date", a: "rooms_available", s: "rooms_sold", r: "room_revenue" }[k]));
+    if (missing.length) return fail(`Couldn't find these columns: <b>${missing.join(", ")}</b>. The header row found was: <code>${esc(rows[hi].join(" | "))}</code>. Rename the columns to match the template and try again.`);
+    const body = rows.slice(hi + 1);
+    const dayFirst = detectDayFirst(body.map(r => r[col.date]));
+    const hotels = [], keyed = new Map();
+    const skip = { date: [], neg: [], over: [], nonnum: [], total: 0 };
+    let merged = 0, read = 0;
+    const defaultHotel = (name || "My hotel").replace(/\.(csv|txt|tsv)$/i, "").replace(/[_\-]+/g, " ").trim() || "My hotel";
+    body.forEach((r, i) => {
+      const line = hi + i + 2;
+      const rawDate = String(r[col.date] ?? "").trim();
+      if (/^(total|grand total|sum|subtotal)/i.test(rawDate) || /^(total|grand total)/i.test(String(r[col.hotel] ?? "").trim())) { skip.total++; return; }
+      read++;
+      const d = parseDate(rawDate, dayFirst);
+      if (d == null) { skip.date.push(line); return; }
+      const a = parseNum(r[col.a], sep), s = parseNum(r[col.s], sep), rv = parseNum(r[col.r], sep);
+      const t = col.t != null ? parseNum(r[col.t], sep) : null, g = col.g != null ? parseNum(r[col.g], sep) : null;
+      if ([a, s, rv].some(x => x == null || Number.isNaN(x)) || Number.isNaN(t) || Number.isNaN(g)) { skip.nonnum.push(line); return; }
+      if (a < 0 || s < 0 || rv < 0 || (t != null && t < 0)) { skip.neg.push(line); return; }
+      if (s > a || a === 0) { skip.over.push(line); return; }
+      const hn = col.hotel != null ? (String(r[col.hotel] ?? "").trim() || defaultHotel) : defaultHotel;
+      let h = hotels.indexOf(hn); if (h < 0) { hotels.push(hn); h = hotels.length - 1; }
+      const k = h + ":" + d;
+      if (keyed.has(k)) {
+        const o = keyed.get(k); merged++;
+        o[3] += s; o[4] += rv; o[5] = o[5] == null && t == null ? null : (o[5] || 0) + (t || 0); o[6] = o[6] == null && g == null ? null : (o[6] || 0) + (g || 0);
+        // segment exports repeat the same inventory on each line: keep the largest, not the sum
+        o[2] = Math.max(o[2], a);
+        if (o[3] > o[2]) o[2] = o[3];
+      } else keyed.set(k, [d, h, a, s, Math.round(rv * 100) / 100, t, g]);
+    });
+    const out = [...keyed.values()].sort((x, y) => x[1] - y[1] || x[0] - y[0]);
+    const nSkip = skip.date.length + skip.neg.length + skip.over.length + skip.nonnum.length;
+    const lines = (arr) => arr.slice(0, 6).join(", ") + (arr.length > 6 ? ` and ${arr.length - 6} more` : "");
+    const issues = [];
+    if (skip.date.length) issues.push(`${skip.date.length} row(s) had a date that couldn't be read (line ${lines(skip.date)}).`);
+    if (skip.nonnum.length) issues.push(`${skip.nonnum.length} row(s) had a blank or non-numeric value in a required column (line ${lines(skip.nonnum)}).`);
+    if (skip.neg.length) issues.push(`${skip.neg.length} row(s) had negative numbers (line ${lines(skip.neg)}).`);
+    if (skip.over.length) issues.push(`${skip.over.length} row(s) had more rooms sold than available, or zero rooms available (line ${lines(skip.over)}).`);
+    const notes = [];
+    if (skip.total) notes.push(`${skip.total} total or subtotal row(s) were ignored.`);
+    if (merged) notes.push(`${merged} row(s) repeated a hotel and date already seen, so their rooms sold and revenue were added together.`);
+    if (dayFirst) notes.push("Dates were read as day/month/year.");
+    if (sep !== ",") notes.push(`Columns were separated by ${sep === ";" ? "semicolons" : "tabs"}.`);
+    if (col.t == null) notes.push("No total revenue column, so TRevPAR is not shown.");
+    if (col.g == null) notes.push("No GOP column, so GOPPAR is not shown.");
+    if (!out.length) return fail("No usable rows were found.<ul class='issues'>" + issues.map(x => `<li>${x}</li>`).join("") + "</ul>");
+    // check gaps
+    let gaps = 0;
+    hotels.forEach((_, h) => { const ds = out.filter(r => r[1] === h).map(r => r[0]); if (ds.length > 1) gaps += (ds[ds.length - 1] - ds[0] + 1) - ds.length; });
+    if (gaps) notes.push(`${gaps} hotel-day(s) are missing between the first and last date; those days are simply left out of totals.`);
+    S.upload = { hotels, rows: out }; S.uploadName = name || "pasted data"; S.source = "upload";
+    S.report = { ok: true, read, kept: out.length, nSkip, issues, notes, hotels: hotels.length };
+    S.view.prop = ALL; S.bHotel = ""; S.bYear = 0;
+    save(); start(); return true;
+    function fail(msg) { S.report = { ok: false, msg }; renderSource(); return false; }
+  }
+
+  // ---------------- rendering: data + period ----------------
+  function renderSource() {
+    const up = S.source === "upload" && S.upload;
+    $("#src-status").innerHTML = `<span>Using: <b>${up ? esc(S.uploadName) : "Sample data (five fictional Niagara hotels)"}</b></span>
+      <span>${D.hotels.length} hotel${D.hotels.length > 1 ? "s" : ""}</span><span>${nice(D.min)} to ${nice(D.max)}</span><span>${fmt.num(D.rows.length)} hotel-days</span>
+      ${up ? '<button class="btn sm" id="use-sample">Switch back to sample</button>' : ""}`;
+    const b = $("#use-sample"); if (b) b.onclick = () => { if (!confirm("Switch back to the sample data? Your imported data will be removed from this browser.")) return; resetData(); };
+    const r = S.report;
+    if (!r) { $("#import-report").innerHTML = ""; return; }
+    if (!r.ok) { $("#import-report").innerHTML = `<div class="warnbox"><b>That file couldn't be used.</b> ${r.msg} Your previous data is still loaded.</div>`; return; }
+    $("#import-report").innerHTML = `<div class="${r.nSkip ? "warnbox" : "takeaway"}" style="margin-top:6px"><strong>Import done:</strong> ${fmt.num(r.kept)} hotel-days kept for ${r.hotels} hotel${r.hotels > 1 ? "s" : ""}${r.nSkip ? `, ${r.nSkip} row(s) skipped` : ""}.
+      ${r.issues.length ? `<ul class="issues">${r.issues.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}${r.notes.length ? `<ul class="issues">${r.notes.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}</div>`;
+  }
+  function renderControls() {
+    const v = S.view;
+    $("#presets").innerHTML = PRESETS.map(([k, l]) => `<button data-p="${k}" class="${v.preset === k ? "active" : ""}">${l}</button>`).join("");
+    $("#presets").querySelectorAll("button").forEach(b => b.onclick = () => {
+      v.preset = b.dataset.p;
+      if (v.preset === "custom" && !v.from) { const p = period(); v.from = iso(D.max - 29); v.to = iso(D.max); }
+      save(); renderControls(); renderResults();
+    });
+    const custom = v.preset === "custom";
+    $("#custom-from-f").style.display = $("#custom-to-f").style.display = custom ? "" : "none";
+    $("#from").value = v.from; $("#to").value = v.to; $("#from").min = $("#to").min = iso(D.min); $("#from").max = $("#to").max = iso(D.max);
+    $("#from").onchange = () => { v.from = $("#from").value; save(); renderResults(); };
+    $("#to").onchange = () => { v.to = $("#to").value; save(); renderResults(); };
+    if (v.prop !== ALL && !D.hotels.includes(v.prop)) v.prop = ALL;
+    $("#prop").innerHTML = (D.hotels.length > 1 ? `<option value="${ALL}">All hotels (portfolio)</option>` : "") + D.hotels.map(h => `<option${h === v.prop ? " selected" : ""}>${esc(h)}</option>`).join("");
+    if (D.hotels.length === 1) v.prop = D.hotels[0];
+    $("#prop").value = v.prop;
+    $("#prop").onchange = () => { v.prop = $("#prop").value; save(); renderResults(); };
+    $("#lymode").value = v.lymode; $("#lymode").onchange = () => { v.lymode = $("#lymode").value; save(); renderResults(); };
+    if (!metricOK(v.metric)) v.metric = "revpar";
+    $("#metric").innerHTML = Object.entries(M).filter(([k]) => metricOK(k)).map(([k, m]) => `<option value="${k}"${k === v.metric ? " selected" : ""}>${m.label}</option>`).join("");
+    $("#metric").onchange = () => { v.metric = $("#metric").value; save(); renderCharts(); };
+    $("#trendby").value = v.trendby; $("#trendby").disabled = D.hotels.length < 2;
+    $("#trendby").onchange = () => { v.trendby = $("#trendby").value; save(); renderCharts(); };
+  }
+
+  // ---------------- rendering: results ----------------
+  const propName = () => S.view.prop === ALL ? `All ${D.hotels.length} hotels` : S.view.prop;
+  const rangeText = (a, b) => { const sameY = ymd(a)[0] === ymd(b)[0]; return a === b ? nice(a) : `${nice(a, !sameY)} to ${nice(b)}`; };
+  function pctChange(c, p) { return c == null || p == null || p === 0 ? null : c / p - 1; }
+  function deltaHtml(k, c, p) {
+    if (c == null || p == null) return '<span class="muted">no data</span>';
+    if (M[k].mode === "points") return delta(c, p, "points");
+    if (p <= 0) return '<span class="muted">n/a</span>';
+    return delta(c, p);
+  }
+  let P;
+  function renderResults() {
+    P = period();
+    const hs = hotelList(S.view.prop);
+    $("#period-warn").innerHTML = P.warn.map(w => `<div class="warnbox">${w}</div>`).join("");
+    const cur = agg(hs, P.from, P.to), prev = agg(hs, P.prev[0], P.prev[1]), ly = agg(hs, P.ly[0], P.ly[1]);
+    $("#res-title").textContent = `${propName()}: ${rangeText(P.from, P.to)}`;
+    $("#res-sub").textContent = `${P.len} day${P.len > 1 ? "s" : ""}. Compared with the previous ${P.len} days (${rangeText(P.prev[0], P.prev[1])}) and last year (${rangeText(P.ly[0], P.ly[1])}).`;
+    const keys = Object.keys(M);
+    $("#kpis").className = "grid " + (keys.filter(metricOK).length >= 5 ? "g5" : "g4");
+    $("#kpis").innerHTML = keys.map(k => {
+      if (!metricOK(k)) return "";
+      const c = M[k].f(cur), p = M[k].f(prev), l = M[k].f(ly);
+      const partial = k === "trevpar" && cur.tDays < cur.rows ? `<div class="note" style="margin:2px 0 0">Based on ${cur.tDays} of ${cur.rows} hotel-days that have total revenue.</div>`
+        : k === "goppar" && cur.gDays < cur.rows ? `<div class="note" style="margin:2px 0 0">Based on ${cur.gDays} of ${cur.rows} hotel-days that have GOP.</div>` : "";
+      return `<div class="kpi${c == null ? " na" : ""}"><div class="label">${M[k].label}</div><div class="value">${c == null ? "No data" : M[k].fmt(c)}</div>
+        <div class="cmp">vs previous ${deltaHtml(k, c, p)}<br>vs last year ${deltaHtml(k, c, l)}</div>${partial}<div class="def">${DEFS[k]}</div></div>`;
+    }).join("");
+    const warns = [];
+    if (!cur.rows) warns.push("There is no data for this hotel in the chosen period. Pick another period or hotel.");
+    if (cur.rows && hs.length > 1) { const missing = hs.filter(h => !agg([h], P.from, P.to).rows).map(h => D.hotels[h]); if (missing.length) warns.push(`No data in this period for: ${missing.map(esc).join(", ")}.`); }
+    if (cur.rows && cur.rows < P.len * hs.length) { const n = P.len * hs.length - cur.rows; if (n && !warns.length) warns.push(`${n} hotel-day(s) in this period have no data and are left out.`); }
+    $("#res-warn").innerHTML = warns.map(w => `<div class="warnbox">${w}</div>`).join("");
+    $("#takeaway").innerHTML = takeaway(cur, prev, ly, hs);
+    renderCharts(); renderPortfolio(); renderMonths();
+  }
+  function takeaway(cur, prev, ly, hs) {
+    if (!cur.rows) return "<strong>What this means:</strong> there is nothing to compare yet for this selection.";
+    const occ = M.occ.f(cur), adr = M.adr.f(cur), rp = M.revpar.f(cur);
+    const lyRp = M.revpar.f(ly), lyOcc = M.occ.f(ly), lyAdr = M.adr.f(ly);
+    let t = `<strong>What this means:</strong> ${esc(propName())} sold ${fmt.pct(occ)} of ${hs.length > 1 ? "their" : "its"} rooms at an average of ${fmt.money(adr, 2)}, so each available room earned ${fmt.money(rp, 2)} in room revenue (${fmt.compact(cur.r)} in total). `;
+    if (lyRp != null && lyRp > 0) {
+      const ch = rp / lyRp - 1, occPts = (occ - lyOcc) * 100, adrCh = adr / lyAdr - 1;
+      const driver = Math.abs(Math.log(occ / lyOcc)) > Math.abs(Math.log(1 + adrCh)) ? `more by occupancy (${occPts >= 0 ? "+" : ""}${occPts.toFixed(1)} pts)` : `more by rate (ADR ${adrCh >= 0 ? "+" : ""}${(adrCh * 100).toFixed(1)}%)`;
+      t += `RevPAR is <b>${ch >= 0 ? "up" : "down"} ${Math.abs(ch * 100).toFixed(1)}%</b> on last year, driven ${driver}. `;
+      if (ch < -0.02 && occPts > 0) t += "You are filling more rooms but at lower rates: check whether discounts are needed on these dates. ";
+      else if (ch < -0.02 && adrCh > 0) t += "Rates held up but fewer rooms sold: look at pricing against the competition on weak nights. ";
+      else if (ch > 0.02 && occ > 0.9) t += "Occupancy is very high, which usually means there is room to push rate further on peak nights. ";
+    } else t += "There is no data from last year to compare with. ";
+    if (hs.length > 1) {
+      const per = hs.map(h => ({ h, rp: M.revpar.f(agg([h], P.from, P.to)), l: M.revpar.f(agg([h], P.ly[0], P.ly[1])) })).filter(x => x.rp != null);
+      const withLy = per.filter(x => x.l);
+      if (withLy.length > 1) { withLy.sort((a, b) => (a.rp / a.l) - (b.rp / b.l)); const w = withLy[0], b = withLy[withLy.length - 1];
+        t += `Best trend: <b>${esc(D.hotels[b.h])}</b> (RevPAR ${b.rp >= b.l ? "+" : ""}${fmt.pct(b.rp / b.l - 1)} vs last year). Needs attention: <b>${esc(D.hotels[w.h])}</b> (${w.rp >= w.l ? "+" : ""}${fmt.pct(w.rp / w.l - 1)}).`; }
+    }
+    return t;
+  }
+
+  function buckets(from, to) {
+    const len = to - from + 1, out = [];
+    if (len <= 92) { for (let d = from; d <= to; d++) out.push({ a: d, b: d, label: nice(d, false) }); return { out, unit: "day" }; }
+    if (len <= 400) {
+      let s = from; while (s <= to) { const e = Math.min(to, s + (6 - dowOf(s))); out.push({ a: s, b: e, label: "Wk of " + nice(s, false) }); s = e + 1; }
+      return { out, unit: "week" };
+    }
+    let [y, m] = ymd(from);
+    while (true) { const a = Math.max(from, dayOf(y, m, 1)), b = Math.min(to, dayOf(y, m + 1, 0)); if (a > to) break; out.push({ a, b, label: MON[m] + " " + String(y).slice(2) }); m++; if (m > 11) { m = 0; y++; } }
+    return { out, unit: "month" };
+  }
+  function lyOf(d) { return S.view.lymode === "date" ? shiftYear(d, -1) : d - 364; }
+  function renderCharts() {
+    const k = S.view.metric, m = M[k], hs = hotelList(S.view.prop);
+    const { out, unit } = buckets(P.from, P.to);
+    $("#trend-title").textContent = `${m.label} trend`;
+    $("#trend-sub").textContent = `${unit === "day" ? "Daily" : unit === "week" ? "Weekly" : "Monthly"} figures for ${propName()}, ${rangeText(P.from, P.to)}.`;
+    $("#dow-title").textContent = `${m.label} by day of the week`;
+    if (!window.Chart) { ["#c-trend", "#c-dow"].forEach(id => { $(id).parentElement.innerHTML = '<div class="chart-empty">Charts need an internet connection. The tables below have the same figures.</div>'; }); return; }
+    const byHotel = S.view.trendby === "hotel" && S.view.prop === ALL && D.hotels.length > 1;
+    let datasets;
+    if (byHotel) {
+      datasets = D.hotels.map((h, i) => ({ label: h, data: out.map(b => { const v = m.f(agg([i], b.a, b.b)); return v == null ? null : +v.toFixed(4); }), borderColor: HOTEL_COLORS[i % 5], backgroundColor: HOTEL_COLORS[i % 5], spanGaps: false }));
+      if (D.hotels.length > 5) datasets = datasets.slice(0, 5);
+    } else {
+      datasets = [
+        { label: propName(), data: out.map(b => { const v = m.f(agg(hs, b.a, b.b)); return v == null ? null : +v.toFixed(4); }), borderColor: COLORS.s1, backgroundColor: COLORS.s1 },
+        { label: "Last year", data: out.map(b => { const v = m.f(agg(hs, lyOf(b.a), lyOf(b.b))); return v == null ? null : +v.toFixed(4); }), borderColor: LY_COLOR, backgroundColor: LY_COLOR, borderDash: [5, 4], borderWidth: 1.5 },
+      ];
+    }
+    const yScale = gridScale({ ticks: { color: COLORS.ink, callback: (v) => m.axis(v) }, beginAtZero: k === "occ", max: k === "occ" ? 1 : undefined });
+    if (charts.trend) charts.trend.destroy();
+    charts.trend = new Chart($("#c-trend"), { type: "line", data: { labels: out.map(b => b.label), datasets },
+      options: { plugins: { legend: { position: "bottom" }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw == null ? "no data" : m.fmt(c.raw)}` } } },
+        scales: { y: yScale, x: gridScale({ grid: { display: false }, ticks: { color: COLORS.ink, maxTicksLimit: 8, maxRotation: 0, autoSkip: true } }) } } });
+    // day of week
+    const cur = DOW.map((_, w) => m.f(agg(hs, P.from, P.to, d => dowOf(d) === w)));
+    const lyv = DOW.map((_, w) => m.f(agg(hs, P.ly[0], P.ly[1], d => dowOf(d) === w)));
+    if (charts.dow) charts.dow.destroy();
+    charts.dow = new Chart($("#c-dow"), { type: "bar", data: { labels: DOW, datasets: [
+        { label: rangeText(P.from, P.to), data: cur.map(v => v == null ? null : +v.toFixed(4)), backgroundColor: COLORS.s1, borderColor: "#fff", borderWidth: 1 },
+        { label: "Last year", data: lyv.map(v => v == null ? null : +v.toFixed(4)), backgroundColor: "#cfd6de", borderColor: "#fff", borderWidth: 1 }] },
+      options: { plugins: { legend: { position: "bottom" }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw == null ? "no data" : m.fmt(c.raw)}` } } },
+        scales: { y: Object.assign(yScale, { beginAtZero: true }), x: gridScale({ grid: { display: false } }) } } });
+  }
+
+  function portfolioRows() {
+    const all = D.hotels.map((_, i) => i);
+    const port = agg(all, P.from, P.to), portRp = M.revpar.f(port);
+    const rows = D.hotels.map((h, i) => {
+      const c = agg([i], P.from, P.to), l = agg([i], P.ly[0], P.ly[1]);
+      const rp = M.revpar.f(c), lrp = M.revpar.f(l);
+      return { i, name: h, rooms: c.rows ? c.a / Math.max(1, c.rows) : null, occ: M.occ.f(c), adr: M.adr.f(c), revpar: rp, rev: c.rows ? c.r : null, ly: pctChange(rp, lrp),
+        trevpar: M.trevpar.f(c), goppar: M.goppar.f(c), index: rp != null && portRp ? rp / portRp * 100 : null };
+    });
+    return { rows, port: { name: "Portfolio", rooms: port.rows ? port.a / Math.max(1, P.len) : null, occ: M.occ.f(port), adr: M.adr.f(port), revpar: portRp, rev: port.r,
+      ly: pctChange(portRp, M.revpar.f(agg(all, P.ly[0], P.ly[1]))), trevpar: M.trevpar.f(port), goppar: M.goppar.f(port), index: 100 } };
+  }
+  function portCols() {
+    return [["name", "Hotel", (v) => v], ["rooms", "Avg rooms", (v) => fmt.num(v)], ["occ", "Occupancy", (v) => fmt.pct(v)], ["adr", "ADR", (v) => fmt.money(v, 2)], ["revpar", "RevPAR", (v) => fmt.money(v, 2)],
+      ["ly", "RevPAR vs LY", (v) => v == null ? "-" : `<span class="${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%</span>`], ["index", "RevPAR index", (v) => v == null ? "-" : v.toFixed(0)],
+      ["rev", "Room revenue", (v) => fmt.money(v)]].concat(D.hasT ? [["trevpar", "TRevPAR", (v) => fmt.money(v, 2)]] : []).concat(D.hasG ? [["goppar", "GOPPAR", (v) => fmt.money(v, 2)]] : []);
+  }
+  function renderPortfolio() {
+    const { rows, port } = portfolioRows(), cols = portCols(), v = S.view;
+    const sk = cols.some(c => c[0] === v.sort) ? v.sort : "revpar";
+    rows.sort((a, b) => { const x = a[sk], y = b[sk]; if (x == null) return 1; if (y == null) return -1; return (typeof x === "string" ? x.localeCompare(y) : x - y) * v.sortDir; });
+    const cell = (c, r) => r[c[0]] == null ? "-" : c[2](r[c[0]]);
+    let h = `<thead><tr>${cols.map((c, j) => `<th class="sortable${j ? " num" : ""}" data-s="${c[0]}">${c[1]}${sk === c[0] ? (v.sortDir > 0 ? " ▲" : " ▼") : ""}</th>`).join("")}</tr></thead><tbody>`;
+    rows.forEach(r => { h += `<tr data-h="${esc(r.name)}" class="${r.name === v.prop ? "sel" : ""}" style="cursor:pointer">${cols.map((c, j) => `<td class="${j ? "num" : ""}">${j ? cell(c, r) : `<span class="sw" style="background:${HOTEL_COLORS[r.i % 5]}"></span>${esc(r.name)}`}</td>`).join("")}</tr>`; });
+    h += `</tbody>` + (rows.length > 1 ? `<tfoot><tr>${cols.map((c, j) => `<td class="${j ? "num" : ""}"><b>${j ? cell(c, port) : "Portfolio"}</b></td>`).join("")}</tr></tfoot>` : "");
+    $("#t-port").innerHTML = h;
+    $("#t-port").querySelectorAll("th[data-s]").forEach(th => th.onclick = () => { if (v.sort === th.dataset.s) v.sortDir *= -1; else { v.sort = th.dataset.s; v.sortDir = th.dataset.s === "name" ? 1 : -1; } save(); renderPortfolio(); });
+    $("#t-port").querySelectorAll("tbody tr").forEach(tr => tr.onclick = () => { v.prop = v.prop === tr.dataset.h && D.hotels.length > 1 ? ALL : tr.dataset.h; save(); renderControls(); renderResults(); });
+  }
+
+  function monthRows() {
+    const hs = hotelList(S.view.prop), out = [];
+    let [y, m] = ymd(D.min);
+    while (dayOf(y, m, 1) <= D.max) {
+      const a = dayOf(y, m, 1), b = dayOf(y, m + 1, 0);
+      const c = agg(hs, a, b);
+      if (c.rows) {
+        const l = agg(hs, dayOf(y - 1, m, 1), dayOf(y - 1, m + 1, 0));
+        out.push({ y, m, label: `${MON[m]} ${y}`, days: Math.round(c.rows / hs.length), partial: c.rows < (b - a + 1) * hs.length, a: c.a, s: c.s, r: c.r, occ: M.occ.f(c), adr: M.adr.f(c), revpar: M.revpar.f(c),
+          trevpar: M.trevpar.f(c), goppar: M.goppar.f(c), ly: pctChange(M.revpar.f(c), M.revpar.f(l)) });
+      }
+      m++; if (m > 11) { m = 0; y++; }
+    }
+    return out.reverse();
+  }
+  function renderMonths() {
+    const rows = monthRows();
+    $("#month-title").textContent = `Month by month: ${propName()}`;
+    let h = `<thead><tr><th>Month</th><th class="num">Rooms available</th><th class="num">Rooms sold</th><th class="num">Occupancy</th><th class="num">ADR</th><th class="num">RevPAR</th><th class="num">RevPAR vs LY</th><th class="num">Room revenue</th>${D.hasT ? '<th class="num">TRevPAR</th>' : ""}${D.hasG ? '<th class="num">GOPPAR</th>' : ""}</tr></thead><tbody>`;
+    rows.forEach(r => {
+      h += `<tr><td class="mo">${r.label}${r.partial ? ' <span class="tag">part</span>' : ""}</td><td class="num">${fmt.num(r.a)}</td><td class="num">${fmt.num(r.s)}</td><td class="num">${fmt.pct(r.occ)}</td><td class="num">${fmt.money(r.adr, 2)}</td><td class="num"><b>${fmt.money(r.revpar, 2)}</b></td>
+        <td class="num">${r.ly == null ? "-" : `<span class="${r.ly >= 0 ? "pos" : "neg"}">${r.ly >= 0 ? "+" : ""}${(r.ly * 100).toFixed(1)}%</span>`}</td><td class="num">${fmt.money(r.r)}</td>${D.hasT ? `<td class="num">${fmt.money(r.trevpar, 2)}</td>` : ""}${D.hasG ? `<td class="num">${fmt.money(r.goppar, 2)}</td>` : ""}</tr>`;
+    });
+    $("#t-month").innerHTML = h + "</tbody>";
+  }
+
+  // ---------------- budget vs actual ----------------
+  const bKey = () => `${S.bHotel}|${S.bYear}`;
+  function budgetYears() { const ys = []; for (let y = ymd(D.min)[0]; y <= ymd(D.max)[0] + 1; y++) ys.push(y); return ys; }
+  function budgetFromLY(hotel, year) {
+    const hs = hotelList(hotel);
+    return MON.map((_, m) => {
+      const l = agg(hs, dayOf(year - 1, m, 1), dayOf(year - 1, m + 1, 0));
+      if (!l.rows) return { occ: null, adr: null };
+      return { occ: Math.round(Math.min(0.99, M.occ.f(l) + 0.01) * 1000) / 10, adr: Math.round(M.adr.f(l) * 1.03) };
+    });
+  }
+  function ensureBudget() {
+    const ys = budgetYears();
+    if (!S.bYear || !ys.includes(S.bYear)) S.bYear = ymd(D.max)[0];
+    if (S.bHotel !== ALL && !D.hotels.includes(S.bHotel)) S.bHotel = D.hotels.includes("Summit Tower Hotel") ? "Summit Tower Hotel" : (D.hotels.length > 1 ? ALL : D.hotels[0]);
+    if (!S.budgets[bKey()]) S.budgets[bKey()] = budgetFromLY(S.bHotel, S.bYear);
+  }
+  function renderBudget() {
+    ensureBudget();
+    $("#b-hotel").innerHTML = (D.hotels.length > 1 ? `<option value="${ALL}">All hotels</option>` : "") + D.hotels.map(h => `<option${h === S.bHotel ? " selected" : ""}>${esc(h)}</option>`).join("");
+    $("#b-hotel").value = S.bHotel;
+    $("#b-year").innerHTML = budgetYears().map(y => `<option${y === S.bYear ? " selected" : ""}>${y}</option>`).join("");
+    const B = S.budgets[bKey()];
+    $("#t-budget").innerHTML = `<thead><tr><th>Month</th><th class="num">Budget occupancy %</th><th class="num">Budget ADR $</th><th class="num">Budget RevPAR</th><th class="num">Budget room revenue</th>
+      <th class="num">Actual occupancy</th><th class="num">Actual ADR</th><th class="num">Actual room revenue</th><th class="num">Variance</th><th class="num">Rate effect</th><th class="num">Volume effect</th><th>Status</th></tr></thead><tbody></tbody><tfoot></tfoot>`;
+    $("#t-budget tbody").innerHTML = MON.map((mn, m) => `<tr data-m="${m}"><td><b>${mn}</b></td>
+      <td class="num"><input type="number" min="0" max="100" step="0.1" data-m="${m}" data-f="occ" value="${B[m].occ ?? ""}" aria-label="${mn} budget occupancy"></td>
+      <td class="num"><input type="number" min="0" step="1" data-m="${m}" data-f="adr" value="${B[m].adr ?? ""}" aria-label="${mn} budget ADR"></td>
+      <td class="num" data-c="brp"></td><td class="num" data-c="brev"></td><td class="num" data-c="aocc"></td><td class="num" data-c="aadr"></td><td class="num" data-c="arev"></td><td class="num" data-c="var"></td><td class="num" data-c="rate"></td><td class="num" data-c="vol"></td><td data-c="st"></td></tr>`).join("");
+    $("#t-budget tbody").querySelectorAll("input").forEach(inp => inp.oninput = () => {
+      const v = inp.value === "" ? null : +inp.value, f = inp.dataset.f;
+      const bad = v != null && (!isFinite(v) || v < 0 || (f === "occ" && v > 100));
+      inp.style.borderColor = bad ? "var(--bad)" : "";
+      S.budgets[bKey()][+inp.dataset.m][f] = bad ? null : v; save(); budgetCalc();
+    });
+    budgetCalc();
+  }
+  function budgetCalc() {
+    const B = S.budgets[bKey()], hs = hotelList(S.bHotel), y = S.bYear;
+    const rooms = hs.reduce((s, h) => s + (S.source === "sample" ? SAMPLE_HOTELS[h].rooms : maxRooms(h)), 0);
+    const T = { brev: 0, bsold: 0, arev: 0, asold: 0, aa: 0, brevYTD: 0, months: 0, rate: 0, vol: 0 };
+    let invalid = 0;
+    const out = MON.map((_, m) => {
+      const a = dayOf(y, m, 1), b = dayOf(y, m + 1, 0), days = b - a + 1;
+      const act = agg(hs, a, b);
+      const bo = B[m].occ, ba = B[m].adr;
+      const hasB = bo != null && ba != null;
+      if ((bo == null) !== (ba == null)) invalid++;
+      // budget availability: actual rooms available when the month is complete, else full inventory
+      const full = act.rows >= days * hs.length;
+      const bAvail = full ? act.a : rooms * days;
+      const bSold = hasB ? bAvail * bo / 100 : null, bRev = hasB ? bSold * ba : null;
+      const r = { m, hasB, bRp: hasB ? bo / 100 * ba : null, bRev, bSold, act, full, partial: act.rows > 0 && !full };
+      if (act.rows && hasB) {
+        // compare like for like: for a part month, scale the budget to the days that have data
+        const scale = full ? 1 : act.a / bAvail;
+        r.bRevCmp = bRev * scale; r.bSoldCmp = bSold * scale;
+        r.var = act.r - r.bRevCmp;
+        r.rate = (M.adr.f(act) - ba) * act.s; r.vol = (act.s - r.bSoldCmp) * ba;
+        T.brev += r.bRevCmp; T.bsold += r.bSoldCmp; T.arev += act.r; T.asold += act.s; T.aa += act.a; T.rate += r.rate; T.vol += r.vol; T.months++;
+      }
+      if (hasB) T.brevYTD += bRev;
+      return r;
+    });
+    const money0 = (v) => v == null ? "-" : fmt.money(v);
+    const sgn = (v) => v == null ? "-" : `<span class="${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : "-"}${fmt.money(Math.abs(v))}</span>`;
+    out.forEach(r => {
+      const tr = $(`#t-budget tbody tr[data-m="${r.m}"]`), set = (c, h) => { tr.querySelector(`[data-c="${c}"]`).innerHTML = h; };
+      set("brp", r.bRp == null ? "-" : fmt.money(r.bRp, 2)); set("brev", money0(r.bRev));
+      set("aocc", r.act.rows ? fmt.pct(M.occ.f(r.act)) : "-"); set("aadr", r.act.rows ? fmt.money(M.adr.f(r.act), 2) : "-"); set("arev", r.act.rows ? fmt.money(r.act.r) + (r.partial ? ' <span class="tag">part</span>' : "") : "-");
+      set("var", r.var == null ? "-" : `${sgn(r.var)} <span class="muted" style="font-size:12px">(${(r.var / r.bRevCmp * 100).toFixed(1)}%)</span>`);
+      set("rate", sgn(r.rate)); set("vol", sgn(r.vol));
+      let st = '<span class="muted">No actuals yet</span>';
+      if (!r.hasB && r.act.rows) st = '<span class="muted">No budget</span>';
+      else if (r.var != null) { const p = r.var / r.bRevCmp; st = p >= 0 ? '<span class="pill pass">Ahead</span>' : p > -0.03 ? '<span class="pill" style="background:var(--warn-soft);color:var(--warn)">Close</span>' : '<span class="pill fail">Behind</span>'; }
+      set("st", st);
+    });
+    const tv = T.arev - T.brev;
+    $("#t-budget tfoot").innerHTML = `<tr><td>Year to date</td><td></td><td></td><td></td><td class="num">${money0(T.brev)}</td><td class="num">${T.aa ? fmt.pct(T.asold / T.aa) : "-"}</td><td class="num">${T.asold ? fmt.money(T.arev / T.asold, 2) : "-"}</td><td class="num">${money0(T.arev)}</td><td class="num">${T.months ? sgn(tv) : "-"}</td><td class="num">${T.months ? sgn(T.rate) : "-"}</td><td class="num">${T.months ? sgn(T.vol) : "-"}</td><td></td></tr>
+      <tr><td>Full-year budget</td><td></td><td></td><td></td><td class="num">${money0(T.brevYTD)}</td><td colspan="7" class="muted">Budget room revenue for all 12 months</td></tr>`;
+    const name = S.bHotel === ALL ? "All hotels" : S.bHotel;
+    $("#b-kpis").innerHTML = [
+      ["Actual room revenue, year to date", money0(T.arev), `${T.months} month${T.months === 1 ? "" : "s"} with actuals in ${y}`],
+      ["Budget for the same months", money0(T.brev), "Part months are scaled to the days with data"],
+      ["Variance", T.months ? `<span class="${tv >= 0 ? "pos" : "neg"}">${tv >= 0 ? "+" : "-"}${fmt.money(Math.abs(tv))}</span>` : "-", T.brev ? `${(tv / T.brev * 100).toFixed(1)}% against budget` : "Enter a budget to compare"],
+      ["Full-year budget", money0(T.brevYTD), `${name}, ${y}`],
+    ].map(k => `<div class="kpi"><div class="label">${k[0]}</div><div class="value" style="font-size:24px">${k[1]}</div><div class="sub">${k[2]}</div></div>`).join("");
+    let tk = `<strong>What this means:</strong> `;
+    if (!T.months) tk += `there are no actuals yet for ${y} that line up with a budget. Pick another year, or enter the budget so it is ready when the data arrives.`;
+    else {
+      tk += `${esc(name)} is <b>${fmt.money(Math.abs(tv))} ${tv >= 0 ? "ahead of" : "behind"}</b> budget for ${y} so far (${(tv / T.brev * 100).toFixed(1)}%). `;
+      tk += Math.abs(T.rate) >= Math.abs(T.vol) ? `Most of the gap comes from <b>rate</b> (${T.rate >= 0 ? "selling above" : "selling below"} the budgeted ADR). ` : `Most of the gap comes from <b>volume</b> (${T.vol >= 0 ? "more" : "fewer"} rooms sold than budgeted). `;
+      const worst = out.filter(r => r.var != null).sort((a, b) => a.var / a.bRevCmp - b.var / b.bRevCmp)[0];
+      if (worst && worst.var < 0) tk += `The weakest month is <b>${MON[worst.m]}</b> (${(worst.var / worst.bRevCmp * 100).toFixed(1)}%).`;
+    }
+    if (invalid) tk += ` <br><span class="neg">${invalid} month(s) have only one of occupancy and ADR filled in, so they are left out.</span>`;
+    $("#b-takeaway").innerHTML = tk;
+  }
+  function maxRooms(h) { let mx = 0; IDX[h].forEach(r => { if (r.a > mx) mx = r.a; }); return mx; }
+  function budgetRows() {
+    const B = S.budgets[bKey()], hs = hotelList(S.bHotel), y = S.bYear;
+    return [["Month", "Budget occupancy %", "Budget ADR", "Actual occupancy %", "Actual ADR", "Actual room revenue"]].concat(MON.map((mn, m) => {
+      const act = agg(hs, dayOf(y, m, 1), dayOf(y, m + 1, 0));
+      return [`${mn} ${y}`, B[m].occ ?? "", B[m].adr ?? "", act.rows ? +(M.occ.f(act) * 100).toFixed(1) : "", act.rows ? +M.adr.f(act).toFixed(2) : "", act.rows ? +act.r.toFixed(2) : ""];
+    }));
+  }
+  $("#b-hotel").onchange = () => { S.bHotel = $("#b-hotel").value; save(); renderBudget(); };
+  $("#b-year").onchange = () => { S.bYear = +$("#b-year").value; save(); renderBudget(); };
+  $("#b-fill").onclick = () => {
+    const nb = budgetFromLY(S.bHotel, S.bYear);
+    if (nb.every(x => x.occ == null)) { alert(`There is no data for ${S.bYear - 1} to copy from.`); return; }
+    if (!confirm(`Replace this budget with last year's actuals (ADR up 3%)?`)) return;
+    S.budgets[bKey()] = nb; save(); renderBudget();
+  };
+
+  // ---------------- exports ----------------
+  function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  const csvCell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  const toCSV = (rows) => rows.map(r => r.map(csvCell).join(",")).join("\n");
+  const r2 = (v, d = 2) => v == null ? "" : +v.toFixed(d);
+  const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  function monthTable() {
+    return [["Month", "Rooms available", "Rooms sold", "Occupancy %", "ADR", "RevPAR", "RevPAR vs LY %", "Room revenue"].concat(D.hasT ? ["TRevPAR"] : [], D.hasG ? ["GOPPAR"] : [])]
+      .concat(monthRows().map(r => [r.label, r.a, r.s, r2(r.occ * 100, 1), r2(r.adr), r2(r.revpar), r.ly == null ? "" : r2(r.ly * 100, 1), r2(r.r)].concat(D.hasT ? [r2(r.trevpar)] : [], D.hasG ? [r2(r.goppar)] : [])));
+  }
+  function portTable() {
+    const { rows, port } = portfolioRows();
+    return [[`Period ${iso(P.from)} to ${iso(P.to)}`], ["Hotel", "Avg rooms available", "Occupancy %", "ADR", "RevPAR", "RevPAR vs LY %", "RevPAR index", "Room revenue"].concat(D.hasT ? ["TRevPAR"] : [], D.hasG ? ["GOPPAR"] : [])]
+      .concat(rows.concat(rows.length > 1 ? [port] : []).map(r => [r.name, r2(r.rooms, 0), r2(r.occ * 100, 1), r2(r.adr), r2(r.revpar), r.ly == null ? "" : r2(r.ly * 100, 1), r2(r.index, 0), r2(r.rev)].concat(D.hasT ? [r2(r.trevpar)] : [], D.hasG ? [r2(r.goppar)] : [])));
+  }
+  function cleanTable() {
+    return [["date", "hotel", "rooms_available", "rooms_sold", "room_revenue", "total_revenue", "gop"]].concat(D.rows.map(r => [iso(r.d), D.hotels[r.h], r.a, r.s, r.r, r.t ?? "", r.g ?? ""]));
+  }
+  $("#csv-month").onclick = $("#csv-month2").onclick = () => download(`kpi-monthly-${slug(propName())}.csv`, toCSV(monthTable()), "text/csv");
+  $("#csv-port").onclick = () => download(`kpi-portfolio-${iso(P.from)}-to-${iso(P.to)}.csv`, toCSV(portTable()), "text/csv");
+  $("#b-csv").onclick = () => download(`budget-${slug(S.bHotel === ALL ? "all-hotels" : S.bHotel)}-${S.bYear}.csv`, toCSV(budgetRows()), "text/csv");
+  $("#exp-clean").onclick = () => download("hotel-daily-data-cleaned.csv", toCSV(cleanTable()), "text/csv");
+  $("#tpl").onclick = () => download("hotel-kpi-template.csv", toCSV([["date", "hotel", "rooms_available", "rooms_sold", "room_revenue", "total_revenue", "gop"],
+    ["2026-10-01", "My Hotel", 200, 151, 27930.50, 36310.00, 9800], ["2026-10-02", "My Hotel", 200, 188, 41360.00, 55836.00, 21400], ["2026-10-03", "My Hotel", 200, 196, 45080.00, 61760.00, 25100]]), "text/csv");
+  $("#xlsx").onclick = () => {
+    if (!window.XLSX) { $("#csv-month").click(); return; }
+    const wb = XLSX.utils.book_new();
+    const k = Object.keys(M).filter(metricOK).map(x => [M[x].label, ...[[P.from, P.to], P.prev, P.ly].map(([a, b]) => { const v = M[x].f(agg(hotelList(S.view.prop), a, b)); return v == null ? "" : +v.toFixed(4); })]);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([[`${propName()}`], ["Measure", `This period ${iso(P.from)} to ${iso(P.to)}`, "Previous period", "Last year"], ...k]), "KPIs");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(portTable()), "Portfolio");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monthTable()), "Monthly");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(budgetRows()), "Budget");
+    XLSX.writeFile(wb, `hotel-kpis-${iso(P.to)}.xlsx`);
+  };
+
+  // ---------------- import buttons ----------------
+  $("#imp").onchange = async (ev) => { const f = ev.target.files[0]; if (!f) return; const text = await f.text(); importText(text, f.name); ev.target.value = ""; };
+  $("#paste-toggle").onclick = () => { $("#paste-box").hidden = !$("#paste-box").hidden; if (!$("#paste-box").hidden) $("#paste").focus(); };
+  $("#paste-cancel").onclick = () => { $("#paste-box").hidden = true; };
+  $("#paste-go").onclick = () => { const t = $("#paste").value; if (!t.trim()) { alert("Paste some rows first."); return; } if (importText(t, "pasted data")) { $("#paste").value = ""; $("#paste-box").hidden = true; } };
+
+  // ---------------- resets ----------------
+  function resetData() { S.source = "sample"; S.upload = null; S.uploadName = ""; S.report = null; S.view.prop = ALL; S.bHotel = ""; S.bYear = 0; save(); start(); }
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset;
+    const names = { data: "data back to the sample (your imported data will be removed)", view: "period and hotel choices", budget: "budget for this hotel and year to the sample (last year's actuals, ADR up 3%)" };
+    if (!confirm(`Reset the ${names[sec]}?`)) return;
+    if (sec === "data") resetData();
+    else if (sec === "view") { S.view = clone(DEFAULT_VIEW); save(); renderControls(); renderResults(); }
+    else if (sec === "budget") { delete S.budgets[bKey()]; save(); renderBudget(); }
+  });
+  $("#reset-all").onclick = () => { if (!confirm("Reset everything back to the sample? Imported data and budgets will be removed. This can't be undone.")) return; S = clone(DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {} start(); $("#saved").textContent = ""; };
+
+  function start() { buildIndex(); renderSource(); renderControls(); renderResults(); renderBudget(); }
+
+  // ---------------- start ----------------
+  chartDefaults();
+  SAMPLE_DATA = makeSample();
+  S = load();
+  if (S.source === "upload" && !(S.upload && S.upload.rows && S.upload.rows.length)) S.source = "sample";
+  start();
+})();
+</script>
+</body>
+</html>

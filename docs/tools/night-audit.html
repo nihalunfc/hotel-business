@@ -1,0 +1,1203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Night Audit Assistant</title>
+<meta name="description" content="A free night audit assistant for hotels: a guided checklist, cash and card reconciliation, rate and room status checks, no-show charges, the daily manager's flash report with month and year to date, and a history of closed nights.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.progress { height: 12px; background: #e9edf1; border-radius: 999px; overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--good); border-radius: 999px; transition: width .25s; }
+.prog-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin: 14px 0 6px; }
+.prog-row .progress { flex: 1 1 240px; }
+.prog-row b { font-size: 15px; }
+.grp { margin-top: 16px; }
+.grp h3 { font-size: 15px; margin: 0 0 6px; display: flex; justify-content: space-between; gap: 10px; }
+.grp h3 span { font-weight: 500; color: var(--ink-3); font-size: 13.5px; }
+.step-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) 128px minmax(0, 220px); gap: 6px 10px; align-items: center; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; background: #fff; }
+.step-row.done { background: var(--good-soft); border-color: #bfe3cd; }
+.step-row.done .st-text { color: var(--ink-2); text-decoration: line-through; text-decoration-color: #8fb9a0; }
+.step-row input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--good); margin: 0; }
+.step-row input[type=time], .step-row input[type=text] { padding: 5px 7px; font-size: 13.5px; }
+.st-text { font-size: 14.5px; }
+.step-row.edit { grid-template-columns: minmax(0, 1fr) 150px auto; }
+.step-row.edit .mv { display: inline-flex; gap: 2px; }
+.mv button { border: 1px solid var(--line-2); background: #fff; border-radius: 6px; cursor: pointer; padding: 2px 8px; font-size: 13px; }
+.mv button:disabled { opacity: .35; cursor: default; }
+@media (max-width: 700px) {
+  .step-row { grid-template-columns: 28px minmax(0, 1fr); }
+  .step-row input[type=time] { grid-column: 2; max-width: 140px; }
+  .step-row .st-note { grid-column: 2; }
+  .step-row.edit { grid-template-columns: minmax(0, 1fr); }
+}
+.add-row { display: grid; grid-template-columns: 200px minmax(0, 1fr) auto; gap: 8px; margin-top: 10px; }
+@media (max-width: 700px) { .add-row { grid-template-columns: 1fr; } }
+tr.ok td.diff { color: var(--good); font-weight: 600; }
+tr.tol td.diff { color: var(--warn); font-weight: 700; }
+tr.tol { background: #fffaf0; }
+tr.bad td.diff { color: var(--bad); font-weight: 700; }
+tr.bad { background: #fff6f5; }
+.st { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.st.ok { background: var(--good-soft); color: var(--good); }
+.st.tol { background: var(--warn-soft); color: var(--warn); }
+.st.bad { background: var(--bad-soft); color: var(--bad); }
+.st.info { background: var(--brand-soft); color: var(--brand); }
+.flag { display: block; font-size: 13px; }
+.flag.bad { color: var(--bad); }
+.flag.warn { color: var(--warn); }
+textarea.paste { width: 100%; min-height: 150px; font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; resize: vertical; white-space: pre; overflow-wrap: normal; overflow-x: auto; }
+textarea.notes { width: 100%; min-height: 90px; font: inherit; font-size: 14.5px; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.mini { margin-top: 14px; }
+.mini .kpi .value { font-size: 24px; }
+.subhead { font-size: 15.5px; margin: 20px 0 8px; }
+.flash td.sec-row { background: #f3f6fa; font-weight: 700; color: var(--brand); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.flash td.b, .flash tr.b td { font-weight: 700; }
+.print-head { display: none; }
+.hist-act { white-space: nowrap; }
+.hist-act .btn { padding: 4px 9px; font-size: 13px; }
+tr.current td { background: var(--brand-soft); }
+.lbl-inline { font-size: 13.5px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+.lbl-inline input[type=number] { width: 90px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+table.edit input[type=checkbox] { width: 18px; height: 18px; }
+@media print {
+  .print-head { display: block; margin-bottom: 10px; }
+  #s-flash .sec-head { display: none; }
+  .flash { font-size: 12px; }
+  .flash th, .flash td { padding: 4px 8px; }
+  .kpi { box-shadow: none; }
+  .flash td.sec-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Night Audit Assistant</h1>
+    <p class="lead">Everything the night auditor checks before closing the day, on one page. Tick off tonight's steps, balance each cashier's cash and cards, catch wrong rates, over-limit folios and room status mistakes, charge no-shows by policy, then print the manager's flash report with month and year to date.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Paste straight from your PMS or Excel</span><span>Loaded with a sample night: Summit Tower Hotel, 620 rooms</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-check"><b>Step 1</b>Tonight's checklist</a>
+    <a href="#s-recon"><b>Step 2</b>Cash and card balancing</a>
+    <a href="#s-rooms"><b>Step 3</b>Rate and room checks</a>
+    <a href="#s-ns"><b>Step 4</b>No-shows</a>
+    <a href="#s-flash"><b>Step 5</b>Flash report, then close the night</a>
+  </nav>
+
+  <!-- 1. Checklist -->
+  <section class="sec no-print" id="s-check">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Tonight's audit checklist</h2><p>The business date you are closing and every step of tonight's audit. Tick a step and the time is stamped for you. Change the steps to match your hotel with <b>Edit steps</b>.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="edit-steps">Edit steps</button>
+        <button class="btn sm reset" data-reset="check">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="f-hotel">Hotel</label><input type="text" id="f-hotel" data-k="setup.hotel"></div>
+        <div class="field"><label for="f-rooms">Rooms in the hotel</label><input type="number" min="1" id="f-rooms" data-k="setup.rooms" data-num><small>Total rooms, including any out of order</small></div>
+        <div class="field"><label for="f-date">Business date being closed</label><input type="date" id="f-date"><small>A new date starts a fresh checklist</small></div>
+        <div class="field"><label for="f-aud">Night auditor</label><input type="text" id="f-aud" data-k="setup.auditor"></div>
+      </div>
+      <div class="prog-row"><b id="prog-txt"></b><div class="progress" role="progressbar" aria-label="Checklist progress"><i id="prog-bar"></i></div><span class="muted" id="prog-sub" style="font-size:13.5px"></span></div>
+      <div id="steps"></div>
+      <div id="edit-tools" hidden>
+        <div class="add-row">
+          <select id="new-g"></select>
+          <input type="text" id="new-t" placeholder="Describe the new step, e.g. Check group rooming lists for tomorrow">
+          <button class="btn sm primary" id="add-step">Add step</button>
+        </div>
+        <div class="toolbar" style="margin-top:10px">
+          <button class="btn sm" id="save-tpl">Save these steps as my template</button>
+          <button class="btn sm" id="load-tpl">Restart tonight from my template</button>
+          <span class="note" id="tpl-note" style="margin:0"></span>
+        </div>
+        <p class="note">Your template is the list every new business date starts from. Moving a step to another group: change its group in the drop-down.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Reconciliation -->
+  <section class="sec no-print" id="s-recon">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Cash and card reconciliation</h2><p>For each cashier or shift, enter what the system says they took (from the PMS cashier report) and what was actually counted or settled. The difference is the <b>over</b> (more than expected) or <b>short</b> (less than expected).</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="add-cashier">Add cashier (all payment types)</button>
+        <button class="btn sm" id="add-recon">Add one line</button>
+        <button class="btn sm" id="csv-recon">Download CSV</button>
+        <button class="btn sm reset" data-reset="recon">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <label class="lbl-inline">Tolerance per line $ <input type="number" min="0" step="0.5" data-k="recon.tol" data-num></label>
+      <span class="note" style="margin-left:8px">Differences up to this amount show amber; anything larger shows red.</span>
+      <div class="table-wrap" style="margin-top:10px"><table class="edit" id="t-recon"><thead><tr><th>Cashier or shift</th><th>Payment type</th><th class="num">Expected (system)</th><th class="num">Counted or settled</th><th class="num">Over / short</th><th>Status</th><th>Note</th><th></th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <div id="recon-warn"></div>
+      <div class="grid g4 mini" id="recon-kpis"></div>
+      <h3 class="subhead">By cashier</h3>
+      <div class="table-wrap"><table id="t-cashier"><thead><tr><th>Cashier or shift</th><th class="num">Expected</th><th class="num">Counted</th><th class="num">Over / short</th><th>Result</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- 3. Rooms -->
+  <section class="sec no-print" id="s-rooms">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">3</span>Rate and room checks</h2><p>Paste tonight's in-house list and the housekeeping report (copy the columns from your PMS or Excel), or import a CSV. The tool flags wrong rates, folios over their credit limit, missing approvals and room status mismatches.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="tpl-inhouse">Download template</button>
+        <button class="btn sm" id="csv-exc">Download exceptions CSV</button>
+        <button class="btn sm reset" data-reset="rooms">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="r-floor">Rate floor $</label><input type="number" min="0" id="r-floor" data-k="rooms.floor" data-num><small>Lowest rate allowed without approval</small></div>
+        <div class="field"><label for="r-comp">Comp codes</label><input type="text" id="r-comp" data-k="rooms.comp"><small>Rate codes that may be $0 (complimentary)</small></div>
+        <div class="field"><label for="r-disc">Discount codes needing approval</label><input type="text" id="r-disc" data-k="rooms.disc"><small>Separate with commas</small></div>
+        <div class="field"><label for="r-near">Warn at % of credit limit</label><input type="number" min="1" max="100" id="r-near" data-k="rooms.near" data-num><small>High-balance early warning</small></div>
+      </div>
+      <div class="two" style="margin-top:16px">
+        <div>
+          <div class="toolbar" style="justify-content:space-between;margin-bottom:6px"><b style="font-size:14.5px">In-house list (<span id="ih-count">0</span> rooms)</b>
+            <label class="btn sm" style="margin:0">Import CSV<input type="file" id="imp-ih" accept=".csv,.txt,text/csv,text/plain" hidden></label></div>
+          <textarea class="paste" wrap="off" id="ta-inhouse" spellcheck="false" data-k="rooms.inhouse" aria-label="In-house list"></textarea>
+          <p class="note">Columns: <code>room, guest, rate, rate code, nights, balance, credit limit, payment, approval</code>. Payment: VI, MC, AX, DC (debit), CA (cash) or DB (direct bill). Approval is who approved a comp, discount or direct bill. A header row is optional.</p>
+        </div>
+        <div>
+          <div class="toolbar" style="justify-content:space-between;margin-bottom:6px"><b style="font-size:14.5px">Housekeeping report (<span id="hk-count">0</span> rooms)</b>
+            <label class="btn sm" style="margin:0">Import CSV<input type="file" id="imp-hk" accept=".csv,.txt,text/csv,text/plain" hidden></label></div>
+          <textarea class="paste" wrap="off" id="ta-hk" spellcheck="false" data-k="rooms.hk" aria-label="Housekeeping report"></textarea>
+          <p class="note">Columns: <code>room, status</code>. Status: OC or OD (occupied clean or dirty), VC, VD or VI (vacant clean, dirty or inspected), OOO (out of order).</p>
+        </div>
+      </div>
+      <div id="rooms-warn"></div>
+      <div class="grid g4 mini" id="rooms-kpis"></div>
+      <h3 class="subhead">Rate and folio exceptions <span class="muted" style="font-weight:500;font-size:13.5px" id="exc-sub"></span></h3>
+      <div class="toolbar" style="margin-bottom:6px"><label class="lbl-inline"><input type="checkbox" id="show-all"> Show every in-house room, not only the flagged ones</label></div>
+      <div class="table-wrap" style="max-height:520px;overflow:auto"><table id="t-exc"><thead><tr><th>Room</th><th>Guest</th><th class="num">Rate</th><th>Code</th><th class="num">Nights</th><th class="num">Balance</th><th class="num">Credit limit</th><th>Pay</th><th>What to check</th></tr></thead><tbody></tbody></table></div>
+      <h3 class="subhead">Room status discrepancies (PMS against housekeeping)</h3>
+      <div class="table-wrap"><table id="t-disc"><thead><tr><th>Room</th><th>PMS says</th><th>Housekeeping says</th><th>Likely cause</th><th>What to do</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- 4. No-shows -->
+  <section class="sec no-print" id="s-ns">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">4</span>No-shows and late cancellations</h2><p>Tonight's arrivals who did not come, and bookings cancelled inside the penalty window. <b>Guaranteed</b> means a card, deposit or company account secures the booking, so the policy charge applies; non-guaranteed bookings are simply released.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="add-ns">Add reservation</button>
+        <button class="btn sm" id="csv-ns">Download CSV</button>
+        <button class="btn sm reset" data-reset="ns">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="n-tax">Tax on room charges %</label><input type="number" min="0" max="50" step="0.5" id="n-tax" data-k="ns.tax" data-num><small>Ontario HST 13% plus 4% municipal accommodation tax</small></div>
+        <div class="field"><label for="n-nsn">Nights charged for a no-show</label><input type="number" min="0" max="30" id="n-nsn" data-k="ns.nsNights" data-num><small>Usually the first night only</small></div>
+        <div class="field"><label for="n-lcn">Nights charged for a late cancellation</label><input type="number" min="0" max="30" id="n-lcn" data-k="ns.lcNights" data-num><small>Cancelled inside the penalty window</small></div>
+      </div>
+      <div class="table-wrap" style="margin-top:14px"><table class="edit" id="t-ns"><thead><tr><th>Confirmation</th><th>Guest</th><th>Type</th><th>Guarantee</th><th class="num">Nightly rate</th><th class="num">Charge</th><th>Waive</th><th>Action / note</th><th></th></tr></thead><tbody></tbody></table></div>
+      <div id="ns-warn"></div>
+      <div class="grid g4 mini" id="ns-kpis"></div>
+    </div>
+  </section>
+
+  <!-- 5. Flash inputs -->
+  <section class="sec no-print" id="s-flashin">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">5</span>Daily manager's report figures</h2><p>Today's figures from your PMS end-of-day reports. <b>Fill from sections 2 to 4</b> copies the rooms sold, comps, room revenue, out-of-order rooms, payments and no-shows you already entered above.</p></div>
+      <div class="toolbar">
+        <button class="btn sm primary" id="pull">Fill from sections 2 to 4</button>
+        <button class="btn sm reset" data-reset="flash">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="x-ooo">Rooms out of order</label><input type="number" min="0" id="x-ooo" data-k="flash.ooo" data-num><small>Under repair, cannot be sold</small></div>
+        <div class="field"><label for="x-sold">Rooms sold (paid)</label><input type="number" min="0" id="x-sold" data-k="flash.sold" data-num></div>
+        <div class="field"><label for="x-comp">Complimentary rooms</label><input type="number" min="0" id="x-comp" data-k="flash.comp" data-num><small>Occupied at $0</small></div>
+        <div class="field"><label for="x-usali">Rooms available counts</label><select id="x-usali" data-k="flash.usali"><option value="all">All rooms (USALI 11th edition)</option><option value="sellable">Only rooms not out of order</option></select><small>USALI is the industry accounting standard</small></div>
+        <div class="field"><label for="x-rr">Room revenue $</label><input type="number" min="0" step="0.01" id="x-rr" data-k="flash.roomRev" data-num><small>Before tax</small></div>
+        <div class="field"><label for="x-fb">Food and beverage revenue $</label><input type="number" min="0" step="0.01" id="x-fb" data-k="flash.fbRev" data-num></div>
+        <div class="field"><label for="x-oth">Other revenue $</label><input type="number" min="0" step="0.01" id="x-oth" data-k="flash.otherRev" data-num><small>Parking, spa, retail, fees</small></div>
+        <div class="field"><label for="x-tax">Taxes collected $</label><input type="number" min="0" step="0.01" id="x-tax" data-k="flash.taxes" data-num></div>
+      </div>
+      <h3 class="subhead">Payments received by type $</h3>
+      <div class="fields" id="pay-fields"></div>
+      <h3 class="subhead">Guest movement</h3>
+      <div class="fields">
+        <div class="field"><label for="x-arr">Arrivals</label><input type="number" min="0" id="x-arr" data-k="flash.arr" data-num></div>
+        <div class="field"><label for="x-dep">Departures</label><input type="number" min="0" id="x-dep" data-k="flash.dep" data-num></div>
+        <div class="field"><label for="x-ns">No-shows</label><input type="number" min="0" id="x-ns" data-k="flash.ns" data-num></div>
+      </div>
+      <h3 class="subhead">Handover notes for the morning team</h3>
+      <textarea class="notes" id="x-notes" data-k="flash.notes" aria-label="Handover notes"></textarea>
+      <div id="flash-warn"></div>
+    </div>
+  </section>
+
+  <!-- Results: flash report -->
+  <section class="sec" id="s-flash">
+    <div class="sec-head">
+      <div><h2 id="flash-title">Daily manager's flash report</h2><p class="no-print">The one-page summary the general manager reads first thing. Month to date (MTD) and year to date (YTD) add tonight to the closed nights saved in History.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm primary" id="csv-flash">Download CSV</button>
+        <button class="btn sm" onclick="window.print()">Print</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="print-head" id="print-head"></div>
+      <div class="grid g4" id="flash-kpis"></div>
+      <div class="takeaway" id="takeaway"></div>
+      <div class="table-wrap" style="margin-top:16px"><table class="flash" id="t-flash"><thead><tr><th>Measure</th><th class="num">Today</th><th class="num">Month to date</th><th class="num">Year to date</th></tr></thead><tbody></tbody></table></div>
+      <p class="note" id="flash-note"></p>
+      <div id="print-extra"></div>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <button class="btn primary big" id="close-night">Close this night and save to History</button>
+      <button class="btn sm" id="backup">Download backup</button>
+      <label class="btn sm" style="margin:0">Restore backup<input type="file" id="restore" accept=".json,application/json" hidden></label>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <!-- 6. History -->
+  <section class="sec no-print" id="s-hist">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">6</span>History of closed nights</h2><p>Each closed night is kept in this browser by business date. Re-open a night to correct it, then close it again to replace the saved copy.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="csv-hist">Download CSV</button>
+        <button class="btn sm reset" data-reset="history">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="grid g4" id="hist-kpis"></div>
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card"><h3>Occupancy and ADR</h3><p class="muted" style="font-size:14px">Last 30 nights. ADR is the average rate paid per room sold.</p><div class="chart-box"><canvas id="ch-trend"></canvas></div></div>
+        <div class="card"><h3>Cash and card over / short</h3><p class="muted" style="font-size:14px">Total difference per night. Bars above zero are overs, below are shorts.</p><div class="chart-box"><canvas id="ch-os"></canvas></div></div>
+      </div>
+      <div class="table-wrap" style="margin-top:16px;max-height:460px;overflow:auto"><table id="t-hist"><thead><tr><th>Business date</th><th class="num">Occupancy</th><th class="num">ADR</th><th class="num">RevPAR</th><th class="num">Room revenue</th><th class="num">Total revenue</th><th class="num">Over / short</th><th class="num">Checklist</th><th></th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <details class="tech no-print" style="margin-top:22px">
+    <summary>How it's calculated</summary>
+    <p><b>Occupancy</b> = rooms sold &divide; rooms available. By default rooms available is every room in the hotel, because the USALI 11th edition (the Uniform System of Accounts for the Lodging Industry) keeps out-of-order rooms in the count. You can switch to counting only rooms that are not out of order. Complimentary rooms are not in paid occupancy; occupancy including comps is shown on its own line.</p>
+    <p><b>ADR</b> (average daily rate) = room revenue &divide; rooms sold (paid rooms only, so comps do not drag it down). <b>RevPAR</b> (revenue per available room) = room revenue &divide; rooms available, which also equals occupancy &times; ADR. <b>TRevPAR</b> = total revenue &divide; rooms available.</p>
+    <p><b>Month and year to date</b> add up the closed nights in History in the same month or year, before tonight's date, plus tonight. Ratios are recalculated from the totals (for example MTD ADR = MTD room revenue &divide; MTD rooms sold), not averaged night by night. Year to date only covers nights saved in this browser.</p>
+    <p><b>Over / short</b> = counted &minus; expected, per line. Zero is balanced, within the tolerance is amber and anything larger is red. The total over / short for the night is saved to History.</p>
+    <p><b>Rate checks</b>: a $0 rate needs a comp code; a rate below the floor is flagged unless it is an approved discount or comp code; comp and discount codes and direct bill (city ledger) folios need an approval name; a balance above the credit limit is flagged red and one at or above the warning percentage is flagged amber. A cash guest with no credit limit is flagged if they owe anything.</p>
+    <p><b>Room status</b>: a room is occupied in the PMS if it is on the in-house list. PMS occupied but housekeeping vacant is a possible <i>sleeper</i> (guest left, folio never checked out) or <i>skip</i> (guest left without paying, likely when the balance is above $0). Housekeeping occupied but PMS vacant may be an unregistered guest or a missed check-in. Rooms missing from either list are listed too.</p>
+    <p><b>No-show charge</b> = nightly rate &times; nights charged by policy &times; (1 + tax %), only for guaranteed bookings that are not waived. Non-guaranteed bookings are released at no charge.</p>
+    <p><b>Limits</b>: this tool checks and records; it does not post to your PMS. Figures you type are trusted, so always run the PMS end-of-day reports too. Everything is saved only in this browser (local storage), so use <b>Download backup</b> to keep a copy. To save space, History stores tonight's checklist, reconciliation, no-shows and report figures, but not the full pasted in-house and housekeeping lists.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.night-audit.v1";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const num = (v) => { const x = parseFloat(String(v ?? "").replace(/[$,\s]/g, "")); return isFinite(x) ? x : 0; };
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const m2 = (v) => (v < -0.004 ? "-" : "") + "$" + Math.abs(v).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const m0 = (v) => (v < -0.5 ? "-" : "") + "$" + Math.round(Math.abs(v)).toLocaleString("en-CA");
+  const os = (v) => Math.abs(v) < 0.005 ? "$0.00" : (v > 0 ? "+" : "-") + "$" + Math.abs(v).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pct = (v) => isFinite(v) ? (v * 100).toFixed(1) + "%" : "-";
+  const int = (v) => Math.round(v).toLocaleString("en-CA");
+  const addDays = (iso, k) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + k); return d.toISOString().slice(0, 10); };
+  const longDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-CA", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const nowHM = () => { const d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  const PAY = [["cash", "Cash"], ["visa", "Visa"], ["mc", "Mastercard"], ["amex", "Amex"], ["debit", "Debit (Interac)"], ["db", "Direct bill"]];
+  const PAYNAME = Object.fromEntries(PAY);
+  const GROUPS = [["pre", "Before midnight"], ["roll", "The roll-over (end of day)"], ["post", "After the roll-over"], ["rep", "Reports and handover"]];
+  const GTD = [["cc", "Credit card"], ["dep", "Advance deposit"], ["db", "Company account"], ["none", "Not guaranteed"]];
+  const rng = (seed) => () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+
+  // ---------------- sample data ----------------
+  const TEMPLATE = [
+    ["pre", "Take over from the evening shift: read the log and handover notes, count and sign for your cash float"],
+    ["pre", "Make sure every restaurant, bar, room service and spa charge has posted and the outlet tills (POS) are closed"],
+    ["pre", "Balance each cashier's cash and card totals against the PMS cashier report (section 2)"],
+    ["pre", "Work through tonight's arrivals: check in late guests, mark no-shows, cancel per policy (section 4)"],
+    ["pre", "Check due-outs: anyone due to leave today is either checked out or extended"],
+    ["pre", "Rate check on the in-house list: $0 rates, rates below the floor, discounts without approval (section 3)"],
+    ["pre", "High balance and credit limit report: get a new card authorisation or payment where needed (section 3)"],
+    ["pre", "Match PMS room status with the housekeeping report; fix sleepers and skips (section 3)"],
+    ["pre", "Direct-bill folios: approval on file and billing details complete before transfer to city ledger"],
+    ["roll", "Print or save the pre-audit reports: in-house list, arrivals, departures, trial balance"],
+    ["roll", "Post room and tax charges to every in-house folio"],
+    ["roll", "Post no-show and late-cancellation charges for guaranteed bookings"],
+    ["roll", "Run end of day (roll the business date) in the PMS"],
+    ["roll", "Confirm the system date moved forward and interfaces (keys, phones, POS) reconnected"],
+    ["post", "Trial balance: today's charges, payments and transfers net out, with no unexplained difference"],
+    ["post", "Guest ledger (money owed by in-house guests) and city ledger (money owed by companies and accounts) match yesterday's close plus today's activity"],
+    ["post", "Fix posting errors with corrections or allowances, with a reason on each"],
+    ["post", "Close the credit card batch on the payment terminal and keep the settlement slip"],
+    ["rep", "Complete the daily manager's flash report (section 5)"],
+    ["rep", "Save the end-of-day reports and download a backup of this audit"],
+    ["rep", "Prepare tomorrow's arrival list and pre-assign rooms for early arrivals and VIPs"],
+    ["rep", "Write handover notes for the morning manager and front desk"],
+    ["rep", "Send the flash report to the general manager and revenue manager"],
+  ].map(([g, t]) => ({ g, t }));
+
+  const SAMPLE_DATE = "2026-10-18";
+  const SAMPLE_DONE = { 0: ["23:02", "Float $500 correct, signed"], 1: ["23:15", "Lobby bar closed 23:40, posted 23:52"], 2: ["23:58", "Evening cash $20 short, see note"], 3: ["00:21", "7 no-shows, 1 late cancel"], 4: ["00:30", ""], 5: ["00:44", ""] };
+
+  function sampleCheck(date) {
+    return { date, steps: TEMPLATE.map((s, i) => ({ id: uid(), g: s.g, t: s.t, done: !!SAMPLE_DONE[i], time: SAMPLE_DONE[i] ? SAMPLE_DONE[i][0] : "", note: SAMPLE_DONE[i] ? SAMPLE_DONE[i][1] : "" })) };
+  }
+
+  function sampleRecon() {
+    const D = "Day: Priya S. (07:00 to 15:00)", E = "Evening: Marco D. (15:00 to 23:00)", N = "Night: Alex K. (23:00 to 07:00)";
+    const rows = [
+      [D, "cash", 1842.50, 1842.50], [D, "visa", 18420.15, 18420.15], [D, "mc", 9875.40, 9875.40], [D, "amex", 6210.00, 6210.00], [D, "debit", 1104.75, 1104.75], [D, "db", 4880.00, 4880.00],
+      [E, "cash", 2315.25, 2295.25, "Short $20. Possible change error on room 1408 checkout"], [E, "visa", 21560.80, 21560.80], [E, "mc", 11240.10, 11240.10], [E, "amex", 7845.60, 7848.60, "Tip added at bar, confirm with F&B"], [E, "debit", 1388.20, 1388.20], [E, "db", 2150.00, 2150.00],
+      [N, "cash", 412.00, 413.50], [N, "visa", 3120.40, 3120.40], [N, "mc", 1480.00, 1480.00], [N, "amex", 0, 0], [N, "debit", 210.50, 210.50], [N, "db", 0, 0],
+    ];
+    return { tol: 5, rows: rows.map(([who, type, exp, cnt, note]) => ({ who, type, exp, cnt, note: note || "" })) };
+  }
+
+  function sampleLists() {
+    const r = rng(20261018);
+    const FN = ["James", "Mary", "Wei", "Priya", "Ahmed", "Sofia", "Liam", "Olivia", "Noah", "Emma", "Lucas", "Chloe", "Mateo", "Aisha", "Ethan", "Grace", "Hiro", "Fatima", "Owen", "Isabelle", "Raj", "Zoe", "Daniel", "Ana", "Kofi", "Mei", "Luca", "Hannah", "Omar", "Elena"];
+    const LN = ["Smith", "Tremblay", "Nguyen", "Patel", "Li", "Martin", "Brown", "Roy", "Wilson", "Singh", "Gagnon", "Kim", "Garcia", "Chen", "Taylor", "Côté", "Khan", "Rossi", "Murphy", "Okafor", "Bouchard", "Lee", "Anderson", "Haddad", "Silva", "Kowalski", "Fraser", "Ito", "Morrison", "Dubois"];
+    const CODES = [["BAR", 0.5, 199, 289], ["CORP", 0.13, 169, 169], ["AAA", 0.08, 179, 189], ["PKG-FALLS", 0.1, 239, 279], ["GRP-WED", 0.08, 159, 159], ["GOV", 0.05, 149, 149], ["OTA", 0.06, 189, 249]];
+    const pickCode = () => { let x = r(), acc = 0; for (const c of CODES) { acc += c[1]; if (x < acc) return c; } return CODES[0]; };
+    const PAYS = ["VI", "VI", "VI", "MC", "MC", "AX", "DC", "CA"];
+    const rooms = []; for (let f = 3; f <= 33; f++) for (let k = 1; k <= 20; k++) rooms.push(f * 100 + k);
+    const ooo = new Set([705, 1112, 1418, 2203, 2620, 3109]);
+    const rows = [];
+    rooms.forEach(room => {
+      if (ooo.has(room) || r() > 0.865) return;
+      const c = pickCode();
+      const rate = c[2] === c[3] ? c[2] : Math.round((c[2] + r() * (c[3] - c[2])) / 10) * 10 - 1;
+      const nights = 1 + Math.floor(r() * r() * 5);
+      let pay = c[0] === "GOV" ? "DB" : PAYS[Math.floor(r() * PAYS.length)];
+      const limit = pay === "DB" ? 2500 : pay === "CA" ? 300 : Math.round(rate * nights * 1.17 / 100) * 100 + 300;
+      const stayed = Math.max(0, nights - 1 - Math.floor(r() * nights));
+      const bal = r2(Math.max(0, rate * 1.17 * (stayed + 1) + r() * 60 - (pay === "CA" ? rate * 1.17 * (stayed + 1) : 0)));
+      rows.push({ room, guest: LN[Math.floor(r() * LN.length)] + ", " + FN[Math.floor(r() * FN.length)], rate, code: c[0], nights, bal, limit, pay, appr: pay === "DB" ? "Sales: R. Fraser" : "" });
+    });
+    // deliberate issues for the sample
+    const set = (i, o) => Object.assign(rows[i], o);
+    set(17, { rate: 0, code: "BAR" });
+    set(203, { rate: 0, code: "CORP" });
+    set(45, { rate: 95, code: "BAR" });
+    set(310, { rate: 110, code: "GRP-WED" });
+    set(402, { rate: 119, code: "OTA" });
+    set(60, { rate: 99, code: "EMP", appr: "" });
+    set(250, { rate: 129, code: "MGR", appr: "" });
+    set(355, { rate: 99, code: "EMP", appr: "D. Roy (GM)" });
+    set(12, { bal: 1984.36, limit: 800, pay: "VI" });
+    set(99, { bal: 1312.80, limit: 1000, pay: "MC" });
+    set(333, { bal: 3120.55, limit: 2500, pay: "DB", appr: "Sales: R. Fraser" });
+    set(450, { bal: 486.20, limit: 300, pay: "CA" });
+    set(20, { bal: 940.10, limit: 1000, pay: "AX" });
+    set(480, { bal: 1415.00, limit: 1500, pay: "VI" });
+    set(130, { pay: "DB", appr: "", limit: 2500 });
+    set(377, { pay: "DB", appr: "", limit: 2500 });
+    [[88, "COMP", "D. Roy (GM)"], [91, "COMP", "D. Roy (GM)"], [166, "COMP", "Sales: R. Fraser"], [222, "COMP", ""], [290, "HSE", "Front office manager"]].forEach(([i, code, appr]) => set(i, { rate: 0, code, appr, bal: r2(rows[i].bal * 0.1), pay: "VI" }));
+    const occSet = new Set(rows.map(x => x.room));
+    const hkOverride = {};
+    hkOverride[rows[70].room] = "VD"; hkOverride[rows[288].room] = "VC"; hkOverride[rows[505 % rows.length].room] = "VD";
+    rows[70].bal = 742.18; rows[288].bal = 0;
+    hkOverride[rows[150].room] = "OOO";
+    const vac = rooms.filter(x => !occSet.has(x) && !ooo.has(x));
+    hkOverride[vac[3]] = "OD"; hkOverride[vac[40]] = "OC";
+    const hk = rooms.filter(x => x !== 3320).map(room => {
+      let st = hkOverride[room] || (ooo.has(room) ? "OOO" : occSet.has(room) ? (r() < 0.6 ? "OD" : "OC") : (r() < 0.75 ? "VC" : r() < 0.6 ? "VI" : "VD"));
+      return room + "\t" + st;
+    });
+    const head = "Room\tGuest\tRate\tRate code\tNights\tBalance\tCredit limit\tPayment\tApproval";
+    const ih = rows.map(x => [x.room, x.guest, x.rate.toFixed(2), x.code, x.nights, x.bal.toFixed(2), x.limit, x.pay, x.appr].join("\t"));
+    return { inhouse: [head].concat(ih).join("\n"), hk: ["Room\tStatus"].concat(hk).join("\n") };
+  }
+
+  function sampleRooms() {
+    const L = sampleLists();
+    return { floor: 129, comp: "COMP, HSE", disc: "EMP, MGR, FF", near: 90, inhouse: L.inhouse, hk: L.hk, showAll: false };
+  }
+
+  function sampleNs() {
+    const rows = [
+      ["SUM-44721", "Chen, Lily", "ns", "cc", 219, false, ""],
+      ["SUM-44890", "Okafor, David", "ns", "cc", 189, false, ""],
+      ["SUM-45012", "Tremblay, Marc", "ns", "dep", 249, false, "Deposit $291.33 on file"],
+      ["SUM-45103", "Smith, Jordan", "ns", "none", 179, false, ""],
+      ["SUM-45177", "Gupta, Anjali", "ns", "none", 159, false, ""],
+      ["SUM-44702", "Wilson, Kate (Baker Logistics)", "ns", "db", 169, true, "Waived by sales, email ref BL-1018"],
+      ["SUM-45230", "Morrison, Owen", "ns", "cc", 199, false, ""],
+      ["SUM-44610", "Rossi, Francesca", "lc", "cc", 229, false, "Cancelled 21:40, inside 48 hour window"],
+    ];
+    return { tax: 17, nsNights: 1, lcNights: 1, rows: rows.map(([conf, guest, kind, gtd, rate, waive, note]) => ({ conf, guest, kind, gtd, rate, waive, note })) };
+  }
+
+  function sampleHistory() {
+    const r = rng(7);
+    const out = [];
+    for (let d = "2026-09-01"; d < SAMPLE_DATE; d = addDays(d, 1)) {
+      const dow = new Date(d + "T12:00:00Z").getUTCDay();
+      const sep = d < "2026-10-01";
+      const wk = dow === 5 || dow === 6;
+      let occ = (sep ? 0.84 : 0.79) + (wk ? 0.1 : dow === 0 ? -0.02 : 0) + (r() - 0.5) * 0.08;
+      if (d === "2026-10-11" || d === "2026-10-12") occ += 0.08; // Thanksgiving weekend
+      occ = Math.min(0.985, Math.max(0.45, occ));
+      const ooo = 3 + Math.floor(r() * 6);
+      const comp = 2 + Math.floor(r() * 5);
+      const sold = Math.round(620 * occ) - comp;
+      const adr = (sep ? 214 : 204) + (wk ? 34 : 0) + (r() - 0.5) * 18;
+      const roomRev = r2(sold * adr), fbRev = r2(sold * (58 + r() * 22)), otherRev = r2(sold * (9 + r() * 5));
+      const taxes = r2(roomRev * 0.17 + (fbRev + otherRev) * 0.13);
+      const total = roomRev + fbRev + otherRev + taxes;
+      const paid = total * (0.9 + r() * 0.12);
+      const share = { cash: 0.05, visa: 0.42, mc: 0.22, amex: 0.15, debit: 0.04, db: 0.12 };
+      const pay = Object.fromEntries(Object.entries(share).map(([k, v]) => [k, r2(paid * v)]));
+      const overShort = r() < 0.55 ? 0 : r2((r() - 0.6) * 40);
+      const arr = Math.round(sold * (0.28 + r() * 0.12)), dep = Math.round(sold * (0.27 + r() * 0.12)), ns = Math.floor(r() * 9);
+      const nsCharge = r2(Math.floor(ns * 0.6) * adr * 1.17);
+      const flash = { ooo, sold, comp, usali: "all", roomRev, fbRev, otherRev, taxes, pay, arr, dep, ns, notes: "" };
+      const recon = { tol: 5, rows: PAY.map(([k]) => ({ who: "Night audit total (all cashiers)", type: k, exp: pay[k], cnt: k === "cash" ? r2(pay[k] + overShort) : pay[k], note: "" })) };
+      const check = { date: d, steps: TEMPLATE.map(s => ({ id: uid(), g: s.g, t: s.t, done: true, time: "", note: "" })) };
+      out.push({ date: d, rooms: 620, avail: 620, ooo, sold, comp, roomRev, fbRev, otherRev, taxes, pay, arr, dep, ns, overShort, nsCharge, exceptions: Math.floor(r() * 6), checkPct: 1, closedAt: addDays(d, 1) + "T05:4" + Math.floor(r() * 10) + ":00", snap: { check, recon, ns: { tax: 17, nsNights: 1, lcNights: 1, rows: [] }, flash } });
+    }
+    return out;
+  }
+
+  function sampleFlash(rooms, recon, ns) {
+    const f = { ooo: 0, sold: 0, comp: 0, usali: "all", roomRev: 0, fbRev: 38450.75, otherRev: 6120.40, taxes: 0, pay: {}, arr: 164, dep: 151, ns: 0,
+      notes: "Room 1408: evening cash $20 short, Marco to recount float at 15:00.\nRoom 2117 (Patel) over credit limit; new authorisation needed at check-out.\nRooms with a status mismatch sent to housekeeping for a 06:30 check.\nGroup GRP-WED (Fraser wedding) arrives 14:00, 42 rooms pre-assigned on floors 18 and 19." };
+    pullInto(f, rooms, recon, ns);
+    f.taxes = r2(f.roomRev * 0.17 + (f.fbRev + f.otherRev) * 0.13);
+    return f;
+  }
+
+  function makeDefaults() {
+    const rooms = sampleRooms(), recon = sampleRecon(), ns = sampleNs();
+    return {
+      setup: { hotel: "Summit Tower Hotel", rooms: 620, date: SAMPLE_DATE, auditor: "Alex K." },
+      template: clone(TEMPLATE),
+      check: sampleCheck(SAMPLE_DATE),
+      recon, rooms, ns,
+      flash: sampleFlash(rooms, recon, ns),
+      history: sampleHistory(),
+    };
+  }
+
+  // ---------------- parsing ----------------
+  function splitLine(line, delim) {
+    if (delim === "\t") return line.split("\t").map(s => s.trim());
+    const out = []; let cur = "", q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+      else if (c === '"') q = true; else if (c === delim) { out.push(cur.trim()); cur = ""; } else cur += c;
+    }
+    out.push(cur.trim()); return out;
+  }
+  function parseTable(text, fields, aliases) {
+    const lines = String(text || "").split(/\r?\n/).filter(l => l.trim());
+    if (!lines.length) return { rows: [], bad: 0 };
+    const first = lines[0];
+    const delim = first.includes("\t") ? "\t" : (first.split(";").length > first.split(",").length ? ";" : ",");
+    let cols = fields.slice(), start = 0;
+    const head = splitLine(first, delim).map(h => h.toLowerCase().replace(/[^a-z]/g, ""));
+    if (head.length && !/^\d/.test(splitLine(first, delim)[0])) {
+      start = 1;
+      cols = head.map(h => { for (const [f, al] of Object.entries(aliases)) if (al.includes(h)) return f; for (const [f, al] of Object.entries(aliases)) if (al.some(a => h.startsWith(a))) return f; return null; });
+      if (!cols.includes(fields[0])) cols = fields.slice();
+    }
+    const rows = []; let bad = 0;
+    for (let i = start; i < lines.length; i++) {
+      const parts = splitLine(lines[i], delim), o = {};
+      cols.forEach((f, j) => { if (f) o[f] = parts[j] ?? ""; });
+      if (!o[fields[0]]) { bad++; continue; }
+      rows.push(o);
+    }
+    return { rows, bad };
+  }
+  const IH_FIELDS = ["room", "guest", "rate", "code", "nights", "bal", "limit", "pay", "appr"];
+  const IH_ALIAS = { room: ["room", "rm"], guest: ["guest", "name"], rate: ["rate", "roomrate", "amount"], code: ["ratecode", "code", "plan"], nights: ["nights", "los", "nts"], bal: ["balance", "bal", "folio"], limit: ["creditlimit", "limit", "credit", "auth"], pay: ["payment", "pay", "method", "pm"], appr: ["approval", "approved", "auth by", "approvedby"] };
+  const HK_ALIAS = { room: ["room", "rm"], status: ["status", "hk", "housekeeping", "condition"] };
+  const codeList = (s) => String(s || "").split(/[,;\s]+/).map(x => x.trim().toUpperCase()).filter(Boolean);
+  function hkClass(s) {
+    const t = String(s || "").toUpperCase().replace(/[^A-Z]/g, "");
+    if (!t) return null;
+    if (t.startsWith("OOO") || t.startsWith("OOS") || t.startsWith("OUTOF")) return "OOO";
+    if (t.startsWith("V")) return "V";
+    if (t.startsWith("O")) return "O";
+    return null;
+  }
+
+  function analyzeRooms(R) {
+    const ih = parseTable(R.inhouse, IH_FIELDS, IH_ALIAS);
+    const hkp = parseTable(R.hk, ["room", "status"], HK_ALIAS);
+    const comp = codeList(R.comp), disc = codeList(R.disc), floor = Math.max(0, num(R.floor)), near = Math.min(100, Math.max(1, num(R.near) || 90)) / 100;
+    const list = ih.rows.map(o => {
+      const x = { room: String(o.room).trim(), guest: o.guest || "", rate: num(o.rate), code: String(o.code || "").trim().toUpperCase(), nights: num(o.nights), bal: num(o.bal), limit: num(o.limit), pay: String(o.pay || "").trim().toUpperCase(), appr: String(o.appr || "").trim(), flags: [] };
+      const isComp = comp.includes(x.code), isDisc = disc.includes(x.code);
+      if (x.rate === 0 && !isComp) x.flags.push(["bad", "Zero rate with no comp code", "rate"]);
+      if (x.rate > 0 && x.rate < floor && !((isDisc || isComp) && x.appr)) x.flags.push(["bad", `Rate ${m2(x.rate)} is below the ${m0(floor)} floor`, "rate"]);
+      if (isDisc && !x.appr) x.flags.push(["bad", `Discount code ${x.code} has no approval`, "rate"]);
+      if (isComp && !x.appr) x.flags.push(["bad", `Comp room has no approval`, "rate"]);
+      if (x.limit > 0 && x.bal > x.limit) x.flags.push(["bad", `Over credit limit by ${m2(x.bal - x.limit)}: get payment or a new authorisation`, "credit"]);
+      else if (x.limit > 0 && x.bal >= near * x.limit) x.flags.push(["warn", `High balance: ${Math.round(x.bal / x.limit * 100)}% of limit`, "credit"]);
+      else if (x.limit <= 0 && x.bal > 0) x.flags.push(["warn", "Owes money but has no credit limit set", "credit"]);
+      if ((x.pay === "DB" || x.pay.startsWith("DIRECT")) && !x.appr) x.flags.push(["bad", "Direct bill with no approval on file: confirm the city ledger account", "credit"]);
+      if (x.rate < 0) x.flags.push(["bad", "Negative rate", "rate"]);
+      return x;
+    });
+    const pms = new Map(list.map(x => [x.room, x]));
+    const hk = new Map(hkp.rows.map(o => [String(o.room).trim(), { raw: String(o.status || "").trim(), cls: hkClass(o.status) }]));
+    const disc2 = [];
+    const dupe = new Set(); const seen = new Set();
+    list.forEach(x => { if (seen.has(x.room)) dupe.add(x.room); seen.add(x.room); });
+    dupe.forEach(room => disc2.push({ room, pms: "Occupied twice", hk: hk.get(room)?.raw || "-", cause: "The same room is on the in-house list twice (double check-in)", todo: "Check both folios and move one guest", sev: "bad" }));
+    if (hk.size) {
+      list.forEach(x => {
+        const h = hk.get(x.room);
+        if (!h) disc2.push({ room: x.room, pms: "Occupied", hk: "Not on report", cause: "Missing from the housekeeping report", todo: "Ask housekeeping to check the room", sev: "warn" });
+        else if (h.cls === "V") disc2.push({ room: x.room, pms: "Occupied", hk: h.raw, cause: x.bal > 0 ? `Possible skip (guest left owing ${m2(x.bal)})` : "Possible sleeper (guest left, never checked out)", todo: x.bal > 0 ? "Check the room, try to contact the guest, charge the card on file" : "Confirm the room is empty, then check out the folio", sev: "bad" });
+        else if (h.cls === "OOO") disc2.push({ room: x.room, pms: "Occupied", hk: h.raw, cause: "Guest is in a room marked out of order", todo: "Confirm the room is fit to use or move the guest; fix the status", sev: "bad" });
+      });
+      hk.forEach((h, room) => {
+        if (pms.has(room)) return;
+        if (h.cls === "O") disc2.push({ room, pms: "Vacant", hk: h.raw, cause: "Occupied but nobody checked in: unregistered guest or missed check-in", todo: "Send security or a manager to check; register or clear the room", sev: "bad" });
+        else if (h.cls === null) disc2.push({ room, pms: "Vacant", hk: h.raw || "(blank)", cause: "Status not recognised", todo: "Use OC, OD, VC, VD, VI or OOO", sev: "warn" });
+      });
+    }
+    disc2.sort((a, b) => num(a.room) - num(b.room));
+    let ooo = 0; hk.forEach(h => { if (h.cls === "OOO") ooo++; });
+    return { list, disc: disc2, badIh: ih.bad, badHk: hkp.bad, hkCount: hk.size, ooo, comp };
+  }
+
+  // ---------------- derived figures ----------------
+  function reconTotals(rec) {
+    const tol = Math.max(0, num(rec.tol));
+    let exp = 0, cnt = 0, out = 0; const byWho = new Map(), byType = {};
+    rec.rows.forEach(x => {
+      const e = num(x.exp), c = num(x.cnt), d = r2(c - e);
+      exp += e; cnt += c;
+      if (Math.abs(d) > tol + 1e-9) out++;
+      const w = byWho.get(x.who) || { exp: 0, cnt: 0 }; w.exp += e; w.cnt += c; byWho.set(x.who, w);
+      byType[x.type] = (byType[x.type] || 0) + c;
+    });
+    return { tol, exp: r2(exp), cnt: r2(cnt), diff: r2(cnt - exp), out, byWho, byType };
+  }
+  function lineStatus(d, tol) { return Math.abs(d) < 0.005 ? "ok" : Math.abs(d) <= tol + 1e-9 ? "tol" : "bad"; }
+  function nsCharge(x, N) {
+    if (x.gtd === "none" || x.waive) return 0;
+    const nights = Math.max(0, num(x.kind === "lc" ? N.lcNights : N.nsNights));
+    return r2(Math.max(0, num(x.rate)) * nights * (1 + Math.max(0, num(N.tax)) / 100));
+  }
+  function nsTotals(N) {
+    let charge = 0, gtd = 0, waived = 0, nsCount = 0, lc = 0;
+    N.rows.forEach(x => { charge += nsCharge(x, N); if (x.gtd !== "none") gtd++; if (x.waive && x.gtd !== "none") waived++; if (x.kind === "lc") lc++; else nsCount++; });
+    return { charge: r2(charge), gtd, waived, nsCount, lc };
+  }
+  function pullInto(f, rooms, recon, ns) {
+    const A = analyzeRooms(rooms);
+    const comp = A.comp;
+    f.sold = A.list.filter(x => x.rate > 0).length;
+    f.comp = A.list.filter(x => x.rate === 0).length;
+    f.roomRev = r2(A.list.reduce((s, x) => s + Math.max(0, x.rate), 0));
+    if (A.hkCount) f.ooo = A.ooo;
+    const T = reconTotals(recon);
+    f.pay = Object.fromEntries(PAY.map(([k]) => [k, r2(T.byType[k] || 0)]));
+    f.ns = ns.rows.filter(x => x.kind !== "lc").length;
+  }
+
+  function flashCalc(f, rooms) {
+    const total = Math.max(0, num(rooms)), ooo = Math.max(0, num(f.ooo));
+    const avail = f.usali === "sellable" ? Math.max(0, total - ooo) : total;
+    const sold = Math.max(0, num(f.sold)), comp = Math.max(0, num(f.comp));
+    const roomRev = Math.max(0, num(f.roomRev)), fbRev = Math.max(0, num(f.fbRev)), otherRev = Math.max(0, num(f.otherRev)), taxes = Math.max(0, num(f.taxes));
+    const pay = Object.fromEntries(PAY.map(([k]) => [k, Math.max(0, num((f.pay || {})[k]))]));
+    return { rooms: total, avail, ooo, sold, comp, roomRev, fbRev, otherRev, taxes, pay, arr: Math.max(0, num(f.arr)), dep: Math.max(0, num(f.dep)), ns: Math.max(0, num(f.ns)) };
+  }
+  function ratios(t) {
+    const totalRev = t.roomRev + t.fbRev + t.otherRev;
+    return { occ: t.avail ? t.sold / t.avail : NaN, occComp: t.avail ? (t.sold + t.comp) / t.avail : NaN, adr: t.sold ? t.roomRev / t.sold : NaN, revpar: t.avail ? t.roomRev / t.avail : NaN, trevpar: t.avail ? totalRev / t.avail : NaN, totalRev };
+  }
+  function sumNights(arr) {
+    const z = { nights: 0, rooms: 0, avail: 0, ooo: 0, sold: 0, comp: 0, roomRev: 0, fbRev: 0, otherRev: 0, taxes: 0, pay: Object.fromEntries(PAY.map(([k]) => [k, 0])), arr: 0, dep: 0, ns: 0, overShort: 0, nsCharge: 0 };
+    arr.forEach(h => {
+      z.nights++;
+      ["rooms", "avail", "ooo", "sold", "comp", "roomRev", "fbRev", "otherRev", "taxes", "arr", "dep", "ns", "overShort", "nsCharge"].forEach(k => z[k] += num(h[k]));
+      PAY.forEach(([k]) => z.pay[k] += num((h.pay || {})[k]));
+    });
+    return z;
+  }
+
+  // ---------------- state and storage ----------------
+  const DEFAULTS = makeDefaults();
+  let S = load();
+  let saveTimer, editMode = false;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; }
+      catch (e) { $("#saved").textContent = "Could not save in this browser (storage full or blocked)"; }
+    }, 250);
+  }
+  function load() {
+    try {
+      const t = localStorage.getItem(KEY);
+      if (t) { const v = JSON.parse(t); if (v && typeof v === "object") return sanitize(Object.assign(clone(DEFAULTS), v)); }
+    } catch (e) {}
+    return clone(DEFAULTS);
+  }
+  function sanitize(s) {
+    const d = DEFAULTS;
+    ["setup", "recon", "rooms", "ns", "flash", "check"].forEach(k => { if (!s[k] || typeof s[k] !== "object") s[k] = clone(d[k]); else s[k] = Object.assign(clone(d[k]), s[k]); });
+    if (!Array.isArray(s.template)) s.template = clone(d.template);
+    if (!Array.isArray(s.check.steps)) s.check = clone(d.check);
+    if (!Array.isArray(s.recon.rows)) s.recon.rows = [];
+    if (!Array.isArray(s.ns.rows)) s.ns.rows = [];
+    if (!Array.isArray(s.history)) s.history = [];
+    s.history = s.history.filter(h => h && /^\d{4}-\d\d-\d\d$/.test(h.date));
+    if (!s.flash.pay || typeof s.flash.pay !== "object") s.flash.pay = {};
+    return s;
+  }
+
+  // ---------------- generic field binding ----------------
+  const getPath = (p) => p.split(".").reduce((o, k) => (o == null ? undefined : o[k]), S);
+  const setPath = (p, v) => { const ks = p.split("."); const last = ks.pop(); const o = ks.reduce((o, k) => (o[k] = o[k] || {}), S); o[last] = v; };
+  function fillFields() {
+    document.querySelectorAll("[data-k]").forEach(el => { const v = getPath(el.dataset.k); el.value = v ?? ""; });
+    $("#f-date").value = S.setup.date;
+  }
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const handler = () => {
+        const v = el.hasAttribute("data-num") ? (el.value === "" ? "" : Number(el.value)) : el.value;
+        setPath(el.dataset.k, v);
+        const sec = el.dataset.k.split(".")[0];
+        if (sec === "rooms") { clearTimeout(bindFields.t); bindFields.t = setTimeout(renderRooms, el.tagName === "TEXTAREA" ? 350 : 120); }
+        else if (sec === "recon") renderReconOut();
+        else if (sec === "ns") updateNs();
+        else if (sec === "setup") { renderChecklistHead(); }
+        renderFlash();
+        save();
+      };
+      el.addEventListener("input", handler);
+      if (el.tagName === "SELECT") el.addEventListener("change", handler);
+    });
+  }
+
+  // ---------------- 1. checklist ----------------
+  function freshChecklist(date) { return { date, steps: S.template.map(s => ({ id: uid(), g: s.g, t: s.t, done: false, time: "", note: "" })) }; }
+  function checkStats() { const st = S.check.steps; const done = st.filter(x => x.done).length; return { done, total: st.length, pct: st.length ? done / st.length : 0 }; }
+  function renderChecklistHead() {
+    const c = checkStats();
+    $("#prog-txt").textContent = `${c.done} of ${c.total} steps done (${Math.round(c.pct * 100)}%)`;
+    $("#prog-bar").style.width = (c.pct * 100).toFixed(1) + "%";
+    const next = S.check.steps.find(x => !x.done);
+    $("#prog-sub").textContent = c.total === 0 ? "No steps yet. Use Edit steps to add some." : next ? "Next: " + next.t.slice(0, 80) + (next.t.length > 80 ? "..." : "") : "All steps done. Close the night below.";
+  }
+  function renderChecklist() {
+    renderChecklistHead();
+    $("#edit-steps").textContent = editMode ? "Done editing" : "Edit steps";
+    $("#edit-steps").classList.toggle("primary", editMode);
+    $("#edit-tools").hidden = !editMode;
+    const steps = S.check.steps;
+    const gOpts = (g) => GROUPS.map(([k, l]) => `<option value="${k}"${k === g ? " selected" : ""}>${esc(l)}</option>`).join("");
+    $("#steps").innerHTML = GROUPS.map(([g, label]) => {
+      const idx = steps.map((s, i) => [s, i]).filter(([s]) => s.g === g);
+      const done = idx.filter(([s]) => s.done).length;
+      const rows = idx.map(([s, i], k) => editMode
+        ? `<div class="step-row edit" data-i="${i}"><input type="text" data-f="t" value="${esc(s.t)}" aria-label="Step text"><select data-f="g" aria-label="Group">${gOpts(s.g)}</select><span class="mv"><button data-mv="-1" ${k === 0 ? "disabled" : ""} title="Move up" aria-label="Move up">&uarr;</button><button data-mv="1" ${k === idx.length - 1 ? "disabled" : ""} title="Move down" aria-label="Move down">&darr;</button><button class="xbtn" data-del title="Remove step" aria-label="Remove step">&times;</button></span></div>`
+        : `<div class="step-row${s.done ? " done" : ""}" data-i="${i}"><input type="checkbox" data-f="done" ${s.done ? "checked" : ""} id="st-${i}"><label class="st-text" for="st-${i}">${esc(s.t)}</label><input type="time" data-f="time" value="${esc(s.time)}" aria-label="Time done"><input type="text" class="st-note" data-f="note" value="${esc(s.note)}" placeholder="Note" aria-label="Note"></div>`).join("");
+      return `<div class="grp"><h3>${esc(label)} <span>${done} of ${idx.length} done</span></h3>${rows || `<p class="note" style="margin:0 0 6px">No steps in this group.</p>`}</div>`;
+    }).join("");
+  }
+  $("#steps").addEventListener("input", (e) => {
+    const row = e.target.closest("[data-i]"); if (!row) return;
+    const s = S.check.steps[+row.dataset.i], f = e.target.dataset.f;
+    if (f === "t") s.t = e.target.value;
+    else if (f === "note") s.note = e.target.value;
+    else if (f === "time") s.time = e.target.value;
+    save(); if (f === "t") renderChecklistHead();
+  });
+  $("#steps").addEventListener("change", (e) => {
+    const row = e.target.closest("[data-i]"); if (!row) return;
+    const s = S.check.steps[+row.dataset.i], f = e.target.dataset.f;
+    if (f === "done") { s.done = e.target.checked; s.time = s.done ? (s.time || nowHM()) : ""; renderChecklist(); renderFlash(); }
+    else if (f === "g") { const [moved] = S.check.steps.splice(+row.dataset.i, 1); moved.g = e.target.value; S.check.steps.push(moved); renderChecklist(); }
+    save();
+  });
+  $("#steps").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const row = b.closest("[data-i]"); const i = +row.dataset.i; const st = S.check.steps;
+    if (b.hasAttribute("data-del")) { if (!confirm("Remove this step from tonight's checklist?")) return; st.splice(i, 1); }
+    else if (b.dataset.mv) {
+      const dir = +b.dataset.mv, g = st[i].g;
+      let j = i + dir; while (j >= 0 && j < st.length && st[j].g !== g) j += dir;
+      if (j < 0 || j >= st.length) return;
+      [st[i], st[j]] = [st[j], st[i]];
+    }
+    save(); renderChecklist(); renderFlash();
+  });
+  $("#edit-steps").onclick = () => { editMode = !editMode; renderChecklist(); };
+  $("#new-g").innerHTML = GROUPS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join("");
+  $("#add-step").onclick = () => {
+    const t = $("#new-t").value.trim(); if (!t) { $("#new-t").focus(); return; }
+    const g = $("#new-g").value; let at = -1;
+    S.check.steps.forEach((s, i) => { if (s.g === g) at = i; });
+    if (at < 0) { const order = GROUPS.map(x => x[0]); at = S.check.steps.filter(s => order.indexOf(s.g) < order.indexOf(g)).length - 1; }
+    S.check.steps.splice(at + 1, 0, { id: uid(), g, t, done: false, time: "", note: "" });
+    $("#new-t").value = ""; save(); renderChecklist(); renderFlash();
+  };
+  $("#new-t").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#add-step").click(); });
+  $("#save-tpl").onclick = () => {
+    const order = GROUPS.map(x => x[0]);
+    S.template = S.check.steps.filter(s => s.t.trim()).map(s => ({ g: s.g, t: s.t.trim() })).sort((a, b) => order.indexOf(a.g) - order.indexOf(b.g));
+    $("#tpl-note").textContent = `Template saved: ${S.template.length} steps. New business dates start from it.`; save();
+  };
+  $("#load-tpl").onclick = () => {
+    if (!confirm("Restart tonight's checklist from your template? Ticks, times and notes for tonight will be cleared.")) return;
+    S.check = freshChecklist(S.setup.date); save(); renderChecklist(); renderFlash();
+  };
+  $("#f-date").addEventListener("change", (e) => {
+    const v = e.target.value;
+    if (!/^\d{4}-\d\d-\d\d$/.test(v)) { e.target.value = S.setup.date; return; }
+    if (v === S.setup.date) return;
+    const saved = S.history.find(h => h.date === v);
+    if (saved && saved.snap && confirm(`${longDate(v)} is already closed and saved in History. Re-open it? (Cancel starts it fresh instead.)`)) { reopen(v, true); return; }
+    if (S.check.steps.some(s => s.done) && !confirm(`Start a fresh checklist for ${longDate(v)}? Tonight's ticks and notes are cleared (close the night first to keep them in History).`)) { e.target.value = S.setup.date; return; }
+    S.setup.date = v; S.check = freshChecklist(v); save(); renderChecklist(); renderFlash(); renderHistory();
+  });
+
+  // ---------------- 2. reconciliation ----------------
+  function renderRecon() {
+    const typeOpts = (t) => PAY.map(([k, l]) => `<option value="${k}"${k === t ? " selected" : ""}>${esc(l)}</option>`).join("");
+    $("#t-recon tbody").innerHTML = S.recon.rows.length ? S.recon.rows.map((x, i) => `<tr data-i="${i}" id="rr-${i}">
+      <td><input type="text" class="w-name" data-f="who" value="${esc(x.who)}" aria-label="Cashier" style="min-width:210px"></td>
+      <td><select data-f="type" aria-label="Payment type" style="min-width:130px">${typeOpts(x.type)}</select></td>
+      <td class="num"><input type="number" step="0.01" class="w-num" data-f="exp" value="${esc(x.exp)}" aria-label="Expected" style="width:110px"></td>
+      <td class="num"><input type="number" step="0.01" class="w-num" data-f="cnt" value="${esc(x.cnt)}" aria-label="Counted" style="width:110px"></td>
+      <td class="num diff" id="rd-${i}"></td><td id="rs-${i}"></td>
+      <td><input type="text" data-f="note" value="${esc(x.note)}" aria-label="Note" style="min-width:160px"></td>
+      <td><button class="xbtn" data-del title="Remove line" aria-label="Remove line">&times;</button></td></tr>`).join("")
+      : `<tr><td colspan="8" class="muted">No lines yet. Use <b>Add cashier</b> to add one line per payment type.</td></tr>`;
+    renderReconOut();
+  }
+  function renderReconOut() {
+    const T = reconTotals(S.recon);
+    const warns = [];
+    S.recon.rows.forEach((x, i) => {
+      const d = r2(num(x.cnt) - num(x.exp)), s = lineStatus(d, T.tol);
+      if (num(x.exp) < 0 || num(x.cnt) < 0) warns.push(`Line ${i + 1} (${x.who || "no name"}, ${PAYNAME[x.type] || x.type}) has a negative amount. Enter refunds as a separate note and keep amounts at zero or more.`);
+      const tr = document.getElementById("rr-" + i); if (!tr) return;
+      tr.className = s;
+      document.getElementById("rd-" + i).textContent = os(d);
+      document.getElementById("rs-" + i).innerHTML = s === "ok" ? `<span class="st ok">Balanced</span>` : s === "tol" ? `<span class="st tol">${d > 0 ? "Over" : "Short"}, within tolerance</span>` : `<span class="st bad">${d > 0 ? "Over" : "Short"}: investigate</span>`;
+    });
+    const tsAll = lineStatus(T.diff, T.tol);
+    $("#t-recon tfoot").innerHTML = S.recon.rows.length ? `<tr class="${tsAll}" style="font-weight:700"><td colspan="2">Total, all cashiers</td><td class="num">${m2(T.exp)}</td><td class="num">${m2(T.cnt)}</td><td class="num diff">${os(T.diff)}</td><td colspan="3"></td></tr>` : "";
+    $("#recon-warn").innerHTML = warns.length ? `<div class="warnbox">${warns.map(esc).join("<br>")}</div>` : "";
+    $("#recon-kpis").innerHTML = [
+      ["Expected (system)", m2(T.exp), `${S.recon.rows.length} lines, ${T.byWho.size} cashiers`],
+      ["Counted or settled", m2(T.cnt), "Cash counted plus card batches"],
+      ["Total over / short", `<span class="${Math.abs(T.diff) < 0.005 ? "okc" : Math.abs(T.diff) <= T.tol ? "" : "short"}">${os(T.diff)}</span>`, T.diff > 0.004 ? "More than expected" : T.diff < -0.004 ? "Less than expected" : "Balanced"],
+      ["Lines to investigate", `<span class="${T.out ? "short" : "okc"}">${T.out}</span>`, `Beyond the ${m2(T.tol)} tolerance`],
+    ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+    const rows = [...T.byWho.entries()];
+    $("#t-cashier tbody").innerHTML = rows.length ? rows.map(([w, v]) => { const d = r2(v.cnt - v.exp), s = lineStatus(d, T.tol); return `<tr><td>${esc(w || "(no name)")}</td><td class="num">${m2(v.exp)}</td><td class="num">${m2(v.cnt)}</td><td class="num ${s === "bad" ? "short" : s === "ok" ? "okc" : ""}">${os(d)}</td><td>${s === "ok" ? `<span class="st ok">Balanced</span>` : s === "tol" ? `<span class="st tol">Within tolerance</span>` : `<span class="st bad">Investigate</span>`}</td></tr>`; }).join("") : `<tr><td colspan="5" class="muted">Nothing to total yet.</td></tr>`;
+  }
+  $("#t-recon").addEventListener("input", (e) => {
+    const tr = e.target.closest("tr[data-i]"); if (!tr) return;
+    const x = S.recon.rows[+tr.dataset.i], f = e.target.dataset.f;
+    x[f] = (f === "exp" || f === "cnt") ? (e.target.value === "" ? "" : Number(e.target.value)) : e.target.value;
+    save(); renderReconOut(); renderFlash();
+  });
+  $("#t-recon").addEventListener("change", (e) => { if (e.target.dataset.f === "type") { S.recon.rows[+e.target.closest("tr").dataset.i].type = e.target.value; save(); renderReconOut(); } });
+  $("#t-recon").addEventListener("click", (e) => {
+    if (!e.target.closest("[data-del]")) return;
+    S.recon.rows.splice(+e.target.closest("tr").dataset.i, 1); save(); renderRecon(); renderFlash();
+  });
+  $("#add-recon").onclick = () => { const last = S.recon.rows[S.recon.rows.length - 1]; S.recon.rows.push({ who: last ? last.who : "Cashier", type: "cash", exp: "", cnt: "", note: "" }); save(); renderRecon(); };
+  $("#add-cashier").onclick = () => {
+    const who = prompt("Cashier name or shift (for example: Night: Sam T. 23:00 to 07:00)", ""); if (who == null) return;
+    PAY.forEach(([k]) => S.recon.rows.push({ who: who.trim() || "Cashier", type: k, exp: "", cnt: "", note: "" })); save(); renderRecon();
+  };
+
+  // ---------------- 3. rooms ----------------
+  let lastRooms = null;
+  function renderRooms() {
+    const A = analyzeRooms(S.rooms); lastRooms = A;
+    $("#ih-count").textContent = A.list.length; $("#hk-count").textContent = A.hkCount;
+    const warns = [];
+    if (A.badIh) warns.push(`${A.badIh} line(s) in the in-house list have no room number and were skipped.`);
+    if (A.badHk) warns.push(`${A.badHk} line(s) in the housekeeping report have no room number and were skipped.`);
+    if (A.list.length > num(S.setup.rooms) && num(S.setup.rooms) > 0) warns.push(`The in-house list has ${A.list.length} rooms, more than the ${S.setup.rooms} rooms in the hotel. Check the paste or the hotel size in section 1.`);
+    if (!A.list.length) warns.push("Paste tonight's in-house list to run the rate and credit checks.");
+    if (!A.hkCount) warns.push("Paste the housekeeping report to find room status mismatches.");
+    $("#rooms-warn").innerHTML = warns.length ? `<div class="warnbox">${warns.map(esc).join("<br>")}</div>` : "";
+    const flagged = A.list.filter(x => x.flags.length);
+    const rateF = A.list.filter(x => x.flags.some(f => f[2] === "rate")).length;
+    const credF = A.list.filter(x => x.flags.some(f => f[2] === "credit" && f[0] === "bad")).length;
+    const nearF = A.list.filter(x => x.flags.some(f => f[2] === "credit" && f[0] === "warn")).length;
+    const discBad = A.disc.filter(d => d.sev === "bad").length;
+    $("#rooms-kpis").innerHTML = [
+      ["Rooms in-house", int(A.list.length), `${A.list.filter(x => x.rate === 0).length} at $0, guest ledger ${m0(A.list.reduce((s, x) => s + x.bal, 0))}`],
+      ["Rate problems", `<span class="${rateF ? "short" : "okc"}">${rateF}</span>`, "Zero, below floor or no approval"],
+      ["Credit and direct bill", `<span class="${credF ? "short" : "okc"}">${credF}</span>`, `${nearF} more close to the limit`],
+      ["Status mismatches", `<span class="${discBad ? "short" : "okc"}">${A.disc.length}</span>`, "PMS against housekeeping"],
+    ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+    $("#exc-sub").textContent = `(${flagged.length} room${flagged.length === 1 ? "" : "s"} flagged)`;
+    $("#show-all").checked = !!S.rooms.showAll;
+    const show = S.rooms.showAll ? A.list : flagged.slice().sort((a, b) => (b.flags.some(f => f[0] === "bad") - a.flags.some(f => f[0] === "bad")) || num(a.room) - num(b.room));
+    $("#t-exc tbody").innerHTML = show.length ? show.map(x => `<tr><td>${esc(x.room)}</td><td>${esc(x.guest)}</td><td class="num">${m2(x.rate)}</td><td>${esc(x.code)}</td><td class="num">${x.nights || ""}</td><td class="num${x.limit > 0 && x.bal > x.limit ? " short" : ""}">${m2(x.bal)}</td><td class="num">${x.limit ? m0(x.limit) : "-"}</td><td>${esc(x.pay)}</td><td>${x.flags.length ? x.flags.map(f => `<span class="flag ${f[0]}">${esc(f[1])}</span>`).join("") : `<span class="st ok">OK</span>`}${x.appr ? `<span class="flag" style="color:var(--ink-3)">Approved: ${esc(x.appr)}</span>` : ""}</td></tr>`).join("")
+      : `<tr><td colspan="9" class="muted">${A.list.length ? "No rate or credit problems found. Nice work." : "No in-house list yet."}</td></tr>`;
+    $("#t-disc tbody").innerHTML = A.disc.length ? A.disc.map(d => `<tr><td><b>${esc(d.room)}</b></td><td>${esc(d.pms)}</td><td>${esc(d.hk)}</td><td><span class="flag ${d.sev}">${esc(d.cause)}</span></td><td>${esc(d.todo)}</td></tr>`).join("")
+      : `<tr><td colspan="5" class="muted">${A.hkCount ? "PMS and housekeeping agree on every room." : "No housekeeping report yet."}</td></tr>`;
+    renderFlash();
+  }
+  $("#show-all").onchange = (e) => { S.rooms.showAll = e.target.checked; save(); renderRooms(); };
+  function readFileInto(input, key, ta) {
+    input.onchange = () => {
+      const f = input.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => { S.rooms[key] = String(rd.result || ""); $(ta).value = S.rooms[key]; save(); renderRooms(); input.value = ""; };
+      rd.readAsText(f);
+    };
+  }
+  readFileInto($("#imp-ih"), "inhouse", "#ta-inhouse");
+  readFileInto($("#imp-hk"), "hk", "#ta-hk");
+
+  // ---------------- 4. no-shows ----------------
+  function renderNs() {
+    const o = (list, v) => list.map(([k, l]) => `<option value="${k}"${k === v ? " selected" : ""}>${esc(l)}</option>`).join("");
+    $("#t-ns tbody").innerHTML = S.ns.rows.length ? S.ns.rows.map((x, i) => `<tr data-i="${i}">
+      <td><input type="text" data-f="conf" value="${esc(x.conf)}" aria-label="Confirmation" style="width:110px"></td>
+      <td><input type="text" class="w-name" data-f="guest" value="${esc(x.guest)}" aria-label="Guest" style="min-width:170px"></td>
+      <td><select data-f="kind" aria-label="Type" style="min-width:120px">${o([["ns", "No-show"], ["lc", "Late cancel"]], x.kind)}</select></td>
+      <td><select data-f="gtd" aria-label="Guarantee" style="min-width:150px">${o(GTD, x.gtd)}</select></td>
+      <td class="num"><input type="number" min="0" step="0.01" class="w-num" data-f="rate" value="${esc(x.rate)}" aria-label="Nightly rate" style="width:95px"></td>
+      <td class="num" id="nc-${i}" style="font-weight:600"></td>
+      <td><input type="checkbox" data-f="waive" ${x.waive ? "checked" : ""} aria-label="Waive charge"></td>
+      <td><span class="flag" id="na-${i}" style="color:var(--ink-2)"></span><input type="text" data-f="note" value="${esc(x.note)}" placeholder="Note or waiver reason" aria-label="Note" style="min-width:190px;margin-top:3px"></td>
+      <td><button class="xbtn" data-del title="Remove" aria-label="Remove">&times;</button></td></tr>`).join("")
+      : `<tr><td colspan="9" class="muted">No no-shows tonight. Use <b>Add reservation</b> if one comes up.</td></tr>`;
+    updateNs();
+  }
+  function updateNs() {
+    const N = S.ns, warns = [];
+    N.rows.forEach((x, i) => {
+      const c = nsCharge(x, N);
+      if (num(x.rate) < 0) warns.push(`${x.guest || x.conf || "A reservation"} has a negative rate.`);
+      if (x.waive && x.gtd !== "none" && !String(x.note || "").trim()) warns.push(`${x.guest || x.conf}: give a reason for waiving the charge (it will be asked for in the morning).`);
+      const a = document.getElementById("na-" + i), cc = document.getElementById("nc-" + i); if (!a) return;
+      cc.textContent = m2(c);
+      const nights = num(x.kind === "lc" ? N.lcNights : N.nsNights);
+      a.textContent = x.gtd === "none" ? "Release the room and cancel, no charge" : x.waive ? "Waived, no charge" :
+        x.gtd === "cc" ? `Post ${nights} night${nights === 1 ? "" : "s"} plus tax to the card on file` : x.gtd === "dep" ? "Apply the deposit; refund any excess per policy" : "Post to the company's city ledger account";
+    });
+    if (num(N.tax) < 0 || num(N.tax) > 50) warns.push("Tax rate should be between 0% and 50%.");
+    $("#ns-warn").innerHTML = warns.length ? `<div class="warnbox">${warns.map(esc).join("<br>")}</div>` : "";
+    const T = nsTotals(N);
+    $("#ns-kpis").innerHTML = [
+      ["No-shows", int(T.nsCount), `${T.lc} late cancellation${T.lc === 1 ? "" : "s"} too`],
+      ["Guaranteed", int(T.gtd), `${N.rows.length - T.gtd} not guaranteed, released`],
+      ["Charges to post", m2(T.charge), `Including ${num(N.tax)}% tax`],
+      ["Waived", int(T.waived), "Guaranteed but not charged"],
+    ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+  }
+  $("#t-ns").addEventListener("input", (e) => {
+    const tr = e.target.closest("tr[data-i]"); if (!tr) return;
+    const x = S.ns.rows[+tr.dataset.i], f = e.target.dataset.f;
+    if (f === "waive") x.waive = e.target.checked; else if (f === "rate") x.rate = e.target.value === "" ? "" : Number(e.target.value); else x[f] = e.target.value;
+    save(); updateNs(); renderFlash();
+  });
+  $("#t-ns").addEventListener("change", (e) => { if (e.target.tagName === "SELECT" || e.target.type === "checkbox") { const tr = e.target.closest("tr[data-i]"); const x = S.ns.rows[+tr.dataset.i]; const f = e.target.dataset.f; if (f === "waive") x.waive = e.target.checked; else x[f] = e.target.value; save(); updateNs(); renderFlash(); } });
+  $("#t-ns").addEventListener("click", (e) => { if (!e.target.closest("[data-del]")) return; S.ns.rows.splice(+e.target.closest("tr").dataset.i, 1); save(); renderNs(); renderFlash(); });
+  $("#add-ns").onclick = () => { S.ns.rows.push({ conf: "", guest: "", kind: "ns", gtd: "cc", rate: "", waive: false, note: "" }); save(); renderNs(); };
+
+  // ---------------- 5. flash report ----------------
+  $("#pay-fields").innerHTML = PAY.map(([k, l]) => `<div class="field"><label for="p-${k}">${esc(l)}</label><input type="number" min="0" step="0.01" id="p-${k}" data-k="flash.pay.${k}" data-num></div>`).join("");
+  $("#pull").onclick = () => {
+    pullInto(S.flash, S.rooms, S.recon, S.ns);
+    fillFields(); save(); renderFlash();
+    $("#flash-warn").innerHTML = `<div class="warnbox" style="background:var(--good-soft);border-color:#bfe3cd;color:var(--good)">Filled: ${S.flash.sold} rooms sold, ${S.flash.comp} comps and ${m2(S.flash.roomRev)} room revenue from the in-house list; ${S.flash.ooo} out of order from housekeeping; payments from the counted amounts; ${S.flash.ns} no-shows. Check taxes, F&amp;B and other revenue yourself.</div>`;
+  };
+
+  function currentNight() {
+    const t = flashCalc(S.flash, S.setup.rooms);
+    const R = reconTotals(S.recon), N = nsTotals(S.ns), c = checkStats();
+    const A = lastRooms || analyzeRooms(S.rooms);
+    const exceptions = A.list.filter(x => x.flags.some(f => f[0] === "bad")).length + A.disc.filter(d => d.sev === "bad").length;
+    return Object.assign(t, { date: S.setup.date, overShort: R.diff, nsCharge: N.charge, exceptions, checkPct: c.pct, reconOut: R.out });
+  }
+
+  function flashWarnings(t) {
+    const w = [];
+    const f = S.flash;
+    const neg = ["ooo", "sold", "comp", "roomRev", "fbRev", "otherRev", "taxes", "arr", "dep", "ns"].filter(k => num(f[k]) < 0);
+    if (neg.length || PAY.some(([k]) => num((f.pay || {})[k]) < 0)) w.push("Some figures are negative. They are treated as zero; please correct them.");
+    if (!(num(S.setup.rooms) > 0)) w.push("Enter the number of rooms in the hotel in section 1.");
+    if (t.ooo > t.rooms) w.push("More rooms out of order than rooms in the hotel.");
+    if (t.sold + t.comp + t.ooo > t.rooms && t.rooms > 0) w.push(`Rooms sold (${t.sold}) plus comps (${t.comp}) plus out of order (${t.ooo}) is more than the ${t.rooms} rooms in the hotel. Check the figures.`);
+    if (t.sold === 0 && t.roomRev > 0) w.push("There is room revenue but no rooms sold, so ADR cannot be worked out.");
+    if (t.sold > 0 && t.roomRev === 0) w.push("Rooms are sold but room revenue is $0. Did room and tax posting run?");
+    return w;
+  }
+
+  function renderFlash() {
+    const t = currentNight(), q = ratios(t);
+    const warns = flashWarnings(t);
+    $("#flash-warn").innerHTML = warns.length ? `<div class="warnbox">${warns.map(esc).join("<br>")}</div>` : ($("#flash-warn").innerHTML.includes("Filled:") ? $("#flash-warn").innerHTML : "");
+    const date = S.setup.date, ym = date.slice(0, 7), y = date.slice(0, 4);
+    const prev = S.history.filter(h => h.date !== date);
+    const mtdH = prev.filter(h => h.date.slice(0, 7) === ym && h.date < date), ytdH = prev.filter(h => h.date.slice(0, 4) === y && h.date < date);
+    const M = sumNights(mtdH.concat([t])), Y = sumNights(ytdH.concat([t]));
+    const qm = ratios(M), qy = ratios(Y);
+    const ly = S.history.find(h => h.date === addDays(date, -7));
+    const lw = ly ? ratios(ly) : null;
+    $("#flash-title").textContent = `Daily manager's flash report: ${S.setup.hotel || "Hotel"}, ${longDate(date)}`;
+    $("#print-head").innerHTML = `<h2 style="margin:0">${esc(S.setup.hotel)}: daily manager's flash report</h2><p style="margin:0">Business date ${esc(longDate(date))}. Night auditor: ${esc(S.setup.auditor || "-")}. Printed ${esc(new Date().toLocaleString("en-CA"))}.</p>`;
+    const dlt = (cur, old, mode) => (old == null || !isFinite(old) || !isFinite(cur)) ? "" : " " + (typeof delta === "function" ? delta(cur, old, mode) : "");
+    $("#flash-kpis").innerHTML = [
+      ["Occupancy", pct(q.occ), `${int(t.sold)} of ${int(t.avail)} rooms sold${lw ? ";" + dlt(q.occ, lw.occ, "points") + " vs same day last week" : ""}`],
+      ["ADR (average daily rate)", isFinite(q.adr) ? m2(q.adr) : "-", `Room revenue per room sold${lw ? ";" + dlt(q.adr, lw.adr) + " vs last week" : ""}`],
+      ["RevPAR", isFinite(q.revpar) ? m2(q.revpar) : "-", `Revenue per available room${lw ? ";" + dlt(q.revpar, lw.revpar) + " vs last week" : ""}`],
+      ["Total revenue", m0(q.totalRev), `Rooms, F&B and other, before tax. MTD ${m0(qm.totalRev)}`],
+    ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+
+    // takeaway
+    const c = checkStats(), A = lastRooms || analyzeRooms(S.rooms), R = reconTotals(S.recon), N = nsTotals(S.ns);
+    const todo = [];
+    if (c.done < c.total) todo.push(`${c.total - c.done} checklist step${c.total - c.done === 1 ? "" : "s"} still open`);
+    if (R.out) todo.push(`${R.out} cash or card line${R.out === 1 ? "" : "s"} outside tolerance (total ${os(R.diff)})`);
+    const rateBad = A.list.filter(x => x.flags.some(f => f[0] === "bad" && f[2] === "rate")).length, credBad = A.list.filter(x => x.flags.some(f => f[0] === "bad" && f[2] === "credit")).length, discBad = A.disc.filter(d => d.sev === "bad").length;
+    if (rateBad) todo.push(`${rateBad} rate problem${rateBad === 1 ? "" : "s"} to fix before posting room charges`);
+    if (credBad) todo.push(`${credBad} folio${credBad === 1 ? "" : "s"} over the credit limit or without direct-bill approval`);
+    if (discBad) todo.push(`${discBad} room status mismatch${discBad === 1 ? "" : "es"} for housekeeping or security to check`);
+    if (N.charge > 0) todo.push(`${m2(N.charge)} in no-show charges to post`);
+    const perf = isFinite(qm.occ) ? ` Month to date the hotel is at ${pct(qm.occ)} occupancy and ${isFinite(qm.adr) ? m2(qm.adr) : "-"} ADR over ${M.nights} night${M.nights === 1 ? "" : "s"}.` : "";
+    $("#takeaway").innerHTML = `<strong>What this means:</strong> tonight ran at ${pct(q.occ)} occupancy with an ADR of ${isFinite(q.adr) ? m2(q.adr) : "-"}, so every available room earned ${isFinite(q.revpar) ? m2(q.revpar) : "-"} in room revenue.${perf} ` +
+      (todo.length ? `Before you close the night: ${todo.join("; ")}.` : `Every check is clear. Close the night and send this report to the general manager.`);
+
+    // table
+    const row = (label, a, b, cc, cls = "") => `<tr class="${cls}"><td>${label}</td><td class="num">${a}</td><td class="num">${b}</td><td class="num">${cc}</td></tr>`;
+    const secRow = (l) => `<tr><td class="sec-row" colspan="4">${l}</td></tr>`;
+    const adr = (x) => isFinite(x) ? m2(x) : "-";
+    let h = secRow("Rooms");
+    h += row("Rooms in the hotel", int(t.rooms), int(M.rooms), int(Y.rooms));
+    h += row("Out of order", int(t.ooo), int(M.ooo), int(Y.ooo));
+    h += row("Rooms available", int(t.avail), int(M.avail), int(Y.avail));
+    h += row("Rooms sold (paid)", int(t.sold), int(M.sold), int(Y.sold));
+    h += row("Complimentary rooms", int(t.comp), int(M.comp), int(Y.comp));
+    h += row("Occupancy (paid)", pct(q.occ), pct(qm.occ), pct(qy.occ), "b");
+    h += row("Occupancy including comps", pct(q.occComp), pct(qm.occComp), pct(qy.occComp));
+    h += row("ADR (average daily rate)", adr(q.adr), adr(qm.adr), adr(qy.adr), "b");
+    h += row("RevPAR (revenue per available room)", adr(q.revpar), adr(qm.revpar), adr(qy.revpar), "b");
+    h += row("TRevPAR (total revenue per available room)", adr(q.trevpar), adr(qm.trevpar), adr(qy.trevpar));
+    h += secRow("Revenue (before tax)");
+    h += row("Rooms", m2(t.roomRev), m2(M.roomRev), m2(Y.roomRev));
+    h += row("Food and beverage", m2(t.fbRev), m2(M.fbRev), m2(Y.fbRev));
+    h += row("Other", m2(t.otherRev), m2(M.otherRev), m2(Y.otherRev));
+    h += row("Total revenue", m2(q.totalRev), m2(qm.totalRev), m2(qy.totalRev), "b");
+    h += row("Taxes collected", m2(t.taxes), m2(M.taxes), m2(Y.taxes));
+    h += secRow("Payments received");
+    PAY.forEach(([k, l]) => h += row(l, m2(t.pay[k]), m2(M.pay[k]), m2(Y.pay[k])));
+    const sp = (z) => PAY.reduce((s, [k]) => s + z.pay[k], 0);
+    h += row("Total payments", m2(sp(t)), m2(sp(M)), m2(sp(Y)), "b");
+    h += secRow("Guests and audit");
+    h += row("Arrivals", int(t.arr), int(M.arr), int(Y.arr));
+    h += row("Departures", int(t.dep), int(M.dep), int(Y.dep));
+    h += row("No-shows", int(t.ns), int(M.ns), int(Y.ns));
+    h += row("No-show charges", m2(t.nsCharge), m2(M.nsCharge), m2(Y.nsCharge));
+    h += row("Cash and card over / short", os(t.overShort), os(M.overShort), os(Y.overShort));
+    h += row("Checklist completed", Math.round(t.checkPct * 100) + "%", "", "");
+    $("#t-flash tbody").innerHTML = h;
+    const first = S.history.map(x => x.date).filter(d => d.slice(0, 4) === y).sort()[0];
+    $("#flash-note").textContent = `MTD covers ${M.nights} night${M.nights === 1 ? "" : "s"} and YTD covers ${Y.nights} night${Y.nights === 1 ? "" : "s"} (tonight plus closed nights saved in this browser${first ? ", from " + fmt.date(first) : ""}).`;
+
+    // printable extras: exceptions and handover
+    const exc = A.list.filter(x => x.flags.some(f => f[0] === "bad"));
+    const discs = A.disc.filter(d => d.sev === "bad");
+    $("#print-extra").innerHTML =
+      `<h3 class="subhead">Handover notes</h3><div style="white-space:pre-wrap;font-size:14.5px">${esc(S.flash.notes || "None.")}</div>` +
+      `<h3 class="subhead">Open exceptions (${exc.length + discs.length + R.out})</h3>` +
+      ((exc.length + discs.length + R.out) ? `<div class="table-wrap"><table><thead><tr><th>Area</th><th>Item</th><th>Issue</th></tr></thead><tbody>` +
+        S.recon.rows.filter(x => lineStatus(r2(num(x.cnt) - num(x.exp)), R.tol) === "bad").map(x => `<tr><td>Cash and cards</td><td>${esc(x.who)}, ${esc(PAYNAME[x.type] || x.type)}</td><td>${os(r2(num(x.cnt) - num(x.exp)))}${x.note ? ". " + esc(x.note) : ""}</td></tr>`).join("") +
+        exc.map(x => `<tr><td>Rate or folio</td><td>Room ${esc(x.room)}, ${esc(x.guest)}</td><td>${x.flags.filter(f => f[0] === "bad").map(f => esc(f[1])).join("; ")}</td></tr>`).join("") +
+        discs.map(d => `<tr><td>Room status</td><td>Room ${esc(d.room)}</td><td>PMS ${esc(d.pms)}, housekeeping ${esc(d.hk)}: ${esc(d.cause)}</td></tr>`).join("") +
+        `</tbody></table></div>` : `<p class="muted">None.</p>`);
+    renderHistKpis();
+  }
+
+  // ---------------- close night, history ----------------
+  function snapshot() { return { check: clone(S.check), recon: clone(S.recon), ns: clone(S.ns), flash: clone(S.flash) }; }
+  $("#close-night").onclick = () => {
+    const t = currentNight(), w = flashWarnings(t);
+    if (!(t.rooms > 0)) { alert("Enter the number of rooms in the hotel in section 1 first."); return; }
+    if (w.length && !confirm("There are warnings on the report:\n\n" + w.join("\n") + "\n\nSave anyway?")) return;
+    const c = checkStats();
+    if (c.done < c.total && !confirm(`${c.total - c.done} checklist step(s) are not ticked. Close the night anyway?`)) return;
+    const exists = S.history.some(h => h.date === t.date);
+    if (exists && !confirm(`${longDate(t.date)} is already in History. Replace it with tonight's figures?`)) return;
+    const rec = { date: t.date, rooms: t.rooms, avail: t.avail, ooo: t.ooo, sold: t.sold, comp: t.comp, roomRev: r2(t.roomRev), fbRev: r2(t.fbRev), otherRev: r2(t.otherRev), taxes: r2(t.taxes), pay: t.pay, arr: t.arr, dep: t.dep, ns: t.ns, overShort: t.overShort, nsCharge: t.nsCharge, exceptions: t.exceptions, checkPct: t.checkPct, closedAt: new Date().toISOString(), snap: snapshot() };
+    S.history = S.history.filter(h => h.date !== t.date).concat([rec]).sort((a, b) => a.date.localeCompare(b.date));
+    save(); renderHistory(); renderFlash();
+    const next = addDays(t.date, 1);
+    if (confirm(`Saved ${longDate(t.date)} to History.\n\nStart the next business day (${longDate(next)}) now? You get a fresh checklist, the same cashiers with empty amounts, an empty no-show list and a blank report.`)) {
+      S.setup.date = next; S.check = freshChecklist(next);
+      S.recon.rows = S.recon.rows.map(x => ({ who: x.who, type: x.type, exp: "", cnt: "", note: "" }));
+      S.ns.rows = [];
+      S.flash = { ooo: S.flash.ooo, sold: "", comp: "", usali: S.flash.usali, roomRev: "", fbRev: "", otherRev: "", taxes: "", pay: {}, arr: "", dep: "", ns: "", notes: "" };
+      $("#flash-warn").innerHTML = "";
+      save(); renderAll(); location.hash = "#s-check";
+    }
+  };
+  function reopen(date, skipConfirm) {
+    const h = S.history.find(x => x.date === date); if (!h) return;
+    if (!skipConfirm && !confirm(`Re-open ${longDate(date)}? Your current working night (${longDate(S.setup.date)}) will be replaced by the saved copy. Close the current night first if you want to keep it.`)) return;
+    const s = h.snap || {};
+    S.setup.date = date;
+    S.check = s.check ? clone(s.check) : freshChecklist(date); S.check.date = date;
+    if (s.recon) S.recon = clone(s.recon);
+    if (s.ns) S.ns = clone(s.ns);
+    S.flash = s.flash ? clone(s.flash) : { ooo: h.ooo, sold: h.sold, comp: h.comp, usali: "all", roomRev: h.roomRev, fbRev: h.fbRev, otherRev: h.otherRev, taxes: h.taxes, pay: clone(h.pay || {}), arr: h.arr, dep: h.dep, ns: h.ns, notes: "" };
+    if (h.rooms) S.setup.rooms = h.rooms;
+    $("#flash-warn").innerHTML = "";
+    save(); renderAll(); location.hash = "#s-check";
+  }
+  let chTrend = null, chOs = null;
+  function renderHistKpis() {
+    const H = S.history;
+    const last30 = H.slice(-30);
+    const z = sumNights(last30), q = ratios(z);
+    const worst = last30.reduce((w, h) => (Math.abs(num(h.overShort)) > Math.abs(num(w?.overShort)) ? h : w), null);
+    $("#hist-kpis").innerHTML = [
+      ["Nights saved", int(H.length), H.length ? `${fmt.date(H[0].date)} to ${fmt.date(H[H.length - 1].date)}` : "Close a night to start"],
+      ["Occupancy, last 30", pct(q.occ), `${z.nights} nights`],
+      ["ADR, last 30", isFinite(q.adr) ? m2(q.adr) : "-", `RevPAR ${isFinite(q.revpar) ? m2(q.revpar) : "-"}`],
+      ["Over / short, last 30", os(z.overShort), worst && Math.abs(num(worst.overShort)) > 0 ? `Largest ${os(num(worst.overShort))} on ${fmt.date(worst.date)}` : "No differences"],
+    ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+  }
+  function renderHistory() {
+    const H = S.history.slice().sort((a, b) => b.date.localeCompare(a.date));
+    $("#t-hist tbody").innerHTML = H.length ? H.map(h => { const q = ratios(h); const o = num(h.overShort); return `<tr class="${h.date === S.setup.date ? "current" : ""}"><td>${esc(fmt.date(h.date))} <span class="muted" style="font-size:12.5px">${h.date}</span>${h.date === S.setup.date ? ' <span class="st info">open now</span>' : ""}</td><td class="num">${pct(q.occ)}</td><td class="num">${isFinite(q.adr) ? m2(q.adr) : "-"}</td><td class="num">${isFinite(q.revpar) ? m2(q.revpar) : "-"}</td><td class="num">${m0(num(h.roomRev))}</td><td class="num">${m0(q.totalRev)}</td><td class="num ${Math.abs(o) > 5 ? "short" : ""}">${os(o)}</td><td class="num">${Math.round(num(h.checkPct) * 100)}%</td><td class="hist-act"><button class="btn sm" data-open="${h.date}">Re-open</button> <button class="xbtn" data-delh="${h.date}" title="Delete this night" aria-label="Delete this night">&times;</button></td></tr>`; }).join("")
+      : `<tr><td colspan="9" class="muted">No closed nights yet. Press <b>Close this night and save to History</b> when tonight's audit is done.</td></tr>`;
+    renderHistKpis();
+    renderCharts();
+  }
+  $("#t-hist").addEventListener("click", (e) => {
+    const o = e.target.closest("[data-open]"), d = e.target.closest("[data-delh]");
+    if (o) reopen(o.dataset.open);
+    if (d) { if (!confirm(`Delete ${longDate(d.dataset.delh)} from History? This cannot be undone (unless you have a backup).`)) return; S.history = S.history.filter(h => h.date !== d.dataset.delh); save(); renderHistory(); renderFlash(); }
+  });
+  function renderCharts() {
+    if (!window.Chart) return;
+    chartDefaults();
+    const H = S.history.slice(-30);
+    const labels = H.map(h => fmt.date(h.date));
+    const occ = H.map(h => { const q = ratios(h); return isFinite(q.occ) ? +(q.occ * 100).toFixed(1) : null; });
+    const adr = H.map(h => { const q = ratios(h); return isFinite(q.adr) ? +q.adr.toFixed(2) : null; });
+    const osv = H.map(h => r2(num(h.overShort)));
+    if (chTrend) chTrend.destroy(); if (chOs) chOs.destroy();
+    chTrend = new Chart($("#ch-trend"), { type: "line", data: { labels, datasets: [
+      { label: "Occupancy %", data: occ, borderColor: COLORS.s1, backgroundColor: COLORS.s1, yAxisID: "y" },
+      { label: "ADR $", data: adr, borderColor: COLORS.s2, backgroundColor: COLORS.s2, yAxisID: "y1" } ] },
+      options: { scales: { x: gridScale({ grid: { display: false }, ticks: { maxTicksLimit: 8, color: COLORS.ink } }), y: gridScale({ min: 0, max: 100, title: { display: true, text: "Occupancy %" } }), y1: gridScale({ position: "right", grid: { display: false }, title: { display: true, text: "ADR $" } }) } } });
+    chOs = new Chart($("#ch-os"), { type: "bar", data: { labels, datasets: [{ label: "Over / short $", data: osv, backgroundColor: osv.map(v => v < 0 ? "#d9534f" : v > 0 ? COLORS.s3 : COLORS.muted) }] },
+      options: { plugins: { legend: { display: false } }, scales: { x: gridScale({ grid: { display: false }, ticks: { maxTicksLimit: 8, color: COLORS.ink } }), y: gridScale({ title: { display: true, text: "$" } }) } } });
+  }
+
+  // ---------------- CSV exports ----------------
+  function download(name, text, type = "text/csv") {
+    const blob = new Blob([text], { type: type + ";charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  const csvCell = (v) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const toCSV = (rows) => "﻿" + rows.map(r => r.map(csvCell).join(",")).join("\r\n");
+  const tableRows = (sel) => [...document.querySelectorAll(sel + " tr")].map(tr => [...tr.children].map(td => td.textContent.trim()));
+  const slugDate = () => S.setup.date;
+  $("#csv-flash").onclick = () => download(`flash-report-${slugDate()}.csv`, toCSV([[S.setup.hotel + " daily manager's flash report", "Business date " + S.setup.date]].concat(tableRows("#t-flash"))));
+  $("#csv-recon").onclick = () => download(`cash-card-reconciliation-${slugDate()}.csv`, toCSV([["Cashier or shift", "Payment type", "Expected", "Counted", "Over/short", "Status", "Note"]].concat(S.recon.rows.map(x => { const d = r2(num(x.cnt) - num(x.exp)); const s = lineStatus(d, num(S.recon.tol)); return [x.who, PAYNAME[x.type] || x.type, num(x.exp).toFixed(2), num(x.cnt).toFixed(2), d.toFixed(2), s === "ok" ? "Balanced" : s === "tol" ? "Within tolerance" : "Investigate", x.note]; }))));
+  $("#csv-ns").onclick = () => download(`no-shows-${slugDate()}.csv`, toCSV([["Confirmation", "Guest", "Type", "Guarantee", "Nightly rate", "Charge incl tax", "Waived", "Note"]].concat(S.ns.rows.map(x => [x.conf, x.guest, x.kind === "lc" ? "Late cancel" : "No-show", Object.fromEntries(GTD)[x.gtd], num(x.rate).toFixed(2), nsCharge(x, S.ns).toFixed(2), x.waive ? "Yes" : "No", x.note]))));
+  $("#csv-exc").onclick = () => {
+    const A = lastRooms || analyzeRooms(S.rooms);
+    const rows = [["Type", "Room", "Guest", "Rate", "Rate code", "Balance", "Credit limit", "Payment", "Issue"]];
+    A.list.filter(x => x.flags.length).forEach(x => rows.push(["Rate or folio", x.room, x.guest, x.rate.toFixed(2), x.code, x.bal.toFixed(2), x.limit, x.pay, x.flags.map(f => f[1]).join("; ")]));
+    A.disc.forEach(d => rows.push(["Room status", d.room, "", "", "", "", "", "", `PMS ${d.pms}, housekeeping ${d.hk}: ${d.cause}. ${d.todo}`]));
+    download(`audit-exceptions-${slugDate()}.csv`, toCSV(rows));
+  };
+  $("#csv-hist").onclick = () => download("night-audit-history.csv", toCSV([["Business date", "Rooms", "Available", "Out of order", "Sold", "Comp", "Occupancy %", "ADR", "RevPAR", "Room revenue", "F&B revenue", "Other revenue", "Taxes", "Arrivals", "Departures", "No-shows", "No-show charges", "Over/short", "Checklist %"]].concat(S.history.map(h => { const q = ratios(h); return [h.date, h.rooms, h.avail, h.ooo, h.sold, h.comp, (q.occ * 100).toFixed(1), isFinite(q.adr) ? q.adr.toFixed(2) : "", isFinite(q.revpar) ? q.revpar.toFixed(2) : "", num(h.roomRev).toFixed(2), num(h.fbRev).toFixed(2), num(h.otherRev).toFixed(2), num(h.taxes).toFixed(2), h.arr, h.dep, h.ns, num(h.nsCharge).toFixed(2), num(h.overShort).toFixed(2), Math.round(num(h.checkPct) * 100)]; }))));
+  $("#tpl-inhouse").onclick = () => download("in-house-and-housekeeping-template.csv", toCSV([["Room", "Guest", "Rate", "Rate code", "Nights", "Balance", "Credit limit", "Payment", "Approval"], ["1204", "Smith, Jordan", "229.00", "BAR", "2", "512.40", "800", "VI", ""], ["1510", "Lee, Mei", "0.00", "COMP", "1", "0.00", "300", "VI", "D. Roy (GM)"], [], ["Housekeeping report: paste as two columns"], ["Room", "Status"], ["1204", "OD"], ["1205", "VC"]]));
+  $("#backup").onclick = () => download(`night-audit-backup-${slugDate()}.json`, JSON.stringify(S), "application/json");
+  $("#restore").onchange = (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try { const v = JSON.parse(rd.result); if (!v || typeof v !== "object" || !v.setup) throw new Error("x");
+        if (!confirm("Replace everything on this page with the backup?")) return;
+        S = sanitize(Object.assign(clone(DEFAULTS), v)); save(); renderAll(); }
+      catch (err) { alert("That file is not a Night Audit Assistant backup."); }
+      e.target.value = "";
+    };
+    rd.readAsText(f);
+  };
+
+  // ---------------- resets ----------------
+  const NAMES = { check: "checklist, hotel details and template", recon: "cash and card reconciliation", rooms: "rate and room checks", ns: "no-show list", flash: "manager's report figures", history: "History (the sample nights come back and your closed nights are removed)" };
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset;
+    if (!confirm(`Reset the ${NAMES[sec]} to the sample? Your changes in this section will be lost.`)) return;
+    const D = makeDefaults();
+    if (sec === "check") { S.setup = D.setup; S.template = D.template; S.check = D.check; editMode = false; }
+    else S[sec] = D[sec];
+    $("#flash-warn").innerHTML = "";
+    save(); renderAll();
+  });
+  $("#reset-all").onclick = () => {
+    if (!confirm("Reset everything to the sample night? All your entries, your template and your History in this browser will be replaced.")) return;
+    S = makeDefaults(); editMode = false; $("#flash-warn").innerHTML = ""; save(); renderAll();
+  };
+
+  function renderAll() { fillFields(); renderChecklist(); renderRecon(); renderRooms(); renderNs(); renderFlash(); renderHistory(); }
+  bindFields();
+  renderAll();
+})();
+</script>
+</body>
+</html>

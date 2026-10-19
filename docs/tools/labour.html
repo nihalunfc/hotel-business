@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labour Productivity Calculator</title>
+<meta name="description" content="A free hotel labour productivity calculator: labour hours, shifts, FTEs, cost per occupied room and labour cost as a share of rooms revenue for housekeeping, front desk, food and beverage and your own departments, with a staffing guide from 30% to 100% occupancy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.dept { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; background: #fcfdfe; }
+.dept-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.dept-head .nm { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; }
+.dept-head .nm input { font-weight: 600; max-width: 280px; }
+.dot { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.dept .fields { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.dept .calc { font-size: 13px; color: var(--ink-2); margin: 10px 0 0; }
+.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--ink-2); }
+.chk input { width: 16px; height: 16px; }
+.slider { margin-bottom: 14px; }
+.slider label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.slider label b { color: var(--brand); font-size: 15px; }
+.slider input[type=range] { width: 100%; accent-color: var(--brand-2); }
+.cmp td, .cmp th { padding: 8px 10px; }
+.cmp td.dlt { font-weight: 600; }
+.dlt.up { color: var(--bad); } .dlt.down { color: var(--good); }
+tr.cur td { background: var(--brand-soft); font-weight: 600; }
+.bm-status { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.bm-status.in { color: var(--good); } .bm-status.hi { color: var(--warn); } .bm-status.lo { color: var(--warn); }
+.seg-wrap { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 8px; }
+.tfoot-row td { font-weight: 700; background: #fafbfc; }
+@media print { .dept { break-inside: avoid; } .chart-box { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Labour Productivity Calculator</h1>
+    <p class="lead">Works out how many labour hours, shifts and full-time staff each department needs for the occupancy you expect, what that costs per occupied room, and how many people to schedule at every occupancy level from 30% to 100%.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Staffing guide for every occupancy level</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-hotel"><b>Step 1</b>Your hotel</a>
+    <a href="#s-depts"><b>Step 2</b>Departments and standards</a>
+    <a href="#s-result"><b>Step 3</b>Results</a>
+    <a href="#s-guide"><b>Step 4</b>Staffing guide</a>
+    <a href="#s-whatif"><b>Step 5</b>What if?</a>
+  </nav>
+
+  <!-- 1. Hotel -->
+  <section class="sec no-print" id="s-hotel">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Your hotel</h2><p>The size of the hotel, how full it will be, and what a room sells for. Pick a sample hotel or type your own numbers.</p></div>
+      <div class="toolbar"><label class="muted" style="font-size:13.5px">Load a sample hotel <select id="sample" style="width:auto"></select></label><button class="btn sm reset" data-reset="hotel">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="fields">
+        <div class="field"><label for="h-name">Hotel</label><input type="text" id="h-name" data-k="hotel.name"></div>
+        <div class="field"><label for="h-rooms">Rooms</label><input type="number" min="1" id="h-rooms" data-k="hotel.rooms" data-num><small>Rooms available to sell</small></div>
+        <div class="field"><label for="h-occ">Occupancy %</label><input type="number" min="0" max="100" id="h-occ" data-k="hotel.occ" data-num><small>Share of rooms sold on a typical night</small></div>
+        <div class="field"><label for="h-ss">Stayover share %</label><input type="number" min="0" max="100" id="h-ss" data-k="hotel.stayShare" data-num><small>Occupied rooms where the guest stays another night. The rest check out and a new guest checks in.</small></div>
+        <div class="field"><label for="h-adr">ADR (average daily rate), $</label><input type="number" min="0" step="0.01" id="h-adr" data-k="hotel.adr" data-num><small>Average room price per night sold</small></div>
+        <div class="field"><label for="h-ben">Benefits load %</label><input type="number" min="0" max="100" id="h-ben" data-k="hotel.benefits" data-num><small>Added to wages for CPP, EI, EHT, WSIB, vacation pay and benefits</small></div>
+        <div class="field"><label for="h-sh">Paid hours per shift</label><input type="number" min="1" max="16" step="0.25" id="h-sh" data-k="hotel.shiftHours" data-num></div>
+        <div class="field"><label for="h-fte">Hours in one FTE week</label><input type="number" min="1" max="60" step="0.5" id="h-fte" data-k="hotel.fteHours" data-num><small>FTE = full-time equivalent: one full-time person's weekly hours</small></div>
+        <div class="field"><label for="h-days">Days in a week you operate</label><input type="number" min="1" max="7" id="h-days" data-k="hotel.days" data-num></div>
+      </div>
+      <p class="note" id="hotel-note"></p>
+      <div id="hotel-warn"></div>
+    </div>
+  </section>
+
+  <!-- 2. Departments -->
+  <section class="sec no-print" id="s-depts">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Departments and standards</h2><p>How much work each department does per guest, and the fewest people you will ever roster. Every number can be changed. Add your own departments (maintenance, laundry, spa, night audit) at the bottom.</p></div>
+      <div class="toolbar"><button class="btn sm" id="add-dept">Add a department</button><button class="btn sm reset" data-reset="depts">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div id="depts"></div>
+      <div id="dept-warn"></div>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <span class="muted" style="font-size:14px">Results update as you type.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="sec" id="s-result">
+    <div class="sec-head">
+      <div><h2 id="res-title">Results</h2><p class="no-print">For a typical day at your occupancy, and for a week of such days.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm primary" id="csv">Download CSV</button>
+        <button class="btn sm" onclick="window.print()">Print</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="grid g5" id="kpis"></div>
+      <div class="takeaway" id="takeaway"></div>
+      <h3 style="margin-top:20px">By department</h3>
+      <div class="table-wrap"><table id="t-dept"><thead><tr><th>Department</th><th class="num">Work hours / day</th><th class="num">Minimum hours</th><th class="num">Scheduled hours / day</th><th class="num">Hours / week</th><th class="num">Shifts / day</th><th class="num">FTE</th><th class="num">Cost / day</th><th class="num">Cost / week</th><th class="num">CPOR</th><th class="num">% of rooms revenue</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+      <p class="note">Scheduled hours = the larger of the work hours and the minimum staffing. Costs include the benefits load. CPOR = cost per occupied room = labour cost divided by rooms sold.</p>
+    </div>
+  </section>
+
+  <section class="grid g2" style="margin-bottom:22px">
+    <div class="card">
+      <h3>Where the labour cost goes</h3>
+      <p class="muted">Cost per day by department, including benefits.</p>
+      <div class="chart-box"><canvas id="c-cost"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Cost per occupied room as occupancy changes</h3>
+      <p class="muted">Minimum staffing is spread over fewer rooms when the hotel is quiet, so CPOR rises.</p>
+      <div class="chart-box"><canvas id="c-cpor"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Staffing guide -->
+  <section class="sec" id="s-guide">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">4</span>Staffing guide</h2><p>How many people (shifts) to schedule on a day at each occupancy level, using your standards. Pin it next to the schedule: look up tomorrow's forecast, read across.</p></div>
+      <div class="toolbar no-print"><button class="btn sm" id="csv-guide">Download guide CSV</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap"><table id="t-guide"><thead></thead><tbody></tbody></table></div>
+      <p class="note">The highlighted row is closest to your occupancy. Housekeeping people include attendants, inspectors and evening turndown staff.</p>
+      <div class="chart-box tall" style="margin-top:14px"><canvas id="c-guide"></canvas></div>
+    </div>
+  </section>
+
+  <!-- What if -->
+  <section class="sec no-print" id="s-whatif">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">5</span>What if?</h2><p>Move the sliders to test a change without touching your plan above.</p></div>
+      <div class="toolbar"><button class="btn sm" id="wi-match">Match my plan</button><button class="btn sm" id="wi-apply">Use these in my plan</button><button class="btn sm reset" data-reset="whatif">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="grid g2">
+        <div>
+          <div class="slider"><label for="wi-occ">Occupancy <b id="wi-occ-v"></b></label><input type="range" id="wi-occ" min="20" max="100" step="1"></div>
+          <div class="slider"><label for="wi-min">Housekeeping minutes per departure room <b id="wi-min-v"></b></label><input type="range" id="wi-min" min="15" max="60" step="1"><small class="muted">Stayover minutes move by the same proportion.</small></div>
+          <div class="slider"><label for="wi-wage">Wage change, all departments <b id="wi-wage-v"></b></label><input type="range" id="wi-wage" min="-10" max="25" step="0.5"></div>
+        </div>
+        <div class="table-wrap"><table class="cmp"><thead><tr><th></th><th class="num">Your plan</th><th class="num">What if</th><th class="num">Change</th></tr></thead><tbody id="wi-table"></tbody></table></div>
+      </div>
+      <div class="takeaway" id="wi-take"></div>
+    </div>
+  </section>
+
+  <!-- Benchmarks -->
+  <section class="sec" id="s-bench">
+    <div class="sec-head">
+      <div><h2>How you compare (rough guide)</h2><p>Typical ranges quoted in industry articles and surveys for full-service hotels. Survey labour figures usually include managers and salaried staff; this calculator only counts the departments you list. They are rough guides, not authoritative standards: your market, union agreement, brand standards, room size and service level matter more. Use them to spot numbers worth a second look.</p></div>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap"><table><thead><tr><th>Measure</th><th class="num">Yours</th><th class="num">Typical range</th><th>Reading</th></tr></thead><tbody id="t-bench"></tbody></table></div>
+    </div>
+  </section>
+
+  <details class="tech no-print">
+    <summary>How it's calculated</summary>
+    <p><b>Rooms.</b> Occupied rooms = rooms &times; occupancy. Stayovers = occupied &times; stayover share. Check-outs = occupied minus stayovers, and the tool assumes the same number of check-ins (a steady week). Rooms revenue = occupied rooms &times; ADR.</p>
+    <p><b>Housekeeping.</b> Cleaning hours = (check-outs &times; departure minutes + stayovers &times; stayover minutes) / 60. Attendant paid hours = cleaning hours &times; paid hours per shift / productive hours per shift (the rest is breaks, cart set-up and linen runs). Inspectors = attendants (rounded up) / attendants per inspector, rounded up, each working one shift. Turndown hours = occupied rooms &times; turndown share &times; turndown minutes / 60.</p>
+    <p><b>Front desk.</b> Transaction hours = check-ins / check-ins per agent hour + check-outs / check-outs per agent hour. Because guests arrive in waves, agents spend only part of their time on these, so work hours = transaction hours / share of desk time on check-ins and check-outs.</p>
+    <p><b>Food and beverage.</b> Covers (meals served) = occupied rooms &times; covers per occupied room + outside covers. Server hours = covers / covers per server hour. Kitchen and support hours = server hours &times; support ratio.</p>
+    <p><b>Your own departments.</b> Work hours = units of the chosen driver / units per labour hour + fixed hours per day.</p>
+    <p><b>Every department.</b> Minimum hours = minimum people per shift &times; shifts per day &times; paid hours per shift. Scheduled hours = the larger of work hours and minimum hours. Shifts = scheduled hours / paid hours per shift, rounded up. FTE = weekly hours / hours in one FTE week. Cost = hours &times; wage &times; (1 + benefits load). CPOR = cost / occupied rooms. Labour % = cost / rooms revenue. Weekly figures = daily &times; days you operate.</p>
+    <p><b>Limits.</b> Every day is treated as a typical day; real weeks have Sunday check-out peaks and quiet Tuesdays, so use the staffing guide day by day. Front-office and F&amp;B managers, salaried staff, sales and admin are not included unless you add them. F&amp;B labour is normally judged against F&amp;B revenue, so the rooms-division figure (housekeeping and front desk, plus any department you tick) is shown separately. Nothing you type leaves this browser.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.labour.v1";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const money = (v, d = 0) => fmt.money(v, d);
+  const n1 = (v) => fmt.num(v, 1);
+  const DCOL = [COLORS.s1, COLORS.s2, COLORS.s3, COLORS.s4, "#7b5cc4", "#8a94a0"];
+
+  const SAMPLES = [
+    { key: "summit", name: "Summit Tower Hotel", rooms: 620, adr: 219, occ: 78 },
+    { key: "grand", name: "Grand Terrace Resort", rooms: 520, adr: 245, occ: 80 },
+    { key: "river", name: "Riverside Suites", rooms: 380, adr: 189, occ: 74 },
+    { key: "harbour", name: "Harbour Lights Hotel", rooms: 300, adr: 175, occ: 72 },
+    { key: "park", name: "Parkview Inn", rooms: 240, adr: 139, occ: 70 },
+  ];
+  const DRIVERS = { occ: "Occupied rooms", rooms: "Total rooms", arr: "Check-ins", covers: "F&B covers", none: "None (fixed hours only)" };
+  const DEFAULTS = {
+    hotel: { name: "Summit Tower Hotel", rooms: 620, occ: 78, stayShare: 60, adr: 219, benefits: 22, shiftHours: 8, fteHours: 40, days: 7 },
+    depts: [
+      { type: "hk", name: "Housekeeping", wage: 20.75, depMin: 30, soMin: 18, prodHours: 7, raPerInsp: 12, turnPct: 35, turnMin: 5, minPerShift: 2, shifts: 1, rooms: true },
+      { type: "fd", name: "Front desk", wage: 21.5, ciPerHr: 10, coPerHr: 15, util: 50, minPerShift: 2, shifts: 3, rooms: true },
+      { type: "fb", name: "Food and beverage", wage: 18.25, coversPerOcc: 0.9, outside: 150, coversPerHr: 14, support: 0.8, minPerShift: 3, shifts: 2, rooms: false },
+      { type: "custom", name: "Maintenance", wage: 28, driver: "rooms", perHour: 60, fixed: 8, minPerShift: 1, shifts: 3, rooms: false },
+    ],
+    whatif: { occ: 78, depMin: 30, wagePct: 0 },
+  };
+
+  let S, saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; } catch (e) { $("#saved").textContent = ""; } }, 250);
+  }
+  function load() {
+    try { const t = localStorage.getItem(KEY); if (t) { const v = JSON.parse(t); const o = clone(DEFAULTS); o.hotel = Object.assign(o.hotel, v.hotel || {}); if (Array.isArray(v.depts)) o.depts = v.depts; o.whatif = Object.assign(o.whatif, v.whatif || {}); return o; } } catch (e) {}
+    return clone(DEFAULTS);
+  }
+
+  // ---------------- validation ----------------
+  function num(v, lo, hi, def, label, warns) {
+    const x = +v;
+    if (v === "" || v == null || !isFinite(x) || x < lo || x > hi) { warns.push(`${label} should be between ${lo} and ${hi}. Using ${def} until it is fixed.`); return def; }
+    return x;
+  }
+  function cleanHotel(w) {
+    const h = S.hotel;
+    return { name: h.name || "Your hotel", rooms: num(h.rooms, 1, 10000, 100, "Rooms", w), occ: num(h.occ, 0, 100, 75, "Occupancy %", w) / 100, ss: num(h.stayShare, 0, 100, 60, "Stayover share %", w) / 100,
+      adr: num(h.adr, 0, 100000, 150, "ADR", w), ben: num(h.benefits, 0, 100, 20, "Benefits load %", w) / 100, sh: num(h.shiftHours, 1, 16, 8, "Paid hours per shift", w),
+      fte: num(h.fteHours, 1, 60, 40, "Hours in one FTE week", w), days: Math.round(num(h.days, 1, 7, 7, "Days you operate", w)) };
+  }
+  function cleanDept(d, i, w) {
+    const L = (t) => `${d.name || "Department " + (i + 1)}: ${t}`;
+    const c = { type: d.type, name: d.name || `Department ${i + 1}`, rooms: !!d.rooms, wage: num(d.wage, 0, 500, 20, L("wage"), w),
+      minPerShift: num(d.minPerShift, 0, 200, 0, L("minimum people per shift"), w), shifts: num(d.shifts, 0, 6, 1, L("shifts per day"), w) };
+    if (d.type === "hk") Object.assign(c, { depMin: num(d.depMin, 1, 240, 30, L("minutes per departure room"), w), soMin: num(d.soMin, 0, 240, 18, L("minutes per stayover room"), w),
+      prodHours: num(d.prodHours, 0.5, 16, 7, L("productive hours per shift"), w), raPerInsp: num(d.raPerInsp, 1, 100, 12, L("attendants per inspector"), w),
+      turnPct: num(d.turnPct, 0, 100, 0, L("turndown share"), w) / 100, turnMin: num(d.turnMin, 0, 60, 5, L("turndown minutes"), w) });
+    if (d.type === "fd") Object.assign(c, { ciPerHr: num(d.ciPerHr, 0.5, 200, 10, L("check-ins per agent hour"), w), coPerHr: num(d.coPerHr, 0.5, 200, 15, L("check-outs per agent hour"), w), util: num(d.util, 5, 100, 50, L("share of time on check-ins and check-outs"), w) / 100 });
+    if (d.type === "fb") Object.assign(c, { coversPerOcc: num(d.coversPerOcc, 0, 20, 0.9, L("covers per occupied room"), w), outside: num(d.outside, 0, 100000, 0, L("outside covers"), w), coversPerHr: num(d.coversPerHr, 0.5, 200, 14, L("covers per server hour"), w), support: num(d.support, 0, 10, 0.8, L("support ratio"), w) });
+    if (d.type === "custom") Object.assign(c, { driver: DRIVERS[d.driver] ? d.driver : "occ", perHour: num(d.perHour, 0.01, 100000, 10, L("units per labour hour"), w), fixed: num(d.fixed, 0, 2000, 0, L("fixed hours"), w) });
+    return c;
+  }
+
+  // ---------------- model ----------------
+  // opts: { occ (0-1), depMinScale, wageMult }
+  function model(H, D, opts = {}) {
+    const occPct = opts.occ ?? H.occ, occ = H.rooms * occPct;
+    const so = occ * H.ss, dep = occ - so, arr = dep;
+    const fbD = D.find(d => d.type === "fb");
+    const covers = fbD ? occ * fbD.coversPerOcc + fbD.outside : 0;
+    const wm = opts.wageMult ?? 1, scale = opts.minScale ?? 1;
+    const rows = D.map((d, i) => {
+      let work = 0, detail = "", people = null;
+      if (d.type === "hk") {
+        const dm = d.depMin * scale, sm = d.soMin * scale;
+        const cleanH = (dep * dm + so * sm) / 60;
+        const raPaid = cleanH * H.sh / Math.min(d.prodHours, H.sh);
+        const ra = Math.ceil(raPaid / H.sh - 1e-9), insp = ra > 0 ? Math.ceil(ra / d.raPerInsp - 1e-9) : 0;
+        const turnH = occ * d.turnPct * d.turnMin / 60, turnP = Math.ceil(turnH / H.sh - 1e-9);
+        work = raPaid + insp * H.sh + turnH;
+        people = { ra, insp, turn: turnP };
+        detail = `${fmt.num(dep)} check-outs and ${fmt.num(so)} stayovers = ${n1(cleanH)} cleaning hours, ${ra} attendants, ${insp} inspector${insp === 1 ? "" : "s"}, ${turnP} turndown`;
+      } else if (d.type === "fd") {
+        const tx = arr / d.ciPerHr + dep / d.coPerHr;
+        work = tx / d.util;
+        detail = `${fmt.num(arr)} check-ins and ${fmt.num(dep)} check-outs = ${n1(tx)} transaction hours`;
+      } else if (d.type === "fb") {
+        const sv = covers / d.coversPerHr;
+        work = sv * (1 + d.support);
+        detail = `${fmt.num(covers)} covers = ${n1(sv)} server hours + ${n1(sv * d.support)} support hours`;
+      } else {
+        const units = { occ, rooms: H.rooms, arr, covers, none: 0 }[d.driver] || 0;
+        work = (d.driver === "none" ? 0 : units / d.perHour) + d.fixed;
+        detail = d.driver === "none" ? `${n1(d.fixed)} fixed hours` : `${fmt.num(units)} ${DRIVERS[d.driver].toLowerCase()} / ${d.perHour} per hour + ${n1(d.fixed)} fixed hours`;
+      }
+      const minH = d.minPerShift * d.shifts * H.sh;
+      const hours = Math.max(work, minH);
+      const shifts = Math.ceil(hours / H.sh - 1e-9);
+      let pp = shifts;
+      if (people && hours === work) pp = people.ra + people.insp + people.turn;
+      const cost = hours * d.wage * wm * (1 + H.ben);
+      return { d, i, work, minH, hours, shifts: Math.max(shifts, pp), cost, detail, floorBound: minH > work };
+    });
+    const tot = rows.reduce((a, r) => ({ hours: a.hours + r.hours, shifts: a.shifts + r.shifts, cost: a.cost + r.cost }), { hours: 0, shifts: 0, cost: 0 });
+    const rev = occ * H.adr;
+    const roomsDiv = rows.filter(r => r.d.rooms).reduce((s, r) => s + r.cost, 0);
+    const hk = rows.find(r => r.d.type === "hk");
+    return { occ, occPct, dep, so, arr, covers, rows, tot, rev, roomsDiv,
+      cpor: occ > 0 ? tot.cost / occ : null, pct: rev > 0 ? tot.cost / rev : null,
+      rdCpor: occ > 0 ? roomsDiv / occ : null, rdPct: rev > 0 ? roomsDiv / rev : null,
+      hkHpor: hk && occ > 0 ? hk.hours / occ : null, fte: tot.hours * H.days / H.fte };
+  }
+
+  // ---------------- input rendering ----------------
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      const [sec, k] = el.dataset.k.split(".");
+      el.value = S[sec][k] ?? "";
+      el.oninput = () => { S[sec][k] = el.hasAttribute("data-num") ? (el.value === "" ? "" : +el.value) : el.value; save(); compute(); };
+    });
+  }
+  const F = (i, k, label, help, attrs = "") => `<div class="field"><label for="d${i}-${k}">${label}</label><input type="number" id="d${i}-${k}" data-dk="${k}" ${attrs}>${help ? `<small>${help}</small>` : ""}</div>`;
+  function renderDepts() {
+    $("#depts").innerHTML = S.depts.map((d, i) => {
+      let f = "";
+      if (d.type === "hk") f = F(i, "depMin", "Minutes per departure room", "Full clean after check-out", 'min="1"') + F(i, "soMin", "Minutes per stayover room", "Daily service", 'min="0"') +
+        F(i, "prodHours", "Productive hours per shift", "Time actually cleaning", 'min="0.5" step="0.25"') + F(i, "raPerInsp", "Attendants per inspector", "One supervisor checks this many", 'min="1"') +
+        F(i, "turnPct", "Evening turndown, % of occupied rooms", "0 if you do not offer it", 'min="0" max="100"') + F(i, "turnMin", "Minutes per turndown", "", 'min="0"');
+      if (d.type === "fd") f = F(i, "ciPerHr", "Check-ins per agent hour", "When the desk is busy", 'min="0.5" step="0.5"') + F(i, "coPerHr", "Check-outs per agent hour", "Express check-out raises this", 'min="0.5" step="0.5"') +
+        F(i, "util", "Share of desk time on check-ins and check-outs, %", "The rest is calls, requests, cash, waiting", 'min="5" max="100"');
+      if (d.type === "fb") f = F(i, "coversPerOcc", "Covers per occupied room", "Meals served to in-house guests per room sold", 'min="0" step="0.05"') + F(i, "outside", "Outside covers per day", "Non-resident guests, banquets", 'min="0"') +
+        F(i, "coversPerHr", "Covers per server hour", "Higher for buffets", 'min="0.5" step="0.5"') + F(i, "support", "Kitchen and support hours per server hour", "Cooks, stewards, hosts", 'min="0" step="0.05"');
+      if (d.type === "custom") f = `<div class="field"><label for="d${i}-driver">Work is driven by</label><select id="d${i}-driver" data-dk="driver">${Object.entries(DRIVERS).map(([k, v]) => `<option value="${k}"${d.driver === k ? " selected" : ""}>${v}</option>`).join("")}</select></div>` +
+        F(i, "perHour", "Units per labour hour", "E.g. rooms one person covers in an hour", 'min="0.01" step="any"') + F(i, "fixed", "Fixed hours per day", "Work that happens whatever the occupancy", 'min="0" step="0.5"');
+      f += F(i, "minPerShift", "Minimum people per shift", "Never roster fewer", 'min="0"') + F(i, "shifts", "Shifts per day", "3 = covered around the clock", 'min="0" max="6"') + F(i, "wage", "Wage, $ per hour", "Average hourly wage before benefits", 'min="0" step="0.05"');
+      return `<div class="dept" data-i="${i}"><div class="dept-head"><div class="nm"><span class="dot" style="background:${DCOL[i % DCOL.length]}"></span><input type="text" data-dk="name" value="${esc(d.name)}" aria-label="Department name"></div>
+        <div class="toolbar"><label class="chk"><input type="checkbox" data-dk="rooms"${d.rooms ? " checked" : ""}>Part of the rooms division</label><button class="btn sm" data-del>Remove</button></div></div>
+        <div class="fields">${f}</div><p class="calc" data-calc></p></div>`;
+    }).join("") || `<p class="muted">No departments. Add one, or reset this section to bring back the sample.</p>`;
+    document.querySelectorAll(".dept").forEach(el => {
+      const d = S.depts[+el.dataset.i];
+      el.querySelectorAll("[data-dk]").forEach(inp => { if (inp.type !== "checkbox" && inp.dataset.dk !== "name" && inp.tagName !== "SELECT") inp.value = d[inp.dataset.dk] ?? ""; });
+    });
+  }
+  $("#depts").addEventListener("input", (e) => {
+    const box = e.target.closest(".dept"); if (!box) return;
+    const d = S.depts[+box.dataset.i], k = e.target.dataset.dk; if (!k) return;
+    if (e.target.type === "checkbox") d[k] = e.target.checked;
+    else if (k === "name" || k === "driver") d[k] = e.target.value;
+    else d[k] = e.target.value === "" ? "" : +e.target.value;
+    save(); compute();
+  });
+  $("#depts").addEventListener("change", (e) => { if (e.target.tagName === "SELECT" || e.target.type === "checkbox") e.target.dispatchEvent(new Event("input", { bubbles: true })); });
+  $("#depts").addEventListener("click", (e) => {
+    if (!e.target.matches("[data-del]")) return;
+    const i = +e.target.closest(".dept").dataset.i;
+    if (!confirm(`Remove ${S.depts[i].name || "this department"}?`)) return;
+    S.depts.splice(i, 1); save(); renderDepts(); compute();
+  });
+  $("#add-dept").onclick = () => {
+    S.depts.push({ type: "custom", name: "New department", wage: 20, driver: "occ", perHour: 20, fixed: 0, minPerShift: 1, shifts: 1, rooms: false });
+    save(); renderDepts(); compute();
+    const last = $("#depts .dept:last-child input[data-dk=name]"); last.focus(); last.select();
+  };
+
+  // ---------------- results ----------------
+  let H, D, M, charts = {};
+  function compute() {
+    const w = [], dw = [];
+    H = cleanHotel(w);
+    D = S.depts.map((d, i) => cleanDept(d, i, dw));
+    $("#hotel-warn").innerHTML = w.length ? `<div class="warnbox">${w.map(esc).join("<br>")}</div>` : "";
+    $("#dept-warn").innerHTML = dw.length ? `<div class="warnbox">${dw.map(esc).join("<br>")}</div>` : "";
+    M = model(H, D);
+    $("#hotel-note").textContent = `${fmt.num(M.occ)} occupied rooms a night: ${fmt.num(M.dep)} check-outs (and as many check-ins), ${fmt.num(M.so)} stayovers. Rooms revenue ${money(M.rev)} a day.`;
+    document.querySelectorAll(".dept").forEach(el => { const r = M.rows[+el.dataset.i]; if (r) el.querySelector("[data-calc]").innerHTML = `${esc(r.detail)}. <b>${n1(r.hours)} hours, ${r.shifts} shifts a day</b>${r.floorBound ? " (set by the minimum staffing)" : ""}.`; });
+    renderKpis(); renderDeptTable(); renderGuide(); renderCharts(); renderWhatIf(); renderBench();
+  }
+  function renderKpis() {
+    const t = M.tot, wk = H.days;
+    $("#res-title").textContent = `Results for ${H.name} at ${fmt.pct(M.occPct, 0)} occupancy`;
+    $("#kpis").innerHTML = [
+      ["Labour hours", fmt.num(t.hours), `a day; ${fmt.num(t.hours * wk)} a week`],
+      ["Shifts to schedule", fmt.num(t.shifts), `a day; ${fmt.num(t.shifts * wk)} a week`],
+      ["FTE (full-time equivalents)", n1(M.fte), `at ${H.fte} hours a week`],
+      ["CPOR (cost per occupied room)", M.cpor != null ? money(M.cpor, 2) : "-", `rooms division ${M.rdCpor != null ? money(M.rdCpor, 2) : "-"}`],
+      ["Labour cost % of rooms revenue", M.pct != null ? fmt.pct(M.pct) : "-", `rooms division ${M.rdPct != null ? fmt.pct(M.rdPct) : "-"}`],
+    ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+    let msg;
+    if (!D.length) msg = "Add at least one department in step 2 to see results.";
+    else if (M.occ <= 0) msg = "At 0% occupancy there are no rooms sold, so only minimum staffing is costed and per-room figures cannot be worked out.";
+    else {
+      const big = M.rows.slice().sort((a, b) => b.cost - a.cost)[0];
+      const floor = M.rows.filter(r => r.floorBound).map(r => r.d.name);
+      msg = `A typical day needs about <b>${fmt.num(M.tot.shifts)} shifts</b> (${n1(M.fte)} full-time equivalents) costing <b>${money(M.tot.cost)}</b>, or <b>${money(M.cpor, 2)}</b> for every room sold. ${esc(big.d.name)} is the biggest cost at ${fmt.pct(big.cost / M.tot.cost, 0)} of the total.`;
+      if (floor.length) msg += ` ${floor.map(esc).join(" and ")} ${floor.length === 1 ? "is" : "are"} staffed at the minimum, so ${floor.length === 1 ? "its" : "their"} cost does not fall when the hotel is quieter: check whether that minimum can flex on slow nights.`;
+      else msg += " Every department is staffed by workload, so costs will move with occupancy.";
+    }
+    $("#takeaway").innerHTML = `<strong>What this means:</strong> ${msg}`;
+  }
+  function renderDeptTable() {
+    const wk = H.days, occ = M.occ;
+    $("#t-dept tbody").innerHTML = M.rows.map(r => `<tr><td><span class="dot" style="display:inline-block;vertical-align:-1px;margin-right:6px;background:${DCOL[r.i % DCOL.length]}"></span>${esc(r.d.name)}</td><td class="num">${n1(r.work)}</td><td class="num">${n1(r.minH)}</td><td class="num">${n1(r.hours)}</td><td class="num">${fmt.num(r.hours * wk)}</td><td class="num">${r.shifts}</td><td class="num">${n1(r.hours * wk / H.fte)}</td><td class="num">${money(r.cost)}</td><td class="num">${money(r.cost * wk)}</td><td class="num">${occ > 0 ? money(r.cost / occ, 2) : "-"}</td><td class="num">${M.rev > 0 ? fmt.pct(r.cost / M.rev) : "-"}</td></tr>`).join("") || `<tr><td colspan="11" class="muted">No departments.</td></tr>`;
+    $("#t-dept tfoot").innerHTML = `<tr class="tfoot-row"><td>Total</td><td class="num">${n1(M.rows.reduce((s, r) => s + r.work, 0))}</td><td class="num">${n1(M.rows.reduce((s, r) => s + r.minH, 0))}</td><td class="num">${n1(M.tot.hours)}</td><td class="num">${fmt.num(M.tot.hours * wk)}</td><td class="num">${M.tot.shifts}</td><td class="num">${n1(M.fte)}</td><td class="num">${money(M.tot.cost)}</td><td class="num">${money(M.tot.cost * wk)}</td><td class="num">${M.cpor != null ? money(M.cpor, 2) : "-"}</td><td class="num">${M.pct != null ? fmt.pct(M.pct) : "-"}</td></tr>`;
+  }
+  const LEVELS = Array.from({ length: 15 }, (_, i) => 30 + i * 5);
+  function guideRows() { return LEVELS.map(p => ({ p, m: model(H, D, { occ: p / 100 }) })); }
+  function renderGuide() {
+    const G = guideRows(), cur = LEVELS.reduce((b, p) => Math.abs(p - M.occPct * 100) < Math.abs(b - M.occPct * 100) ? p : b, LEVELS[0]);
+    $("#t-guide thead").innerHTML = `<tr><th class="num">Occupancy</th><th class="num">Rooms sold</th>${D.map(d => `<th class="num">${esc(d.name)}</th>`).join("")}<th class="num">Total people</th><th class="num">Hours</th><th class="num">Cost / day</th><th class="num">CPOR</th><th class="num">% of rooms revenue</th></tr>`;
+    $("#t-guide tbody").innerHTML = G.map(({ p, m }) => `<tr class="${p === cur ? "cur" : ""}"><td class="num">${p}%</td><td class="num">${fmt.num(m.occ)}</td>${m.rows.map(r => `<td class="num">${r.shifts}</td>`).join("")}<td class="num"><b>${m.tot.shifts}</b></td><td class="num">${fmt.num(m.tot.hours)}</td><td class="num">${money(m.tot.cost)}</td><td class="num">${m.cpor != null ? money(m.cpor, 2) : "-"}</td><td class="num">${m.pct != null ? fmt.pct(m.pct) : "-"}</td></tr>`).join("");
+    return G;
+  }
+  function renderCharts() {
+    if (!window.Chart) { document.querySelectorAll(".chart-box").forEach(b => b.innerHTML = `<p class="muted">Charts could not load. The tables show the same numbers.</p>`); return; }
+    const G = guideRows();
+    const mk = (id, cfg) => { if (charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update("none"); } else charts[id] = new Chart($(id), cfg); };
+    mk("#c-cost", { type: "bar", data: { labels: M.rows.map(r => r.d.name), datasets: [{ label: "Cost per day", data: M.rows.map(r => Math.round(r.cost)), backgroundColor: M.rows.map(r => DCOL[r.i % DCOL.length]), borderColor: "#fff", borderWidth: 2, maxBarThickness: 46 }] },
+      options: { indexAxis: "y", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${money(c.raw)} a day (${fmt.pct(c.raw / (M.tot.cost || 1), 0)})` } } }, scales: { x: gridScale({ ticks: { callback: (v) => fmt.compact(v) } }), y: gridScale({ grid: { display: false } }) } } });
+    mk("#c-cpor", { type: "line", data: { labels: LEVELS.map(p => p + "%"), datasets: [
+      { label: "All departments", data: G.map(g => g.m.cpor != null ? +g.m.cpor.toFixed(2) : null), borderColor: COLORS.s1, backgroundColor: COLORS.s1, pointRadius: 3 },
+      { label: "Rooms division", data: G.map(g => g.m.rdCpor != null ? +g.m.rdCpor.toFixed(2) : null), borderColor: COLORS.s2, backgroundColor: COLORS.s2, pointRadius: 3 }] },
+      options: { plugins: { legend: { position: "bottom" }, tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${money(c.raw, 2)}` } } }, scales: { x: gridScale({ title: { display: true, text: "Occupancy" } }), y: gridScale({ beginAtZero: true, ticks: { callback: (v) => "$" + v } }) } } });
+    mk("#c-guide", { type: "bar", data: { labels: LEVELS.map(p => p + "%"), datasets: D.map((d, i) => ({ label: d.name, data: G.map(g => g.m.rows[i].shifts), backgroundColor: DCOL[i % DCOL.length], borderColor: "#fff", borderWidth: 2, stack: "s" })) },
+      options: { plugins: { legend: { position: "bottom" }, title: { display: true, text: "People to schedule per day, by occupancy", align: "start", color: COLORS.ink, font: { weight: "600" } } }, scales: { x: gridScale({ stacked: true, grid: { display: false } }), y: gridScale({ stacked: true, beginAtZero: true, title: { display: true, text: "People (shifts)" } }) } } });
+  }
+
+  // ---------------- what if ----------------
+  function hkBase() { const hk = D.find(d => d.type === "hk"); return hk ? hk.depMin : 30; }
+  function renderWhatIf() {
+    const W = S.whatif;
+    W.occ = Math.min(100, Math.max(20, +W.occ || 20)); W.depMin = Math.min(60, Math.max(15, +W.depMin || 30)); W.wagePct = Math.min(25, Math.max(-10, +W.wagePct || 0));
+    $("#wi-occ").value = W.occ; $("#wi-min").value = W.depMin; $("#wi-wage").value = W.wagePct;
+    $("#wi-occ-v").textContent = W.occ + "%"; $("#wi-min-v").textContent = W.depMin + " min"; $("#wi-wage-v").textContent = (W.wagePct > 0 ? "+" : "") + W.wagePct + "%";
+    const hasHk = D.some(d => d.type === "hk");
+    $("#wi-min").disabled = !hasHk;
+    const X = model(H, D, { occ: W.occ / 100, minScale: hasHk ? W.depMin / hkBase() : 1, wageMult: 1 + W.wagePct / 100 });
+    const line = (label, a, b, f, goodDown = true) => {
+      const dv = (a == null || b == null) ? null : b - a;
+      const cls = dv == null || Math.abs(dv) < 1e-9 ? "" : (dv > 0) === goodDown ? "up" : "down";
+      return `<tr><td>${label}</td><td class="num">${a == null ? "-" : f(a)}</td><td class="num">${b == null ? "-" : f(b)}</td><td class="num dlt ${cls}">${dv == null ? "-" : (dv > 0 ? "+" : dv < 0 ? "-" : "") + f(Math.abs(dv))}</td></tr>`;
+    };
+    $("#wi-table").innerHTML = [
+      `<tr><td>Rooms sold</td><td class="num">${fmt.num(M.occ)}</td><td class="num">${fmt.num(X.occ)}</td><td class="num">${X.occ - M.occ >= 0 ? "+" : "-"}${fmt.num(Math.abs(X.occ - M.occ))}</td></tr>`,
+      line("Labour hours a day", M.tot.hours, X.tot.hours, (v) => fmt.num(v)),
+      line("Shifts a day", M.tot.shifts, X.tot.shifts, (v) => fmt.num(v)),
+      line("Labour cost a day", M.tot.cost, X.tot.cost, (v) => money(v)),
+      line("Labour cost a week", M.tot.cost * H.days, X.tot.cost * H.days, (v) => money(v)),
+      line("CPOR", M.cpor, X.cpor, (v) => money(v, 2)),
+      line("% of rooms revenue", M.pct, X.pct, (v) => fmt.pct(v)).replace(/(<td class="num dlt[^"]*">[^<]*?)%<\/td><\/tr>$/, "$1 pts</td></tr>"),
+    ].join("");
+    const dw = (X.tot.cost - M.tot.cost) * H.days;
+    let t;
+    if (Math.abs(dw) < 1) t = "The sliders match your plan. Move one to see what changes.";
+    else t = `This scenario ${dw > 0 ? "adds" : "saves"} about <b>${money(Math.abs(dw))}</b> a week in labour cost (${money(Math.abs(dw) * 52 / 1000, 0)}K a year if every week looked like this)` +
+      (X.cpor != null && M.cpor != null ? ` and moves CPOR from ${money(M.cpor, 2)} to <b>${money(X.cpor, 2)}</b>.` : ".") +
+      (hasHk && W.depMin !== hkBase() ? ` Each minute off the departure clean is worth about ${money(Math.abs(model(H, D, { occ: W.occ / 100, minScale: (W.depMin - 1) / hkBase(), wageMult: 1 + W.wagePct / 100 }).tot.cost - X.tot.cost) * H.days)} a week at this occupancy.` : "");
+    $("#wi-take").innerHTML = `<strong>What this means:</strong> ${t}`;
+  }
+  const wiInput = (k, el) => { el.oninput = () => { S.whatif[k] = +el.value; save(); renderWhatIf(); }; };
+  wiInput("occ", $("#wi-occ")); wiInput("depMin", $("#wi-min")); wiInput("wagePct", $("#wi-wage"));
+  $("#wi-match").onclick = () => { S.whatif = { occ: Math.round(M.occPct * 100), depMin: Math.round(hkBase()), wagePct: 0 }; save(); renderWhatIf(); };
+  $("#wi-apply").onclick = () => {
+    if (!confirm("Copy the what-if occupancy, housekeeping minutes and wage change into your plan above?")) return;
+    const W = S.whatif, hk = S.depts.find(d => d.type === "hk");
+    S.hotel.occ = W.occ;
+    if (hk && +hk.depMin > 0) { const r = W.depMin / +hk.depMin; hk.depMin = W.depMin; hk.soMin = Math.round(+hk.soMin * r * 10) / 10; }
+    if (W.wagePct) S.depts.forEach(d => { d.wage = Math.round(+d.wage * (1 + W.wagePct / 100) * 100) / 100; });
+    S.whatif.wagePct = 0;
+    save(); bindFields(); renderDepts(); compute();
+  };
+
+  // ---------------- benchmarks ----------------
+  function renderBench() {
+    const hk = D.find(d => d.type === "hk"), fd = D.find(d => d.type === "fd"), fb = D.find(d => d.type === "fb");
+    const B = [];
+    const add = (label, val, lo, hi, f, hiTxt, loTxt) => { if (val == null || !isFinite(val)) return; const s = val > hi ? "hi" : val < lo ? "lo" : "in"; B.push(`<tr><td>${label}</td><td class="num">${f(val)}</td><td class="num">${f(lo)} to ${f(hi)}</td><td><span class="bm-status ${s}">${s === "in" ? "Inside the usual range" : s === "hi" ? "Above the usual range" : "Below the usual range"}</span>${s !== "in" ? `<br><span class="muted" style="font-size:13px">${s === "hi" ? hiTxt : loTxt}</span>` : ""}</td></tr>`); };
+    if (hk) {
+      add("Housekeeping: minutes per departure room", hk.depMin, 25, 35, (v) => fmt.num(v, 0) + " min", "Worth checking room size, cart set-up and inspection steps.", "Fine for small rooms; check quality scores if guests complain.");
+      add("Housekeeping: minutes per stayover room", hk.soMin, 12, 20, (v) => fmt.num(v, 0) + " min", "Green or opt-out programs can lower this.", "Check the service standard is being met.");
+      add("Housekeeping: labour hours per occupied room", M.hkHpor, 0.35, 0.65, (v) => v.toFixed(2) + " h", "Often minimum staffing on quiet days, or slow standards.", "Lean; make sure inspection and turndown are included.");
+    }
+    if (fd) add("Front desk: check-ins per agent hour", fd.ciPerHr, 8, 15, (v) => fmt.num(v, 0), "Possible with mobile check-in or kiosks.", "Usually a sign of manual steps that could be simplified.");
+    if (fb) add("F&amp;B: covers per server hour", fb.coversPerHr, 10, 20, (v) => fmt.num(v, 0), "Typical of buffets; table service is lower.", "Common for fine dining; high for a casual outlet.");
+    add("Rooms division labour, % of rooms revenue", M.rdPct, 0.12, 0.22, (v) => fmt.pct(v, 0), "Common when ADR is low or minimum staffing is heavy.", "Expected here unless you add managers, reservations, laundry and other salaried rooms staff, which survey figures usually include.");
+    add("Rooms division CPOR", M.rdCpor, 20, 45, (v) => money(v, 0), "Check minimums and productive hours.", "Expected here unless you add managers and salaried rooms staff, which survey figures usually include.");
+    $("#t-bench").innerHTML = B.join("") || `<tr><td colspan="4" class="muted">Add housekeeping or front desk to see benchmarks.</td></tr>`;
+  }
+
+  // ---------------- exports ----------------
+  const csvCell = (v) => { v = String(v ?? ""); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+  function download(name, text) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + text], { type: "text/csv;charset=utf-8" })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+  function guideCSV() {
+    const G = guideRows();
+    return [["Occupancy %", "Rooms sold", ...D.map(d => d.name + " people"), "Total people", "Hours", "Cost per day", "CPOR", "Labour % of rooms revenue"].map(csvCell).join(","),
+      ...G.map(({ p, m }) => [p, Math.round(m.occ), ...m.rows.map(r => r.shifts), m.tot.shifts, m.tot.hours.toFixed(1), m.tot.cost.toFixed(2), m.cpor != null ? m.cpor.toFixed(2) : "", m.pct != null ? (m.pct * 100).toFixed(1) : ""].map(csvCell).join(","))].join("\n");
+  }
+  $("#csv").onclick = () => {
+    const wk = H.days;
+    const head = ["Department", "Work hours per day", "Minimum hours", "Scheduled hours per day", "Hours per week", "Shifts per day", "FTE", "Cost per day", "Cost per week", "CPOR", "Labour % of rooms revenue"];
+    const rows = M.rows.map(r => [r.d.name, r.work.toFixed(1), r.minH.toFixed(1), r.hours.toFixed(1), (r.hours * wk).toFixed(1), r.shifts, (r.hours * wk / H.fte).toFixed(2), r.cost.toFixed(2), (r.cost * wk).toFixed(2), M.occ > 0 ? (r.cost / M.occ).toFixed(2) : "", M.rev > 0 ? (r.cost / M.rev * 100).toFixed(1) : ""]);
+    rows.push(["Total", "", "", M.tot.hours.toFixed(1), (M.tot.hours * wk).toFixed(1), M.tot.shifts, M.fte.toFixed(2), M.tot.cost.toFixed(2), (M.tot.cost * wk).toFixed(2), M.cpor != null ? M.cpor.toFixed(2) : "", M.pct != null ? (M.pct * 100).toFixed(1) : ""]);
+    const top = [`${H.name}, ${H.rooms} rooms, ${(M.occPct * 100).toFixed(0)}% occupancy, ADR $${H.adr}, benefits ${(H.ben * 100).toFixed(0)}%`];
+    download("labour-productivity.csv", [top.map(csvCell).join(","), "", head.map(csvCell).join(","), ...rows.map(r => r.map(csvCell).join(",")), "", "Staffing guide", guideCSV()].join("\n"));
+  };
+  $("#csv-guide").onclick = () => download("staffing-guide.csv", guideCSV());
+
+  // ---------------- samples and resets ----------------
+  const sm = $("#sample");
+  sm.innerHTML = `<option value="">Choose…</option>` + SAMPLES.map(s => `<option value="${s.key}">${esc(s.name)} (${s.rooms} rooms)</option>`).join("");
+  sm.onchange = () => { const s = SAMPLES.find(x => x.key === sm.value); if (!s) return; Object.assign(S.hotel, { name: s.name, rooms: s.rooms, adr: s.adr, occ: s.occ }); S.whatif.occ = s.occ; save(); bindFields(); compute(); sm.value = ""; };
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset, names = { hotel: "hotel details", depts: "departments and standards", whatif: "what-if sliders" };
+    if (!confirm(`Reset the ${names[sec]} to the sample? Your changes in this section will be lost.`)) return;
+    S[sec] = clone(DEFAULTS[sec]); save(); renderAll();
+  });
+  $("#reset-all").onclick = () => { if (!confirm("Reset every section back to the sample? This can't be undone.")) return; S = clone(DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {} renderAll(); $("#saved").textContent = ""; };
+  function renderAll() { bindFields(); renderDepts(); compute(); }
+
+  chartDefaults();
+  S = load();
+  renderAll();
+})();
+</script>
+</body>
+</html>

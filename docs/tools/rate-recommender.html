@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rate Recommender</title>
+<meta name="description" content="A free daily rate recommender for hotels: enter the next 30 days of bookings, last year's pace and competitor rates, and get a recommended best available rate for every day with a plain reason, then export the rate plan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/tool.css">
+<style>
+.howto { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 860px) { .howto { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.subhead { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--brand-2); margin: 18px 0 8px; }
+.subhead:first-child { margin-top: 0; }
+table.edit.rr input.w-num { width: 74px; }
+table.edit.rr input.w-date { width: 142px; }
+table.edit.rr input.w-ev { width: 120px; }
+table.edit.rr td.dow { color: var(--ink-3); font-size: 13px; white-space: nowrap; }
+table.edit.rr tr.ev td { background: #fff8e8; }
+table.edit.rr tr.bad td { background: var(--bad-soft); }
+.pastebox { display: none; margin-bottom: 14px; }
+.pastebox.open { display: block; }
+.pastebox textarea { width: 100%; min-height: 110px; font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px; }
+.strip { display: grid; grid-template-columns: repeat(var(--n, 30), minmax(0, 1fr)); gap: 3px; margin: 8px 0 6px; }
+@media (max-width: 860px) { .strip { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
+.strip .cell { border-radius: 5px; padding: 4px 0 5px; text-align: center; font-size: 11px; line-height: 1.25; position: relative; cursor: default; }
+.strip .cell b { display: block; font-size: 13px; }
+.strip .cell.ev::after { content: ""; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #eda100; box-shadow: 0 0 0 1.5px #fff; }
+.t-Low { background: var(--tier-need); color: #0d366b; }
+.t-Moderate { background: var(--tier-shoulder); color: #0d366b; }
+.t-High { background: var(--tier-high); color: #fff; }
+.t-Compression { background: var(--tier-compression); color: #fff; }
+.pill.Low { background: var(--tier-need); color: #0d366b; }
+.pill.Moderate { background: var(--tier-shoulder); color: #0d366b; }
+.act { font-weight: 700; white-space: nowrap; }
+.act.up { color: var(--good); }
+.act.down { color: var(--bad); }
+.act.hold { color: var(--ink-3); font-weight: 600; }
+td.why { width: 32%; min-width: 280px; font-size: 13.5px; color: var(--ink-2); }
+#plan td { vertical-align: middle; }
+#plan tr.off td:not(.keep) { opacity: .55; }
+.evdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #eda100; margin-right: 4px; }
+@media print { .strip .cell, .pill { -webkit-print-color-adjust: exact; print-color-adjust: exact; } td.why { min-width: 0; } }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
+    <nav class="nav">
+      <a href="../index.html">Home</a>
+      <a href="../revenue.html">Revenue Command Centre</a>
+      <a href="../schedule.html">Staff Schedule Builder</a>
+      <a class="active" href="../tools/index.html">Free tools</a>
+      <a href="../swarm/">AI Swarm</a>
+      <a href="../index.html#proposals">Proposals</a>
+      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Rate Recommender</h1>
+    <p class="lead">Tell it what is on the books for the next 30 days, how last year looked and what your competitors charge. It forecasts how full each night will be and recommends a best available rate for every day, with a one-line reason you can check.</p>
+    <div class="chips"><span>Saves automatically in your browser</span><span>No sign-up</span><span>Free</span><span>Paste straight from Excel</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto no-print" aria-label="Steps">
+    <a href="#s-set"><b>Step 1</b>Your hotel and price rules</a>
+    <a href="#s-grid"><b>Step 2</b>The next 30 days</a>
+    <a href="#s-res"><b>Step 3</b>Review the recommendations</a>
+    <a href="#s-plan"><b>Step 4</b>Accept and export</a>
+  </nav>
+
+  <!-- 1. Settings -->
+  <section class="sec no-print" id="s-set">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Your hotel and price rules</h2><p>The guard rails every recommendation must respect. BAR means best available rate: your standard public price for the night.</p></div>
+      <div class="toolbar"><button class="btn sm reset" data-reset="set">Reset this section</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="subhead">Hotel and limits</div>
+      <div class="fields">
+        <div class="field"><label for="f-hotel">Hotel</label><input type="text" id="f-hotel" data-k="hotel"></div>
+        <div class="field"><label for="f-cap">Rooms to sell (capacity)</label><input type="number" min="1" id="f-cap" data-k="capacity" data-num><small>Rooms available each night</small></div>
+        <div class="field"><label for="f-floor">Rate floor ($)</label><input type="number" min="0" id="f-floor" data-k="floor" data-num><small>Never recommend below this</small></div>
+        <div class="field"><label for="f-ceil">Rate ceiling ($)</label><input type="number" min="0" id="f-ceil" data-k="ceiling" data-num><small>Never recommend above this</small></div>
+        <div class="field"><label for="f-mc">Biggest change in one go (%)</label><input type="number" min="1" max="100" id="f-mc" data-k="maxChange" data-num><small>Up or down from today's rate</small></div>
+        <div class="field"><label for="f-pos">Your price vs competitors (%)</label><input type="number" min="-50" max="100" id="f-pos" data-k="position" data-num><small>0 = match their middle price; +5 = sit 5% above</small></div>
+        <div class="field"><label for="f-round">Round prices</label><select id="f-round" data-k="round"><option value="9">To end in 9 (e.g. $219)</option><option value="1">To the nearest dollar</option><option value="5">To the nearest $5</option></select></div>
+        <div class="field"><label for="f-sens">How price-sensitive late bookers are</label><select id="f-sens" data-k="sens"><option value="low">Not very (strong brand, few rivals)</option><option value="normal">Normal</option><option value="high">Very (many similar hotels nearby)</option></select><small>Only used to estimate revenue</small></div>
+      </div>
+      <div class="subhead">Demand tiers and how far to move price</div>
+      <div class="fields">
+        <div class="field"><label for="f-t1">Moderate from (% full)</label><input type="number" min="1" max="100" id="f-t1" data-k="t1" data-num><small>Below this is Low</small></div>
+        <div class="field"><label for="f-t2">High from (% full)</label><input type="number" min="1" max="100" id="f-t2" data-k="t2" data-num></div>
+        <div class="field"><label for="f-t3">Compression from (% full)</label><input type="number" min="1" max="150" id="f-t3" data-k="t3" data-num><small>Compression = nearly sold out, demand exceeds rooms</small></div>
+        <div class="field"><label for="f-ev">Extra pickup on event days (%)</label><input type="number" min="0" max="100" id="f-ev" data-k="eventBoost" data-num><small>Late bookings beyond last year's</small></div>
+        <div class="field"><label for="f-a1">Low: price vs competitors (%)</label><input type="number" min="-50" max="50" id="f-a1" data-k="adjLow" data-num></div>
+        <div class="field"><label for="f-a2">Moderate: price vs competitors (%)</label><input type="number" min="-50" max="50" id="f-a2" data-k="adjMod" data-num></div>
+        <div class="field"><label for="f-a3">High: price vs competitors (%)</label><input type="number" min="-50" max="80" id="f-a3" data-k="adjHigh" data-num></div>
+        <div class="field"><label for="f-a4">Compression: price vs competitors (%)</label><input type="number" min="-50" max="100" id="f-a4" data-k="adjComp" data-num></div>
+      </div>
+      <div class="subhead">Competitor names (shown as column headings)</div>
+      <div class="fields">
+        <div class="field"><label for="f-c1">Competitor 1</label><input type="text" id="f-c1" data-k="comp.0"></div>
+        <div class="field"><label for="f-c2">Competitor 2</label><input type="text" id="f-c2" data-k="comp.1"></div>
+        <div class="field"><label for="f-c3">Competitor 3</label><input type="text" id="f-c3" data-k="comp.2"></div>
+        <div class="field"><label for="f-c4">Competitor 4</label><input type="text" id="f-c4" data-k="comp.3"></div>
+      </div>
+      <div id="set-warn"></div>
+    </div>
+  </section>
+
+  <!-- 2. Grid -->
+  <section class="sec no-print" id="s-grid">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>The next 30 days</h2><p>OTB means rooms on the books: rooms already reserved for that night. Copy cells from Excel and paste into any box to fill many at once. Tick <b>Event</b> for concerts, festivals or long weekends.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="tpl">Download template</button>
+        <label class="btn sm" style="margin:0">Import CSV<input type="file" id="imp" accept=".csv,.txt,text/csv" hidden></label>
+        <button class="btn sm" id="paste-toggle">Paste from Excel</button>
+        <button class="btn sm" id="today">Start from today</button>
+        <button class="btn sm reset" data-reset="rows">Reset this section</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="pastebox" id="pastebox">
+        <p class="note" style="margin:0 0 6px">Copy the rows from Excel or Google Sheets (with or without the heading row) and paste here. Columns in this order if there is no heading: <code>date, OTB, OTB last year, final last year, current BAR, comp 1, comp 2, comp 3, comp 4, event</code>.</p>
+        <textarea id="paste-text" placeholder="2026-10-19&#9;402&#9;380&#9;455&#9;189&#9;199&#9;185&#9;179&#9;159"></textarea>
+        <div class="toolbar" style="margin-top:8px"><button class="btn sm primary" id="paste-go">Use pasted rows</button><button class="btn sm" id="paste-cancel">Cancel</button></div>
+      </div>
+      <div id="imp-msg"></div>
+      <div class="table-wrap"><table class="edit rr" id="t-grid"><thead></thead><tbody></tbody></table></div>
+      <div class="toolbar" style="margin-top:10px"><button class="btn sm" id="add-row">Add a day</button><button class="btn sm" id="del-row">Remove last day</button><span class="note" id="grid-note" style="margin:0"></span></div>
+    </div>
+  </section>
+
+  <section class="sec no-print">
+    <div class="sec-body build-bar">
+      <span class="muted" style="font-size:14px">Recommendations update as you type.</span>
+      <span class="saved" id="saved"></span>
+      <button class="btn sm reset" id="reset-all" style="margin-left:auto">Reset everything</button>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section id="s-res">
+    <div id="res-warn"></div>
+    <div class="grid g5" id="kpis"></div>
+    <div class="takeaway" id="takeaway"></div>
+
+    <div class="card" style="margin-top:18px">
+      <h3>Demand calendar</h3>
+      <p class="muted" style="margin-bottom:4px">Each square is one night, coloured by demand tier. A yellow dot marks an event. Hover or tap a square for details.</p>
+      <div class="cal-legend" style="margin-bottom:0"><span><i class="t-Low"></i>Low</span><span><i class="t-Moderate"></i>Moderate</span><span><i class="t-High"></i>High</span><span><i class="t-Compression"></i>Compression</span><span><span class="evdot"></span>Event</span></div>
+      <div class="strip" id="strip"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Your rate, the recommendation and the market</h3>
+      <p class="muted">Lines are prices (left axis). Grey bars are the forecast occupancy (right axis).</p>
+      <div class="chart-box tall"><canvas id="chart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="sec" id="s-plan" style="margin-top:22px">
+    <div class="sec-head">
+      <div><h2 id="plan-title">Rate plan</h2><p class="no-print">Untick <b>Accept</b> to keep today's rate for a day. The totals above and the export use only the accepted changes.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm" id="acc-all">Accept all</button>
+        <button class="btn sm" id="acc-none">Accept none</button>
+        <button class="btn sm primary" id="xlsx">Download Excel</button>
+        <button class="btn sm" id="csv">Download CSV</button>
+        <button class="btn sm" onclick="window.print()">Print</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="table-wrap"><table id="plan"><thead><tr><th>Date</th><th>Demand</th><th class="num">Forecast full</th><th class="num">Pace vs last year</th><th class="num">Competitor middle</th><th class="num">Current BAR</th><th class="num">Recommended</th><th class="num">Change</th><th>Accept</th><th>Why</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <details class="tech no-print" style="margin-top:22px">
+    <summary>How it's calculated</summary>
+    <p><b>1. Forecast.</b> For each night: <i>pace</i> = rooms on the books now ÷ rooms on the books at the same time last year (limited to between 0.5 and 2). Last year's remaining pickup = last year's final rooms sold minus last year's rooms on the books at the same point. <code>Forecast rooms = OTB + last year's remaining pickup × pace</code>, plus the event boost on ticked days, capped at your capacity. If last year had no bookings yet at this point, pace is taken as 1.</p>
+    <p><b>2. Demand tier.</b> The uncapped forecast as a share of capacity sets the tier: Low, Moderate, High or Compression (your thresholds in Step 1). An event moves the night up one tier.</p>
+    <p><b>3. Price.</b> Start from the competitor middle price (the median of the rates you entered, so one odd rate does not drag it). Apply your position, then the tier adjustment, then a pace adjustment of 30% of the pace gap (at most ±6%). <code>Target = median × (1 + position) × (1 + tier adjustment) × (1 + pace adjustment)</code>. The target is then limited to your biggest change in one go, kept inside the floor and ceiling (these always win), and rounded. Changes smaller than 2% are shown as Hold, so you are not chasing noise. With no competitor rates, the current BAR is used as the starting point.</p>
+    <p><b>4. Revenue estimate.</b> Rooms already booked are assumed to stay at the current BAR. Rooms still to be booked respond to price: <code>late bookings × (new rate ÷ current rate)<sup>−sensitivity</sup></code>, capped at capacity. Sensitivity is higher on quiet nights (guests shop around) and lower in compression (guests have few choices): 1.5, 1.1, 0.7 and 0.3 for Low to Compression, scaled by your choice in Step 1. ADR (average daily rate) = room revenue ÷ rooms sold. RevPAR (revenue per available room) = room revenue ÷ rooms available.</p>
+    <p><b>Limits.</b> This is a rules-based recommender, not a machine-learning model. It does not know about group blocks, length-of-stay patterns, channel costs or rate parity, and the revenue estimate is a guide, not a promise. Always sense-check days with big moves. Your data stays in this browser; nothing is sent anywhere.</p>
+  </details>
+</main>
+
+<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="../assets/common.js"></script>
+<script>
+(() => {
+  const KEY = "hbi.tool.rate-recommender.v1";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const money = (v) => "$" + Math.round(v).toLocaleString("en-CA");
+  const pct0 = (v) => Math.round(v * 100) + "%";
+  const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const TIERS = ["Low", "Moderate", "High", "Compression"];
+  const FIELDS = ["date", "ev", "evName", "otb", "otbLy", "finLy", "bar", "c0", "c1", "c2", "c3"];
+  const MAX_ROWS = 90;
+
+  // ---------------- dates ----------------
+  const pad = (n) => String(n).padStart(2, "0");
+  const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const todayISO = () => iso(new Date());
+  const addDays = (s, n) => { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() + n); return iso(d); };
+  const validISO = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || "") && !isNaN(new Date(s + "T12:00:00"));
+  const dayDiff = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 864e5);
+  const dowOf = (s) => new Date(s + "T12:00:00").getDay();
+  const label = (s) => validISO(s) ? new Date(s + "T12:00:00").toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" }) : "?";
+  const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  function parseDate(raw, dmy) {
+    let s = String(raw ?? "").trim().replace(/^"|"$/g, "");
+    if (!s) return null;
+    let m;
+    if (/^\d{5}(\.\d+)?$/.test(s)) { const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(+s) * 864e5); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
+    if ((m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) return mk(+m[1], +m[2], +m[3]);
+    if ((m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/))) { let y = +m[3]; if (y < 100) y += 2000; const a = +m[1], b = +m[2]; return (dmy || a > 12) ? mk(y, b, a) : mk(y, a, b); }
+    if ((m = s.match(/^(\d{1,2})[-\s/]([a-z]{3})[a-z]*\.?[-\s/,]+(\d{2,4})/i))) { let y = +m[3]; if (y < 100) y += 2000; return mk(y, MONTHS.indexOf(m[2].toLowerCase()) + 1, +m[1]); }
+    if ((m = s.match(/^(?:[a-z]+,?\s+)?([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/i))) return mk(+m[3], MONTHS.indexOf(m[1].toLowerCase()) + 1, +m[2]);
+    return null;
+    function mk(y, mo, d) { if (mo < 1 || mo > 12 || d < 1 || d > 31) return null; const r = `${y}-${pad(mo)}-${pad(d)}`; const t = new Date(r + "T12:00:00"); return isNaN(t) || t.getDate() !== d ? null : r; }
+  }
+  const toNum = (v) => { if (v === "" || v == null) return ""; const n = parseFloat(String(v).replace(/[$,\s]/g, "")); return isFinite(n) ? n : ""; };
+
+  // ---------------- sample ----------------
+  function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function sampleRows(start) {
+    const R = rng(620), cap = 620, rows = [];
+    const occBase = [0.55, 0.49, 0.53, 0.58, 0.66, 0.85, 0.94];
+    const barBase = [169, 159, 165, 175, 189, 249, 289];
+    let concert = -1, conf = -1;
+    for (let i = 0; i < 30; i++) {
+      const dow = dowOf(addDays(start, i));
+      if (concert < 0 && i >= 8 && dow === 6) concert = i;
+      if (conf < 0 && i >= 15 && dow === 2) conf = i;
+    }
+    for (let i = 0; i < 30; i++) {
+      const date = addDays(start, i), dow = dowOf(date);
+      const isEv = i === concert || i === conf || i === conf + 1;
+      const occ = Math.min(0.98, occBase[dow] * (1 - 0.0035 * i) * (0.96 + R() * 0.08));
+      const finLy = Math.round(cap * occ);
+      const share = Math.min(0.98, 0.36 + 0.6 * Math.exp(-i / 15) + (R() - 0.5) * 0.04);
+      const otbLy = Math.round(finLy * share);
+      let pace = (i < 7 ? 0.9 : 1.02) + (R() - 0.5) * 0.18;
+      if (isEv) pace = 1.32 + R() * 0.1;
+      const otb = Math.min(cap, Math.round(otbLy * pace));
+      const bar = barBase[dow];
+      const lift = isEv ? 1.24 : 1;
+      const comp = [1.12, 1.05, 1.0, 0.88].map((f, k) => (k === 3 && i % 11 === 5) ? "" : Math.round(bar * f * lift * (0.95 + R() * 0.1)));
+      rows.push({ date, ev: isEv, evName: i === concert ? "Concert at the arena" : isEv ? "Trade show" : "", otb, otbLy, finLy, bar, c0: comp[0], c1: comp[1], c2: comp[2], c3: comp[3] });
+    }
+    return rows;
+  }
+  const DEF_SET = { hotel: "Summit Tower Hotel", capacity: 620, floor: 139, ceiling: 549, maxChange: 15, position: 0, round: "9", sens: "normal",
+    t1: 60, t2: 80, t3: 92, eventBoost: 10, adjLow: -6, adjMod: 0, adjHigh: 6, adjComp: 15,
+    comp: ["Grand Terrace Resort", "Riverside Suites", "Harbour Lights Hotel", "Parkview Inn"] };
+  const makeDefaults = () => ({ set: clone(DEF_SET), rows: sampleRows(todayISO()), accept: {} });
+  let DEFAULTS = makeDefaults(), S, chart = null;
+
+  // ---------------- storage ----------------
+  let saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(S)); $("#saved").textContent = "✓ Saved in this browser"; } catch (e) { $("#saved").textContent = ""; }
+    }, 250);
+  }
+  function load() {
+    try {
+      const t = localStorage.getItem(KEY);
+      if (t) { const v = JSON.parse(t); const o = Object.assign(clone(DEFAULTS), v); o.set = Object.assign(clone(DEF_SET), v.set || {}); if (!Array.isArray(o.rows)) o.rows = clone(DEFAULTS.rows); if (!o.accept) o.accept = {}; return o; }
+    } catch (e) {}
+    return clone(DEFAULTS);
+  }
+
+  // ---------------- engine ----------------
+  const median = (a) => { const s = a.slice().sort((x, y) => x - y), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : null; };
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function settingsOK() {
+    const s = S.set, w = [];
+    const n = (k) => typeof s[k] === "number" && isFinite(s[k]);
+    if (!n("capacity") || s.capacity < 1) w.push("Enter how many rooms you sell each night (capacity must be at least 1).");
+    if (!n("floor") || s.floor < 0) w.push("The rate floor must be zero or more.");
+    if (!n("ceiling") || s.ceiling <= 0) w.push("The rate ceiling must be more than zero.");
+    if (n("floor") && n("ceiling") && s.floor >= s.ceiling) w.push("The rate floor must be lower than the ceiling.");
+    if (!n("maxChange") || s.maxChange <= 0 || s.maxChange > 100) w.push("The biggest change in one go must be between 1% and 100%.");
+    if (!(s.t1 < s.t2 && s.t2 < s.t3)) w.push("Tier thresholds must go up in order: Moderate below High below Compression.");
+    ["position", "eventBoost", "adjLow", "adjMod", "adjHigh", "adjComp", "t1", "t2", "t3"].forEach(k => { if (!n(k)) w.push(`Fill in every number in Step 1 (one is blank).`); });
+    return [...new Set(w)];
+  }
+  function roundPrice(v) {
+    const m = S.set.round;
+    if (m === "5") return Math.round(v / 5) * 5;
+    if (m === "9") { const r = Math.round(v); const up = Math.ceil((r + 1) / 10) * 10 - 1, dn = up - 10; return (r - dn < up - r) ? dn : up; }
+    return Math.round(v);
+  }
+  function compute() {
+    const s = S.set, cap = s.capacity, mc = s.maxChange / 100, today = todayISO();
+    const sensMult = { low: 0.7, normal: 1, high: 1.3 }[s.sens] || 1;
+    const adj = { Low: s.adjLow / 100, Moderate: s.adjMod / 100, High: s.adjHigh / 100, Compression: s.adjComp / 100 };
+    const elastic = { Low: 1.5, Moderate: 1.1, High: 0.7, Compression: 0.3 };
+    const out = [], issues = { badDate: 0, noBar: 0, overCap: 0, lyOdd: 0, past: 0, dup: 0 };
+    const seen = new Set();
+    S.rows.forEach((r, idx) => {
+      if (!validISO(r.date)) { issues.badDate++; return; }
+      if (seen.has(r.date)) { issues.dup++; return; }
+      seen.add(r.date);
+      const bar = +r.bar;
+      if (!(bar > 0)) { issues.noBar++; return; }
+      if (dayDiff(today, r.date) < 0) issues.past++;
+      let otb = Math.max(0, +r.otb || 0); if (otb > cap) { issues.overCap++; otb = cap; }
+      const otbLy = Math.max(0, +r.otbLy || 0), finLyRaw = Math.max(0, +r.finLy || 0);
+      if (finLyRaw && finLyRaw < otbLy) issues.lyOdd++;
+      const finLy = Math.max(finLyRaw, otbLy);
+      const pace = otbLy > 0 ? clamp(otb / otbLy, 0.5, 2) : 1;
+      const lyPick = finLy - otbLy;
+      const pick = lyPick * pace * (r.ev ? 1 + s.eventBoost / 100 : 1);
+      const unc = otb + pick, fc = Math.min(cap, unc), ratio = unc / cap;
+      let t = ratio * 100 >= s.t3 ? 3 : ratio * 100 >= s.t2 ? 2 : ratio * 100 >= s.t1 ? 1 : 0;
+      const baseTier = t;
+      if (r.ev && t < 3) t++;
+      const tier = TIERS[t];
+      const comps = [r.c0, r.c1, r.c2, r.c3].map(Number).filter(v => v > 0);
+      const med = median(comps);
+      const anchor = med ?? bar;
+      const paceAdj = clamp((pace - 1) * 0.3, -0.06, 0.06);
+      const target = anchor * (1 + s.position / 100) * (1 + adj[tier]) * (1 + paceAdj);
+      const notes = [];
+      let rec = target;
+      if (rec > bar * (1 + mc)) { rec = bar * (1 + mc); notes.push(`held to your +${s.maxChange}% limit (target was ${money(target)})`); }
+      else if (rec < bar * (1 - mc)) { rec = bar * (1 - mc); notes.push(`held to your −${s.maxChange}% limit (target was ${money(target)})`); }
+      if (Math.abs(rec - bar) / bar < 0.02) rec = bar;
+      else rec = roundPrice(rec);
+      if (rec < s.floor) { rec = s.floor; notes.push("raised to your floor"); }
+      if (rec > s.ceiling) { rec = s.ceiling; notes.push("capped at your ceiling"); }
+      if (Math.abs(rec - bar) < 0.5) rec = bar;
+      const action = rec > bar ? "Raise" : rec < bar ? "Lower" : "Hold";
+      // reason
+      const paceTxt = otbLy <= 0 ? "no bookings at this point last year" : pace >= 1.03 ? `${Math.round((pace - 1) * 100)}% ahead of last year's pace` : pace <= 0.97 ? `${Math.round((1 - pace) * 100)}% behind last year's pace` : "on last year's pace";
+      const evTxt = r.ev ? `, ${r.evName ? esc(r.evName) : "event"}${baseTier < t ? " (moved up a tier)" : ""}` : "";
+      const mkTxt = med ? `competitors' middle price ${money(med)}` : "no competitor rates, so priced from your current rate";
+      const lead = action === "Hold" ? "Hold" : action;
+      const reason = `${lead}: forecast ${pct0(fc / cap)} full${unc > cap ? " with more demand than rooms" : ""}, ${paceTxt}${evTxt}; ${mkTxt}${notes.length ? "; " + notes.join(", ") : ""}.`;
+      const acc = S.accept[r.date] !== false;
+      const plan = acc ? rec : bar;
+      const e = elastic[tier] * sensMult;
+      const pickPlan = pick * Math.pow(plan / bar, -e);
+      const roomsCur = fc, roomsPlan = Math.min(cap, otb + pickPlan);
+      out.push({ idx, date: r.date, ev: !!r.ev, evName: r.evName || "", otb, otbLy, finLy, pace, unc, fc, occ: fc / cap, tier, med, comps: comps.length, bar, rec, action, reason, acc, plan,
+        lead: dayDiff(today, r.date), roomsCur, roomsPlan, revCur: roomsCur * bar, revPlan: Math.min(otb, roomsPlan) * bar + Math.max(0, roomsPlan - otb) * plan });
+    });
+    return { out, issues };
+  }
+
+  // ---------------- inputs ----------------
+  function getK(k) { const [a, b] = k.split("."); return b != null ? S.set[a][+b] : S.set[a]; }
+  function setK(k, v) { const [a, b] = k.split("."); if (b != null) S.set[a][+b] = v; else S.set[a] = v; }
+  function bindFields() {
+    document.querySelectorAll("[data-k]").forEach(el => {
+      el.value = getK(el.dataset.k) ?? "";
+      el.oninput = el.onchange = () => {
+        setK(el.dataset.k, el.hasAttribute("data-num") ? (el.value === "" ? "" : +el.value) : el.value);
+        save(); if (el.dataset.k.startsWith("comp")) renderGridHead(); schedule();
+      };
+    });
+  }
+  function renderGridHead() {
+    const c = S.set.comp.map((n, i) => esc(n || `Competitor ${i + 1}`));
+    $("#t-grid thead").innerHTML = `<tr><th>Date</th><th></th><th>Event</th><th>What's on</th><th class="num">OTB now</th><th class="num">OTB same time last year</th><th class="num">Final sold last year</th><th class="num">Current BAR $</th>${c.map(n => `<th class="num">${n} $</th>`).join("")}</tr>`;
+  }
+  function renderGrid() {
+    renderGridHead();
+    const cap = S.set.capacity;
+    $("#t-grid tbody").innerHTML = S.rows.map((r, i) => {
+      const bad = !validISO(r.date) || !(+r.bar > 0) || (+r.otb > cap);
+      const inp = (f, cls = "w-num") => `<td class="num"><input type="number" min="0" class="${cls}" value="${r[f] === "" || r[f] == null ? "" : r[f]}" data-r="${i}" data-f="${f}"></td>`;
+      return `<tr class="${r.ev ? "ev" : ""}${bad ? " bad" : ""}"><td><input type="date" class="w-date" value="${esc(r.date)}" data-r="${i}" data-f="date"></td><td class="dow">${validISO(r.date) ? DOW[dowOf(r.date)] : ""}</td>
+        <td style="text-align:center"><input type="checkbox" ${r.ev ? "checked" : ""} data-r="${i}" data-f="ev" aria-label="Event on ${esc(r.date)}"></td>
+        <td><input type="text" class="w-ev" value="${esc(r.evName)}" data-r="${i}" data-f="evName" placeholder="optional"></td>
+        ${inp("otb")}${inp("otbLy")}${inp("finLy")}${inp("bar")}${inp("c0")}${inp("c1")}${inp("c2")}${inp("c3")}</tr>`;
+    }).join("");
+    const tb = $("#t-grid tbody");
+    tb.querySelectorAll("[data-f]").forEach(el => {
+      el.oninput = el.onchange = () => {
+        const r = S.rows[+el.dataset.r], f = el.dataset.f;
+        if (f === "ev") { r.ev = el.checked; el.closest("tr").classList.toggle("ev", r.ev); }
+        else if (f === "date" || f === "evName") r[f] = el.value;
+        else r[f] = el.value === "" ? "" : Math.max(0, +el.value);
+        if (f === "date") el.closest("tr").querySelector(".dow").textContent = validISO(r.date) ? DOW[dowOf(r.date)] : "";
+        const cap = S.set.capacity; el.closest("tr").classList.toggle("bad", !validISO(r.date) || !(+r.bar > 0) || (+r.otb > cap));
+        save(); schedule();
+      };
+      el.addEventListener("paste", (ev) => {
+        const t = (ev.clipboardData || window.clipboardData).getData("text");
+        if (!/[\t\n]/.test(t.trim())) return;
+        ev.preventDefault();
+        pasteAt(t, +el.dataset.r, FIELDS.indexOf(el.dataset.f));
+      });
+    });
+    $("#grid-note").textContent = `${S.rows.length} day${S.rows.length === 1 ? "" : "s"}. Rows in red need a valid date and a current BAR, and OTB can't be more than capacity.`;
+  }
+  function setCell(r, f, v) {
+    if (f === "date") { const d = parseDate(v); r.date = d || String(v).trim(); }
+    else if (f === "ev") { const s = String(v).trim(); r.ev = !!s && !/^(0|no|n|false|-)$/i.test(s); if (r.ev && !/^(1|yes|y|x|true)$/i.test(s) && !r.evName) r.evName = s; }
+    else if (f === "evName") r.evName = String(v).trim();
+    else { const n = toNum(v); r[f] = n === "" ? "" : Math.max(0, n); }
+  }
+  function pasteAt(text, r0, c0) {
+    const lines = text.replace(/\r/g, "").replace(/\n+$/, "").split("\n").map(l => l.split("\t"));
+    // skip a pasted heading row
+    if (lines.length > 1 && !parseDate(lines[0][0]) && c0 === 0) lines.shift();
+    let added = 0;
+    lines.forEach((cells, dr) => {
+      const ri = r0 + dr; if (ri >= MAX_ROWS) return;
+      while (S.rows.length <= ri) { S.rows.push(blankRow(S.rows.length ? addDays(S.rows[S.rows.length - 1].date || todayISO(), 1) : todayISO())); added++; }
+      cells.forEach((v, dc) => { const f = FIELDS[c0 + dc]; if (f) setCell(S.rows[ri], f, v); });
+    });
+    save(); renderGrid(); recompute();
+    msg(`Pasted ${lines.length} row${lines.length === 1 ? "" : "s"}${added ? ` (${added} new day${added === 1 ? "" : "s"} added)` : ""}.`, "ok");
+  }
+  const blankRow = (date) => ({ date, ev: false, evName: "", otb: "", otbLy: "", finLy: "", bar: "", c0: "", c1: "", c2: "", c3: "" });
+  function msg(text, kind) { $("#imp-msg").innerHTML = text ? `<div class="${kind === "ok" ? "takeaway" : "warnbox"}" style="margin:0 0 12px">${text}</div>` : ""; }
+
+  // ---------------- import (CSV / pasted table) ----------------
+  function parseTable(t) {
+    const lines5 = t.split(/\r?\n/).filter(l => l.trim()).slice(0, 6), cnt = (ch) => Math.max(0, ...lines5.map(l => l.split(ch).length - 1));
+    const delim = cnt("\t") > 0 ? "\t" : (cnt(";") > cnt(",") ? ";" : ",");
+    const out = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (q) { if (c === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true; else if (c === delim) { row.push(cell); cell = ""; } else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); out.push(row); row = []; cell = ""; } else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); out.push(row); }
+    return out.filter(r => r.some(x => String(x).trim()));
+  }
+  function mapHeader(head) {
+    const map = {}; let comp = 0;
+    const names = S.set.comp.map(n => String(n || "").toLowerCase().trim()).filter(Boolean);
+    head.forEach((h0, i) => {
+      const h = String(h0).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      let f = null;
+      if (/event|flag|note|what s on|occasion/.test(h)) f = map.ev == null ? "ev" : null;
+      else if (/^(date|day|night|stay|arrival)/.test(h) || h === "dt") f = "date";
+      else if (/comp|competitor|rival/.test(h) || names.some(n => h.includes(n.replace(/[^a-z0-9]+/g, " ")))) f = comp < 4 ? "c" + comp++ : null;
+      else if (/(ly|last|prior|stly|previous|py)\b/.test(h) && /(final|actual|sold|total)/.test(h)) f = "finLy";
+      else if (/(^ly|\bly\b|last|prior|stly|previous|same time|\bpy\b)/.test(h)) f = "otbLy";
+      else if (/final|actual/.test(h)) f = "finLy";
+      else if (/otb|on the books|booked|books|rooms|reserv/.test(h)) f = "otb";
+      else if (/bar|rate|price|current|adr/.test(h)) f = "bar";
+      if (f && map[f] == null) map[f] = i;
+    });
+    return map;
+  }
+  function importText(text, source) {
+    const rows = parseTable(text);
+    if (!rows.length) { msg(`The ${source} looks empty. Use <b>Download template</b> to see the expected layout.`); return; }
+    let map;
+    const hasHead = !parseDate(rows[0][0]) && rows[0].some(c => /[a-z]/i.test(c));
+    if (hasHead) { map = mapHeader(rows.shift()); if (map.date == null) { msg(`We couldn't find a date column in your ${source}. Name the first column <b>date</b>, or download the template.`); return; } }
+    else map = { date: 0, otb: 1, otbLy: 2, finLy: 3, bar: 4, c0: 5, c1: 6, c2: 7, c3: 8, ev: 9 };
+    // day-first dates? (if any first part > 12)
+    const dmy = rows.some(r => { const m = String(r[map.date] || "").trim().match(/^(\d{1,2})[-/.](\d{1,2})[-/.]\d{2,4}/); return m && +m[1] > 12; });
+    const res = [], skipped = [];
+    rows.forEach((r, i) => {
+      const d = parseDate(r[map.date], dmy);
+      if (!d) { skipped.push(i + (hasHead ? 2 : 1)); return; }
+      const row = blankRow(d);
+      Object.entries(map).forEach(([f, ci]) => { if (f !== "date" && ci != null && r[ci] != null) setCell(row, f, r[ci]); });
+      res.push(row);
+    });
+    if (!res.length) { msg(`None of the rows had a date we could read. Dates like <code>2026-10-19</code>, <code>10/19/2026</code> or <code>19-Oct-2026</code> all work.`); return; }
+    res.sort((a, b) => a.date < b.date ? -1 : 1);
+    const uniq = []; let dups = 0;
+    res.forEach(r => { if (uniq.length && uniq[uniq.length - 1].date === r.date) { uniq[uniq.length - 1] = r; dups++; } else uniq.push(r); });
+    const kept = uniq.slice(0, MAX_ROWS);
+    S.rows = kept; S.accept = {}; save(); renderGrid(); recompute();
+    const notes = [];
+    if (skipped.length) notes.push(`skipped ${skipped.length} row${skipped.length > 1 ? "s" : ""} without a readable date (line${skipped.length > 1 ? "s" : ""} ${skipped.slice(0, 6).join(", ")}${skipped.length > 6 ? "…" : ""})`);
+    if (dups) notes.push(`${dups} repeated date${dups > 1 ? "s" : ""} (kept the last one)`);
+    if (uniq.length > MAX_ROWS) notes.push(`only the first ${MAX_ROWS} days were kept`);
+    const missing = Object.keys({ otb: 1, otbLy: 1, finLy: 1, bar: 1 }).filter(f => map[f] == null);
+    if (missing.length) notes.push(`no column found for ${missing.map(f => ({ otb: "OTB", otbLy: "OTB last year", finLy: "final last year", bar: "current BAR" })[f]).join(", ")}, so fill those in below`);
+    msg(`Loaded ${kept.length} day${kept.length === 1 ? "" : "s"} from your ${source}${notes.length ? ". Note: " + notes.join("; ") : ""}.`, notes.length ? "warn" : "ok");
+  }
+
+  // ---------------- results ----------------
+  let recTimer;
+  function schedule() { clearTimeout(recTimer); recTimer = setTimeout(recompute, 250); }
+  function recompute() {
+    const sw = settingsOK();
+    $("#set-warn").innerHTML = sw.map(w => `<div class="warnbox">${w}</div>`).join("");
+    if (sw.length) {
+      $("#res-warn").innerHTML = `<div class="warnbox" style="margin-bottom:14px">Recommendations are paused until Step 1 is fixed: ${sw.join(" ")}</div>`;
+      $("#kpis").innerHTML = ""; $("#takeaway").innerHTML = ""; $("#strip").innerHTML = ""; $("#plan tbody").innerHTML = ""; if (chart) { chart.destroy(); chart = null; }
+      return;
+    }
+    const { out, issues } = compute();
+    const w = [];
+    if (issues.badDate) w.push(`${issues.badDate} day${issues.badDate > 1 ? "s have" : " has"} no valid date and ${issues.badDate > 1 ? "were" : "was"} left out.`);
+    if (issues.noBar) w.push(`${issues.noBar} day${issues.noBar > 1 ? "s have" : " has"} no current BAR and ${issues.noBar > 1 ? "were" : "was"} left out.`);
+    if (issues.dup) w.push(`${issues.dup} repeated date${issues.dup > 1 ? "s were" : " was"} left out (the first one counts).`);
+    if (issues.overCap) w.push(`On ${issues.overCap} day${issues.overCap > 1 ? "s" : ""} OTB is above your capacity, so it was treated as sold out. Check for overbooking or a typo.`);
+    if (issues.lyOdd) w.push(`On ${issues.lyOdd} day${issues.lyOdd > 1 ? "s" : ""} last year's final rooms are lower than last year's OTB (cancellations). Pickup was taken as zero.`);
+    if (issues.past) w.push(`${issues.past} day${issues.past > 1 ? "s are" : " is"} already in the past. Press <b>Start from today</b> in Step 2 to roll the dates forward.`);
+    $("#res-warn").innerHTML = w.map(x => `<div class="warnbox" style="margin:0 0 12px">${x}</div>`).join("");
+    if (!out.length) {
+      $("#kpis").innerHTML = ""; $("#strip").innerHTML = ""; $("#plan tbody").innerHTML = `<tr><td colspan="10" class="muted">No days to price yet. Add days in Step 2, import a CSV or paste from Excel.</td></tr>`;
+      $("#takeaway").innerHTML = "<strong>What this means:</strong> there is nothing to recommend until at least one day has a date and a current BAR.";
+      if (chart) { chart.destroy(); chart = null; } return;
+    }
+    const cap = S.set.capacity, n = out.length, avail = cap * n;
+    const sum = (k) => out.reduce((a, o) => a + o[k], 0);
+    const rC = sum("roomsCur"), rP = sum("roomsPlan"), vC = sum("revCur"), vP = sum("revPlan");
+    const adrC = rC ? vC / rC : 0, adrP = rP ? vP / rP : 0;
+    const raise = out.filter(o => o.action === "Raise"), lower = out.filter(o => o.action === "Lower"), hold = out.filter(o => o.action === "Hold");
+    const avgMove = (arr) => arr.length ? arr.reduce((a, o) => a + (o.rec - o.bar), 0) / arr.length : 0;
+    const acceptedN = out.filter(o => o.acc && o.action !== "Hold").length;
+    const dpct = (a, b) => b ? delta(a, b) : "";
+    $("#kpis").innerHTML = [
+      ["Forecast occupancy", pct0(rP / avail), `${Math.round(rP).toLocaleString("en-CA")} of ${avail.toLocaleString("en-CA")} room nights${Math.abs(rP - rC) >= 1 ? `; ${pct0(rC / avail)} at current rates` : ""}`],
+      ["Forecast ADR", money(adrP), `vs ${money(adrC)} at current rates ${dpct(adrP, adrC)}`],
+      ["Forecast RevPAR", "$" + (vP / avail).toFixed(2), `vs $${(vC / avail).toFixed(2)} at current rates ${dpct(vP, vC)}`],
+      ["Days to raise", raise.length, raise.length ? `average +${money(avgMove(raise))} a night` : "No increases needed"],
+      ["Days to lower", lower.length, `${lower.length ? `average −${money(-avgMove(lower))}; ` : ""}${hold.length} to hold`],
+    ].map(k => `<div class="kpi"><div class="label">${k[0]}</div><div class="value">${k[1]}</div><div class="sub">${k[2]}</div></div>`).join("");
+    const up = out.filter(o => o.acc && o.action === "Raise").sort((a, b) => (b.rec - b.bar) * b.roomsPlan - (a.rec - a.bar) * a.roomsPlan)[0];
+    const comp = out.filter(o => o.tier === "Compression").length, low = out.filter(o => o.tier === "Low").length;
+    const gain = vP - vC;
+    $("#takeaway").innerHTML = `<strong>What this means:</strong> ${acceptedN ? `with the ${acceptedN} accepted change${acceptedN > 1 ? "s" : ""}, room revenue for these ${n} nights is estimated at <b>${fmt.compact(vP)}</b>, ${gain >= 0 ? "<b>" + money(gain) + " more</b>" : "<b>" + money(-gain) + " less</b>"} than leaving today's rates as they are.` : "no changes are accepted, so the plan matches today's rates."}` +
+      (comp ? ` ${comp} night${comp > 1 ? "s look" : " looks"} close to selling out: raise early, before cheaper rooms are gone.` : "") +
+      (up ? ` The biggest single opportunity is <b>${label(up.date)}</b>: ${money(up.bar)} to ${money(up.rec)}.` : "") +
+      (low ? ` ${low} quiet night${low > 1 ? "s" : ""} ${low > 1 ? "are" : "is"} in the Low tier; where you sit above the market on those nights, a small cut helps win bookings from competitors rather than leave rooms empty.` : "");
+    // strip
+    $("#strip").style.setProperty("--n", Math.min(31, n));
+    $("#strip").innerHTML = out.map(o => {
+      const d = new Date(o.date + "T12:00:00");
+      const tip = `${label(o.date)}: ${o.tier}, forecast ${pct0(o.occ)} full. ${o.action} ${money(o.bar)} to ${money(o.rec)}.${o.ev ? " " + (o.evName || "Event") + "." : ""}`;
+      return `<div class="cell t-${o.tier}${o.ev ? " ev" : ""}" title="${esc(tip)}">${DOW[d.getDay()][0]}<b>${d.getDate()}</b></div>`;
+    }).join("");
+    // table
+    $("#plan-title").textContent = `Rate plan: ${S.set.hotel || "your hotel"}, ${label(out[0].date)} to ${label(out[n - 1].date)}`;
+    $("#plan tbody").innerHTML = out.map(o => {
+      const ch = o.rec - o.bar;
+      const cls = o.action === "Raise" ? "up" : o.action === "Lower" ? "down" : "hold";
+      return `<tr class="${o.acc || o.action === "Hold" ? "" : "off"}"><td style="white-space:nowrap">${o.ev ? '<span class="evdot" title="Event"></span>' : ""}<b>${label(o.date)}</b></td>
+        <td><span class="pill ${o.tier}">${o.tier}</span></td><td class="num">${pct0(o.occ)}</td>
+        <td class="num">${o.otbLy > 0 ? (o.pace >= 1 ? "+" : "−") + Math.abs(Math.round((o.pace - 1) * 100)) + "%" : "n/a"}</td>
+        <td class="num">${o.med ? money(o.med) : "-"}</td><td class="num">${money(o.bar)}</td><td class="num"><b>${money(o.rec)}</b></td>
+        <td class="num"><span class="act ${cls}">${o.action === "Hold" ? "Hold" : (ch > 0 ? "+" : "−") + money(Math.abs(ch))}</span></td>
+        <td class="keep" style="text-align:center">${o.action === "Hold" ? '<span class="muted">-</span>' : `<input type="checkbox" data-acc="${esc(o.date)}" ${o.acc ? "checked" : ""} aria-label="Accept ${esc(label(o.date))}">`}</td>
+        <td class="why"><div style="min-width:280px">${o.reason}</div></td></tr>`;
+    }).join("");
+    $("#plan tbody").querySelectorAll("[data-acc]").forEach(cb => cb.onchange = () => { S.accept[cb.dataset.acc] = cb.checked; save(); recompute(); });
+    // chart
+    if (window.Chart) {
+      if (chart) chart.destroy();
+      chart = new Chart($("#chart"), {
+        data: { labels: out.map(o => label(o.date)), datasets: [
+          { type: "line", label: "Plan (recommended, if accepted)", data: out.map(o => o.plan), borderColor: COLORS.s1, backgroundColor: COLORS.s1, borderWidth: 3, yAxisID: "y", order: 1 },
+          { type: "line", label: "Current BAR", data: out.map(o => o.bar), borderColor: "#6b7682", backgroundColor: "#6b7682", yAxisID: "y", order: 2 },
+          { type: "line", label: "Competitor middle", data: out.map(o => o.med), borderColor: COLORS.s2, backgroundColor: COLORS.s2, borderDash: [6, 4], yAxisID: "y", spanGaps: true, order: 3 },
+          { type: "bar", label: "Forecast occupancy", data: out.map(o => +(o.occ * 100).toFixed(1)), backgroundColor: "#e3e8ee", yAxisID: "y1", order: 9 },
+        ] },
+        options: { plugins: { tooltip: { callbacks: { label: (c) => c.dataset.yAxisID === "y1" ? ` ${c.dataset.label}: ${c.raw}%` : ` ${c.dataset.label}: ${c.raw == null ? "-" : money(c.raw)}` } } },
+          scales: { x: gridScale({ grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: window.innerWidth < 600 ? 5 : 10 } }),
+            y: gridScale({ title: { display: true, text: "Rate ($)" }, ticks: { callback: v => "$" + v } }),
+            y1: { position: "right", min: 0, max: 100, grid: { display: false }, border: { display: false }, ticks: { callback: v => v + "%", color: COLORS.muted }, title: { display: true, text: "Occupancy", color: COLORS.muted } } } },
+      });
+    }
+    lastOut = out;
+  }
+  let lastOut = [];
+
+  // ---------------- export ----------------
+  function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  const csvCell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  const strip = (h) => String(h).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+  function planRows() {
+    return [["Date", "Day", "Event", "Demand tier", "Forecast occupancy %", "Forecast rooms", "OTB", "Pace vs last year %", "Competitor middle", "Current BAR", "Recommended BAR", "Accepted", "Final BAR", "Change $", "Reason"]]
+      .concat(lastOut.map(o => [o.date, DOW[dowOf(o.date)], o.ev ? (o.evName || "Yes") : "", o.tier, +(o.occ * 100).toFixed(1), Math.round(o.fc), o.otb, o.otbLy > 0 ? +((o.pace - 1) * 100).toFixed(1) : "", o.med ?? "", o.bar, o.rec,
+        o.action === "Hold" ? "Hold" : o.acc ? "Yes" : "No", o.plan, +(o.plan - o.bar).toFixed(2), strip(o.reason)]));
+  }
+  $("#csv").onclick = () => download("rate-plan.csv", planRows().map(r => r.map(csvCell).join(",")).join("\n"), "text/csv");
+  $("#xlsx").onclick = () => {
+    if (!window.XLSX) { $("#csv").click(); return; }
+    const wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet(planRows());
+    ws["!cols"] = [11, 6, 18, 12, 10, 9, 7, 10, 10, 10, 12, 9, 10, 9, 90].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws, "Rate plan");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(templateRows()), "Inputs");
+    const s = S.set;
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Setting", "Value"], ["Hotel", s.hotel], ["Capacity", s.capacity], ["Rate floor", s.floor], ["Rate ceiling", s.ceiling], ["Biggest change in one go %", s.maxChange],
+      ["Position vs competitor middle %", s.position], ["Moderate from %", s.t1], ["High from %", s.t2], ["Compression from %", s.t3], ["Event pickup boost %", s.eventBoost],
+      ["Low adj %", s.adjLow], ["Moderate adj %", s.adjMod], ["High adj %", s.adjHigh], ["Compression adj %", s.adjComp]]), "Settings");
+    XLSX.writeFile(wb, "rate-plan.xlsx");
+  };
+  function templateRows() {
+    return [["date", "otb", "otb_last_year", "final_last_year", "current_bar", ...S.set.comp.map((c, i) => c || `comp${i + 1}`), "event"]]
+      .concat(S.rows.map(r => [r.date, r.otb, r.otbLy, r.finLy, r.bar, r.c0, r.c1, r.c2, r.c3, r.ev ? (r.evName || "yes") : ""]));
+  }
+  $("#tpl").onclick = () => download("rate-recommender-template.csv", templateRows().map(r => r.map(csvCell).join(",")).join("\n"), "text/csv");
+  $("#imp").onchange = async (ev) => { const f = ev.target.files[0]; if (!f) return; try { importText(await f.text(), "file"); } catch (e) { msg("We couldn't read that file. Save it from Excel as CSV (comma separated) and try again."); } ev.target.value = ""; };
+  $("#paste-toggle").onclick = () => { $("#pastebox").classList.toggle("open"); if ($("#pastebox").classList.contains("open")) $("#paste-text").focus(); };
+  $("#paste-cancel").onclick = () => { $("#pastebox").classList.remove("open"); $("#paste-text").value = ""; };
+  $("#paste-go").onclick = () => { const t = $("#paste-text").value; if (!t.trim()) { msg("Paste some rows into the box first."); return; } importText(t, "pasted rows"); $("#pastebox").classList.remove("open"); $("#paste-text").value = ""; };
+  $("#today").onclick = () => {
+    if (!S.rows.length) return;
+    const first = S.rows.find(r => validISO(r.date)); const shift = first ? dayDiff(first.date, todayISO()) : 0;
+    if (!shift) { msg("Your dates already start today.", "ok"); return; }
+    if (!confirm(`Move every date ${shift > 0 ? "forward" : "back"} by ${Math.abs(shift)} day${Math.abs(shift) > 1 ? "s" : ""} so the first day is today? The numbers stay as they are.`)) return;
+    S.rows.forEach(r => { if (validISO(r.date)) r.date = addDays(r.date, shift); }); S.accept = {};
+    save(); renderGrid(); recompute(); msg("Dates now start today. Remember to refresh OTB and competitor rates.", "ok");
+  };
+  $("#add-row").onclick = () => { if (S.rows.length >= MAX_ROWS) { msg(`Up to ${MAX_ROWS} days at a time.`); return; } const last = S.rows[S.rows.length - 1]; const r = last ? { ...clone(last), date: validISO(last.date) ? addDays(last.date, 1) : todayISO(), ev: false, evName: "" } : blankRow(todayISO()); S.rows.push(r); save(); renderGrid(); recompute(); };
+  $("#del-row").onclick = () => { if (!S.rows.length) return; S.rows.pop(); save(); renderGrid(); recompute(); };
+  $("#acc-all").onclick = () => { S.accept = {}; save(); recompute(); };
+  $("#acc-none").onclick = () => { lastOut.forEach(o => S.accept[o.date] = false); save(); recompute(); };
+  document.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+    const sec = b.dataset.reset, names = { set: "hotel and price rules", rows: "30-day grid" };
+    if (!confirm(`Reset the ${names[sec]} to the sample? Your changes in this section will be lost.`)) return;
+    DEFAULTS = makeDefaults(); S[sec] = clone(DEFAULTS[sec]); if (sec === "rows") S.accept = {};
+    msg(""); save(); renderAll();
+  });
+  $("#reset-all").onclick = () => { if (!confirm("Reset every section to the sample? This can't be undone.")) return; DEFAULTS = makeDefaults(); S = clone(DEFAULTS); try { localStorage.removeItem(KEY); } catch (e) {} msg(""); renderAll(); $("#saved").textContent = ""; };
+  function renderAll() { bindFields(); renderGrid(); recompute(); }
+
+  // ---------------- start ----------------
+  chartDefaults();
+  S = load();
+  renderAll();
+})();
+</script>
+</body>
+</html>
