@@ -1,0 +1,42 @@
+[
+ {
+  "policy": "walk to competitor",
+  "net_value": -10158.286,
+  "revenue_kept": 0.0,
+  "total_cost": 10158.286,
+  "kept_in_group_pct": 0.0,
+  "rule_violations": 0.0,
+  "mean_transfer_km": 0.0,
+  "kind": "status quo"
+ },
+ {
+  "policy": "nearest sister hotel",
+  "net_value": 3569.863,
+  "revenue_kept": 7808.912,
+  "total_cost": 4239.05,
+  "kept_in_group_pct": 85.566,
+  "rule_violations": 0.0,
+  "mean_transfer_km": 10.238,
+  "kind": "rule"
+ },
+ {
+  "policy": "swarm auction",
+  "net_value": 4619.48,
+  "revenue_kept": 8568.703,
+  "total_cost": 3949.224,
+  "kept_in_group_pct": 86.362,
+  "rule_violations": 0.0,
+  "mean_transfer_km": 10.312,
+  "kind": "swarm"
+ },
+ {
+  "policy": "optimal plan (reference)",
+  "net_value": 4850.6,
+  "revenue_kept": 8679.507,
+  "total_cost": 3828.907,
+  "kept_in_group_pct": 87.362,
+  "rule_violations": 0.0,
+  "mean_transfer_km": 10.199,
+  "kind": "optimum"
+ }
+]

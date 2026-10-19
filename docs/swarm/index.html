@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swarm Command Board</title>
+<meta name="description" content="Results of a swarm-AI research project applied to energy, wildfire response and hotel operations, explained for a non-technical reader.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --color-bg: #f6f7f9; --color-panel: #ffffff; --color-fg: #18212b; --color-fg-muted: #5a6571;
+  --color-border-line: #e2e6eb; --color-ok: #1a7f4b; --color-warn: #9a5b00; --color-bad: #b42318;
+  --cds-border: #cfd6de; --cds-surface-popover: #ffffff; --cds-shadow-popover: 0 4px 16px rgba(16,24,40,.12);
+  --cds-text-secondary: #5a6571; --cds-chart-axis: #b8c0c9; --cds-chart-grid: #eef1f4; --cds-chart-muted: #9aa4ae;
+  --cds-chart-reference: #8a949e; --cds-dur-slow: .4s;
+  --cds-font-size-caption: 13px; --cds-font-size-body: 15px; --cds-font-size-heading: 17px; --cds-font-size-title: 30px;
+  --cds-font-weight-medium: 600; --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 16px; --cds-gap-lg: 24px;
+  --cds-pad-xs: 6px; --cds-pad-sm: 10px; --cds-pad-lg: 20px; --cds-radius: 10px;
+  --font-anthropic-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-anthropic-serif: Georgia, "Times New Roman", serif;
+  --brand: #1f4e79;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 15px/1.55 var(--font-anthropic-sans); font-feature-settings: "tnum" 1; }
+a { color: #2a78d6; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.site-top { background: var(--brand); color: #fff; }
+.site-top .in { max-width: 1180px; margin: 0 auto; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; }
+.site-top a { color: #fff; }
+.site-top .brand { font-weight: 700; }
+.site-top nav { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; opacity: .92; }
+#dash-root { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+.dash-skeleton { position: relative; color: transparent !important; background: linear-gradient(90deg, #eef1f4 25%, #f6f7f9 50%, #eef1f4 75%); background-size: 200% 100%; animation: sk 1.4s infinite; border-radius: 6px; }
+@keyframes sk { to { background-position: -200% 0; } }
+.site-foot { max-width: 1180px; margin: 0 auto; padding: 0 16px 32px; color: var(--color-fg-muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header class="site-top"><div class="in">
+  <a class="brand" href="../index.html">Hospitality BI Portfolio</a>
+  <nav><a href="../index.html">Home</a><a href="../revenue.html">Revenue Command Centre</a><a href="../schedule.html">Staff Schedule Builder</a><a href="./">Swarm Command Board</a></nav>
+</div></header>
+<main id="dash-root">
+<script src="assets/d3.min.js"></script><script src="assets/dash-shim.js"></script>
+<style>
+.sw { font-family: var(--font-anthropic-sans); display: flex; flex-direction: column; gap: var(--cds-gap-lg); }
+.sw-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+.sw-take { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); margin: var(--cds-gap-xs) 0 0; max-width: 60rem; }
+.sw-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); }
+.sw-tab { font: inherit; font-size: var(--cds-font-size-body); background: none; border: 0; border-bottom: 2px solid transparent; color: var(--color-fg-muted); padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; }
+.sw-tab[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+.sw-page { display: flex; flex-direction: column; gap: var(--cds-gap-md); }
+.sw-page[hidden] { display: none; }
+.sw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--cds-gap-md); }
+.sw-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+.sw-card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.sw-note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0; }
+.sw-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.sw-vs { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.sw-chart { position: relative; min-height: 300px; }
+.sw-chart.sw-short { min-height: 240px; }
+.sw-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sw-legend span::before { content: ""; display: inline-block; width: 0.75rem; height: 2px; margin-right: 0.35rem; vertical-align: middle; background: var(--sw-c); }
+.sw-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 2; }
+.sw-tip .sw-tip-x { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.sw-tip i { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; margin-right: 0.35rem; }
+.sw-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-body); font-variant-numeric: tabular-nums; }
+.sw-table th, .sw-table td { text-align: right; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+.sw-table th:first-child, .sw-table td:first-child { text-align: left; }
+.sw-table th { font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.sw-table tr.sw-hi td { font-weight: var(--cds-font-weight-medium); }
+.sw-scroll { overflow-x: auto; }
+.sw-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sw-controls select, .sw-controls button { font: inherit; color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 2px var(--cds-pad-sm); }
+.sw-controls input[type=range] { flex: 1 1 10rem; min-width: 8rem; }
+.sw-player { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: var(--cds-gap-md); align-items: start; }
+@media (max-width: 720px) { .sw-player { grid-template-columns: 1fr; } }
+.sw-canvas-box { position: relative; width: 100%; aspect-ratio: 1 / 1; min-height: 200px; }
+.sw-canvas-box canvas { width: 100%; height: 100%; border-radius: var(--cds-radius); display: block; }
+.sw-key { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sw-key span::before { content: ""; display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 2px; margin-right: 0.3rem; vertical-align: -1px; background: var(--sw-c); }
+.sw-status { font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; color: var(--color-fg-muted); }
+.sw-fail { display: flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.sw-fail::before { content: ""; width: 0.375rem; height: 0.375rem; border-radius: 50%; background: var(--color-bad); }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.sw-good { color: var(--color-ok); }
+.sw-bad { color: var(--color-bad); }
+</style>
+
+<div class="sw">
+  <header class="sw-head">
+    <h1 id="title">Swarm Command Board</h1>
+    <p class="sw-take" id="takeaway"><span class="dash-skeleton">&nbsp;</span></p>
+  </header>
+
+  <nav class="sw-tabs" role="tablist">
+    <button class="sw-tab" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button class="sw-tab" role="tab" data-tab="energy" aria-selected="false">Energy grid</button>
+    <button class="sw-tab" role="tab" data-tab="wildfire" aria-selected="false">Wildfire</button>
+    <button class="sw-tab" role="tab" data-tab="hotel" aria-selected="false">Hotel</button>
+    <button class="sw-tab" role="tab" data-tab="scale" aria-selected="false">Scale</button>
+    <button class="sw-tab" role="tab" data-tab="training" aria-selected="false">Training</button>
+  </nav>
+
+  <!-- Overview -->
+  <section class="sw-page" id="overview">
+    <div class="sw-grid">
+      <div class="sw-card">
+        <h2>Energy: evening peak cut</h2>
+        <p class="sw-note">10 batteries on ERCOT COAST, held-out Oct to Dec 2020</p>
+        <div class="sw-big dash-skeleton"><span data-source="energy_results" data-field="peak_reduction_mw" data-where="policy=swarm (trained)" class="sw-f" data-fmt="int">—</span> MW</div>
+        <div class="sw-vs">Best rule (proportional): <span data-source="energy_results" data-field="peak_reduction_mw" data-where="policy=proportional rule" class="sw-f" data-fmt="int">—</span> MW</div>
+      </div>
+      <div class="sw-card">
+        <h2>Energy: load spread reduced</h2>
+        <p class="sw-note">Fall in the standard deviation of hourly load</p>
+        <div class="sw-big dash-skeleton"><span data-source="energy_results" data-field="std_reduction_pct" data-where="policy=swarm (trained)" class="sw-f" data-fmt="pct1">—</span>%</div>
+        <div class="sw-vs">Best rule (proportional): <span data-source="energy_results" data-field="std_reduction_pct" data-where="policy=proportional rule" class="sw-f" data-fmt="pct1">—</span>%</div>
+      </div>
+      <div class="sw-card">
+        <h2>Wildfire: forest saved</h2>
+        <p class="sw-note">6 drones, 50 unseen fires on a 16x16 forest</p>
+        <div class="sw-big dash-skeleton"><span data-source="wildfire_results" data-field="forest_saved_pct" data-where="policy=swarm (trained)" class="sw-f" data-fmt="pct1">—</span>%</div>
+        <div class="sw-vs">Learned from the rule first, then RL. Nearest-fire rule: <span data-source="wildfire_results" data-field="forest_saved_pct" data-where="policy=nearest-fire rule" class="sw-f" data-fmt="pct1">—</span>% · no drones: <span data-source="wildfire_results" data-field="forest_saved_pct" data-where="policy=no drones" class="sw-f" data-fmt="pct1">—</span>%</div>
+      </div>
+      <div class="sw-card">
+        <h2>Hotel: peak-hour energy saving</h2>
+        <p class="sw-note">16 equipment agents in 5 hotels, held-out summer days, net of extra energy, per year</p>
+        <div class="sw-big dash-skeleton">$<span data-source="hotel_swarms" data-field="value" data-where="swarm=Peak-hour energy&amp;policy=swarm (trained)" class="sw-f" data-fmt="usd">—</span></div>
+        <div class="sw-vs">Peak-alert rule: $<span data-source="hotel_swarms" data-field="value" data-where="swarm=Peak-hour energy&amp;policy=peak-alert rule" class="sw-f" data-fmt="usd">—</span></div>
+      </div>
+    </div>
+    <div class="sw-card">
+      <h2>What the swarm is</h2>
+      <p class="sw-note">Every agent (a battery, a drone) runs the same small network on its own local view and picks its own action. All agents go through the network in one batched pass, so 10 agents or 1,000 use the same model. Results are measured on data the swarm never trained on, against simple hand-written rules.</p>
+    </div>
+  </section>
+
+  <!-- Energy -->
+  <section class="sw-page" id="energy" hidden>
+    <div class="sw-card">
+      <h2 id="energy-load">Grid load with and without the battery swarm</h2>
+      <p class="sw-note">Hourly ERCOT COAST load in MW, Oct to Dec 2020 (held out from training). Pick a week to zoom in.</p>
+      <div class="sw-controls"><label>Show <select id="energy-week"></select></label></div>
+      <div class="sw-legend" id="energy-legend"></div>
+      <div class="sw-chart" id="energy-chart" data-source="energy_curve"></div>
+    </div>
+    <div class="sw-card">
+      <h2 id="energy-table-h">Swarm vs rules</h2>
+      <p class="sw-note">Peak reduction is the drop in the highest hourly load. Peak-to-average is the highest hour divided by the mean (lower is flatter).</p>
+      <div class="sw-scroll">
+        <table class="sw-table" id="energy-table" data-source="energy_results" data-row-key="policy">
+          <thead><tr>
+            <th data-field="policy">Policy</th>
+            <th data-field="peak_reduction_mw">Peak cut (MW)</th>
+            <th data-field="std_reduction_pct">Spread cut (%)</th>
+            <th data-field="par_before">Peak-to-average before</th>
+            <th data-field="par_after">Peak-to-average after</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wildfire -->
+  <section class="sw-page" id="wildfire" hidden>
+    <div class="sw-card">
+      <h2 id="wildfire-replay">Replay a fire</h2>
+      <p class="sw-note">Recorded episodes on unseen fires. Each policy faces the same three fires.</p>
+      <div class="sw-controls">
+        <label>Policy <select id="wf-policy"></select></label>
+        <label>Fire <select id="wf-episode"></select></label>
+        <button id="wf-play" type="button">Play</button>
+        <input id="wf-step" type="range" min="0" max="0" value="0" aria-label="Step">
+      </div>
+      <div class="sw-player">
+        <div>
+          <div class="sw-canvas-box" data-source="wildfire_replay"><canvas id="wf-canvas"></canvas></div>
+          <div class="sw-key" id="wf-key"></div>
+          <div class="sw-status" id="wf-status"></div>
+        </div>
+        <div>
+          <p class="sw-note">Burning cells at each step, all policies on this fire</p>
+          <div class="sw-legend" id="wf-legend"></div>
+          <div class="sw-chart sw-short" id="wf-chart" data-source="wildfire_replay"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sw-card">
+      <h2 id="wildfire-variants">Ways of training the drones</h2>
+      <p class="sw-note">Forest saved over the same 50 unseen fires. "Copy the rule" pre-trains on the nearest-fire rule's moves before reinforcement learning (RL).</p>
+      <div class="sw-scroll">
+        <table class="sw-table" id="wf-variants" data-source="wildfire_variants" data-row-key="variant">
+          <thead><tr>
+            <th data-field="variant">Training</th>
+            <th data-field="training">Budget</th>
+            <th data-field="forest_saved_pct">Forest saved (%)</th>
+            <th></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sw-card">
+      <h2 id="wildfire-table-h">Swarm vs rules over 50 fires</h2>
+      <p class="sw-note">Averages per fire. Forest saved is the share of cells never burned.</p>
+      <div class="sw-scroll">
+        <table class="sw-table" id="wf-table" data-source="wildfire_results" data-row-key="policy">
+          <thead><tr>
+            <th data-field="policy">Policy</th>
+            <th data-field="forest_saved_pct">Forest saved (%)</th>
+            <th data-field="burned_cells">Cells burned</th>
+            <th data-field="peak_fire_cells">Peak burning cells</th>
+            <th data-field="steps">Steps to end</th>
+            <th data-field="drops">Retardant drops</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hotel -->
+  <section class="sw-page" id="hotel" hidden>
+    <div class="sw-card">
+      <h2 id="hotel-swarms-h">Hotel swarms vs rules</h2>
+      <p class="sw-note">Peak-hour energy and housekeeping are learned swarms; guest relocation is an auction and the shift exchange a contract net, both checked against the exact optimum. Dollar figures rest on the assumptions in each config.</p>
+      <div class="sw-scroll">
+        <table class="sw-table" id="hotel-swarms" data-source="hotel_swarms" data-row-key="swarm,policy">
+          <thead><tr>
+            <th data-field="swarm">Swarm</th>
+            <th data-field="policy">Method</th>
+            <th data-field="kind">Kind</th>
+            <th data-field="value">Result</th>
+            <th data-field="unit">Unit</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sw-card">
+      <h2 id="hotel-table-h">Staff schedule: optimiser vs fixed pattern</h2>
+      <p class="sw-note">From the hotel analytics pipeline (PuLP). Shortfall hours are hours with fewer staff than forecast demand needs.</p>
+      <div class="sw-scroll">
+        <table class="sw-table" id="hotel-table" data-source="hotel_results" data-row-key="method,week">
+          <thead><tr>
+            <th data-field="week">Week</th>
+            <th data-field="method">Method</th>
+            <th data-field="total_cost">Cost ($)</th>
+            <th data-field="shortfall_hours">Shortfall hours</th>
+            <th data-field="requests_honoured">Requests honoured</th>
+            <th data-field="rule_violations">Rule violations</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sw-card">
+      <h2 id="hotel-savings-h">Saving by week</h2>
+      <div class="sw-scroll">
+        <table class="sw-table" id="hotel-savings" data-source="hotel_savings" data-row-key="week">
+          <thead><tr>
+            <th data-field="week">Week</th>
+            <th data-field="saving">Saved ($)</th>
+            <th data-field="saving_pct">Saved (%)</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scale -->
+  <section class="sw-page" id="scale" hidden>
+    <div class="sw-card">
+      <h2 id="scale-h">One model, any swarm size</h2>
+      <p class="sw-note">A model trained with 10 batteries or 6 drones runs unchanged at 10, 100 and 1,000 agents. The battery fleet stays 1 GW; the forest grows to keep the same area per drone, with one launch pad. Result is peak cut (MW) for energy and forest saved (%) for wildfire.</p>
+      <div class="sw-scroll">
+        <table class="sw-table" id="scale-table" data-source="scale_study" data-row-key="app,agents,policy">
+          <thead><tr>
+            <th data-field="app">App</th>
+            <th data-field="agents">Agents</th>
+            <th data-field="policy">Policy</th>
+            <th data-field="value">Result</th>
+            <th data-field="params">Network params</th>
+            <th data-field="act_ms">Choose all actions (ms)</th>
+            <th data-field="update_ms">Training update (ms)</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Training -->
+  <section class="sw-page" id="training" hidden>
+    <div class="sw-grid">
+      <div class="sw-card">
+        <h2 id="train-energy">Energy training</h2>
+        <p class="sw-note">Team return per training episode (dots) and its average over 40 bins (line)</p>
+        <div class="sw-chart sw-short" id="train-energy-chart" data-source="training_history training_trend"></div>
+      </div>
+      <div class="sw-card">
+        <h2 id="train-wildfire">Wildfire training</h2>
+        <p class="sw-note">Team return per training episode (dots) and its average over 40 bins (line)</p>
+        <div class="sw-chart sw-short" id="train-wildfire-chart" data-source="training_history training_trend"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Hotel saving per week: fixed pattern cost minus optimiser cost.
+dash.calc('hotel_savings', {
+  title: 'Hotel saving by week',
+  description: 'Fixed weekly pattern cost minus PuLP schedule cost, for each week.',
+  inputs: ['hotel_results'],
+  fn: (hotel_results) => {
+    const weeks = [...new Set(hotel_results.map(r => r.week))];
+    return weeks.map(week => {
+      const pulp = hotel_results.find(r => r.week === week && r.method === 'PuLP schedule');
+      const fixed = hotel_results.find(r => r.week === week && r.method === 'Fixed weekly pattern');
+      const saving = Number(fixed.total_cost) - Number(pulp.total_cost);
+      return { week, saving, saving_pct: 100 * saving / Number(fixed.total_cost) };
+    });
+  },
+});
+
+// Training trend: mean episode return in 40 equal step bins per app.
+dash.calc('training_trend', {
+  title: 'Training return trend',
+  description: 'Average episode return in 40 equal-width step bins, per app.',
+  inputs: ['training_history'],
+  fn: (training_history) => {
+    const out = [];
+    for (const app of [...new Set(training_history.map(r => r.app))]) {
+      const rows = training_history.filter(r => r.app === app);
+      const max = Math.max(...rows.map(r => Number(r.step)));
+      const bins = 40;
+      const sum = new Array(bins).fill(0), n = new Array(bins).fill(0), at = new Array(bins).fill(0);
+      for (const r of rows) {
+        const b = Math.min(bins - 1, Math.floor(bins * Number(r.step) / (max + 1)));
+        sum[b] += Number(r.return); n[b] += 1; at[b] += Number(r.step);
+      }
+      for (let b = 0; b < bins; b++) if (n[b]) out.push({ app, step: at[b] / n[b], return: sum[b] / n[b] });
+    }
+    return out;
+  },
+});
+</script>
+
+<script>
+(() => {
+  const root = document.querySelector('.sw');
+  const fmt = {
+    int: d3.format(',.0f'),
+    pct1: d3.format('.1f'),
+    usd: d3.format(',.0f'),
+    dec3: d3.format('.3f'),
+    dec1: d3.format(',.1f'),
+  };
+  const ok = (id) => dash.data(id).status === 'ok';
+  const rowsOf = (id) => ok(id) ? dash.data(id).data : [];
+
+  // Resolve a CSS color (token or var()) to a concrete color for canvas.
+  const probe = document.createElement('span');
+  probe.style.display = 'none';
+  root.appendChild(probe);
+  const resolve = (c) => { probe.style.color = ''; probe.style.color = c; return getComputedStyle(probe).color; };
+
+  // ---------- tabs ----------
+  let current = 'overview';
+  const tabs = [...root.querySelectorAll('.sw-tab')];
+  const show = (name, link = true) => {
+    if (!document.getElementById(name)) return;
+    current = name;
+    tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === name)));
+    root.querySelectorAll('.sw-page').forEach(p => { p.hidden = p.id !== name; });
+    if (link) dash.setLink(name);
+    draw();
+  };
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
+
+  // ---------- generic line chart ----------
+  function lineChart(el, o) {
+    el.textContent = '';
+    const w = el.clientWidth;
+    if (!w) return;
+    const h = o.height || 300;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${w} ${h}`).style('display', 'block').style('overflow', 'visible');
+    const all = o.series.flatMap(s => s.points).concat(o.dots ? o.dots.points : []);
+    const yExt = d3.extent(all, d => d.y);
+    const y = d3.scaleLinear(yExt, [h - 28, 8]).nice();
+    // measure the widest y tick
+    const probeG = svg.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(o.fmtY));
+    probeG.attr('font-size', null).attr('font-family', null);
+    let yw = 0; probeG.selectAll('text').each(function () { yw = Math.max(yw, this.getComputedTextLength()); });
+    probeG.remove();
+    const m = { l: yw + 14, r: 12 };
+    const xExt = d3.extent(all, d => d.x);
+    const x = (o.time ? d3.scaleUtc : d3.scaleLinear)(xExt, [m.l, w - m.r]);
+    const xTicks = Math.max(2, Math.floor((w - m.l) / 90));
+    svg.append('g').attr('transform', `translate(0,${h - 28})`)
+      .call(d3.axisBottom(x).ticks(xTicks).tickFormat(o.fmtX).tickSizeOuter(0))
+      .attr('font-size', null).attr('font-family', null)
+      .call(g => g.select('.domain').attr('stroke', 'var(--cds-chart-axis)'))
+      .call(g => g.selectAll('line').attr('stroke', 'var(--cds-chart-axis)'))
+      .call(g => g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)'));
+    svg.append('g').attr('transform', `translate(${m.l},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat(o.fmtY).tickSize(-(w - m.l - m.r)))
+      .attr('font-size', null).attr('font-family', null)
+      .call(g => g.select('.domain').remove())
+      .call(g => g.selectAll('line').attr('stroke', 'var(--cds-chart-grid)'))
+      .call(g => g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)'));
+    if (o.dots) {
+      svg.append('g').selectAll('circle').data(o.dots.points).join('circle')
+        .attr('cx', d => x(d.x)).attr('cy', d => y(d.y)).attr('r', 1.5)
+        .attr('fill', 'var(--cds-chart-muted)').attr('opacity', 0.5);
+    }
+    const line = d3.line().x(d => x(d.x)).y(d => y(d.y));
+    o.series.forEach(s => {
+      svg.append('path').datum(s.points).attr('d', line).attr('fill', 'none')
+        .attr('stroke', s.color).attr('stroke-width', s.width || 2)
+        .attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+    });
+    // tooltip
+    const tip = d3.select(el).append('div').attr('class', 'sw-tip').style('display', 'none');
+    const rule = svg.append('line').attr('y1', 8).attr('y2', h - 28).attr('stroke', 'var(--cds-chart-reference)').style('display', 'none');
+    const marks = svg.append('g');
+    const base = o.series[0].points;
+    const bis = d3.bisector(d => d.x).center;
+    svg.append('rect').attr('x', m.l).attr('y', 0).attr('width', Math.max(0, w - m.l - m.r)).attr('height', h - 28)
+      .attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev);
+        const xv = x.invert(px);
+        const i = bis(base, xv);
+        const p = base[i];
+        if (!p) return;
+        rule.style('display', null).attr('x1', x(p.x)).attr('x2', x(p.x));
+        const vals = o.series.map(s => ({ s, v: s.points[Math.min(s.points.length - 1, d3.bisector(d => d.x).center(s.points, p.x))] }));
+        marks.selectAll('circle').data(vals).join('circle').attr('r', 3.5)
+          .attr('cx', d => x(d.v.x)).attr('cy', d => y(d.v.y)).attr('fill', d => d.s.color);
+        tip.style('display', null).text('');
+        tip.append('div').attr('class', 'sw-tip-x').text(o.fmtTipX(p.x));
+        vals.forEach(d => {
+          const row = tip.append('div');
+          if (vals.length > 1) row.append('i').style('background', d.s.color);
+          row.append('span').text(`${d.s.name}: ${o.fmtTipY(d.v.y)}`);
+        });
+        const tw = tip.node().offsetWidth;
+        let left = x(p.x) + 12;
+        if (left + tw > w) left = x(p.x) - tw - 12;
+        tip.style('left', `${Math.max(0, left)}px`).style('top', '8px');
+      })
+      .on('pointerleave', () => { tip.style('display', 'none'); rule.style('display', 'none'); marks.selectAll('*').remove(); });
+  }
+
+  function failOr(el, ids) {
+    const st = ids.map(id => dash.data(id).status);
+    if (st.some(s => s === 'error' || s === 'connect' || s === 'declined' || s === 'missing')) {
+      el.textContent = '';
+      d3.select(el).append('div').attr('class', 'sw-fail').text('Failed to load');
+      el.classList.remove('dash-skeleton');
+      return true;
+    }
+    if (st.some(s => s !== 'ok')) { el.textContent = ''; el.classList.add('dash-skeleton'); return true; }
+    el.classList.remove('dash-skeleton');
+    return false;
+  }
+
+  function legend(el, items) {
+    el.textContent = '';
+    items.forEach(it => d3.select(el).append('span').style('--sw-c', it.color).text(it.name));
+  }
+
+  // ---------- overview ----------
+  function drawFigures() {
+    root.querySelectorAll('.sw-f').forEach(el => {
+      const id = el.dataset.source;
+      const box = el.closest('.sw-big');
+      if (!ok(id)) { el.textContent = '—'; return; }
+      const conds = (el.dataset.where || '').split('&').filter(Boolean).map(p => p.split('='));
+      const row = rowsOf(id).find(r => conds.every(([k, v]) => String(r[k]) === v));
+      el.textContent = row ? fmt[el.dataset.fmt](Number(row[el.dataset.field])) : '—';
+      if (box) box.classList.remove('dash-skeleton');
+    });
+    const take = document.getElementById('takeaway');
+    if (ok('energy_results') && ok('wildfire_results')) {
+      const e = rowsOf('energy_results').find(r => r.policy === 'swarm (trained)');
+      const wS = rowsOf('wildfire_results').find(r => r.policy === 'swarm (trained)');
+      const wR = rowsOf('wildfire_results').find(r => r.policy === 'nearest-fire rule');
+      take.textContent = '';
+      const t = d3.select(take);
+      t.append('span').text('The battery swarm beats every simple rule on the grid, cutting the evening peak by ');
+      t.append('span').attr('data-source', 'energy_results').attr('data-field', 'peak_reduction_mw').attr('data-where', 'policy=swarm (trained)').text(fmt.int(Number(e.peak_reduction_mw)));
+      t.append('span').text(' MW. The drone swarm saves ');
+      t.append('span').attr('data-source', 'wildfire_results').attr('data-field', 'forest_saved_pct').attr('data-where', 'policy=swarm (trained)').text(fmt.pct1(Number(wS.forest_saved_pct)));
+      t.append('span').text('% of the forest after learning from the nearest-fire rule, still just behind the rule itself (');
+      t.append('span').attr('data-source', 'wildfire_results').attr('data-field', 'forest_saved_pct').attr('data-where', 'policy=nearest-fire rule').text(fmt.pct1(Number(wR.forest_saved_pct)));
+      t.append('span').text('%). The hotel swarms beat their simple rules; see the Hotel tab.');
+    } else {
+      take.innerHTML = '<span class="dash-skeleton">&nbsp;</span>';
+    }
+  }
+
+  // ---------- tables ----------
+  const enc = (v) => String(v).replace(/%/g, '%25').replace(/&/g, '%26').replace(/=/g, '%3D').replace(/,/g, '%2C');
+  function table(id, ds, cols, opts = {}) {
+    const tbody = document.querySelector(`#${id} tbody`);
+    tbody.textContent = '';
+    if (!ok(ds)) return;
+    let rows = rowsOf(ds).slice();
+    if (opts.sort) rows.sort(opts.sort);
+    rows.forEach(r => {
+      const tr = d3.select(tbody).append('tr');
+      if (opts.key) tr.attr('data-key', opts.key.map(k => enc(r[k])).join(','));
+      if (opts.hi && opts.hi(r)) tr.classed('sw-hi', true);
+      cols.forEach(([c, f]) => tr.append('td').text(f ? f(Number(r[c])) : String(r[c])));
+    });
+  }
+
+  // ---------- energy ----------
+  const parseHour = (s) => new Date(s + ':00Z');
+  const weekSel = document.getElementById('energy-week');
+  let weekInit = false;
+  function drawEnergy() {
+    const el = document.getElementById('energy-chart');
+    const C = dash.colors;
+    legend(document.getElementById('energy-legend'), [
+      { name: 'No battery', color: 'var(--cds-chart-muted)' },
+      { name: 'Proportional rule', color: C[1] },
+      { name: 'Swarm', color: C[0] },
+    ]);
+    if (failOr(el, ['energy_curve'])) return;
+    const rows = rowsOf('energy_curve').map(r => ({ t: parseHour(r.hour), nb: Number(r.no_battery_mw), sw: Number(r.swarm_mw), pr: Number(r.proportional_mw) }));
+    if (!weekInit) {
+      const first = d3.utcMonday.floor(rows[0].t);
+      const weeks = d3.utcMonday.range(first, rows[rows.length - 1].t);
+      const peak = rows.reduce((a, b) => (b.nb > a.nb ? b : a));
+      weekSel.textContent = '';
+      d3.select(weekSel).append('option').attr('value', 'all').text('Whole period');
+      weeks.forEach(wk => d3.select(weekSel).append('option').attr('value', wk.toISOString())
+        .text('Week of ' + d3.utcFormat('%b %-d')(wk) + (d3.utcMonday.floor(peak.t).getTime() === wk.getTime() ? ' (highest load)' : '')));
+      weekSel.value = d3.utcMonday.floor(peak.t).toISOString();
+      weekInit = true;
+    }
+    let view = rows;
+    if (weekSel.value !== 'all') {
+      const s = new Date(weekSel.value), e = d3.utcDay.offset(s, 7);
+      view = rows.filter(r => r.t >= s && r.t < e);
+    }
+    const whole = weekSel.value === 'all';
+    lineChart(el, {
+      time: true, height: 300,
+      series: [
+        { name: 'No battery', color: 'var(--cds-chart-muted)', points: view.map(r => ({ x: r.t, y: r.nb })), width: whole ? 1 : 2 },
+        { name: 'Proportional rule', color: C[1], points: view.map(r => ({ x: r.t, y: r.pr })), width: whole ? 1 : 2 },
+        { name: 'Swarm', color: C[0], points: view.map(r => ({ x: r.t, y: r.sw })), width: whole ? 1.25 : 2 },
+      ],
+      fmtX: whole ? d3.utcFormat('%b %-d') : d3.utcFormat('%a %-d'),
+      fmtY: (v) => Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(v),
+      fmtTipX: d3.utcFormat('%b %-d, %H:00'),
+      fmtTipY: (v) => d3.format(',.0f')(v) + ' MW',
+    });
+  }
+  weekSel.addEventListener('change', () => drawEnergy());
+
+  // ---------- wildfire ----------
+  const pSel = document.getElementById('wf-policy');
+  const eSel = document.getElementById('wf-episode');
+  const slider = document.getElementById('wf-step');
+  const playBtn = document.getElementById('wf-play');
+  const canvas = document.getElementById('wf-canvas');
+  let wfInit = false, timer = null;
+  const policyOrder = ['swarm (trained)', 'nearest-fire rule', 'random', 'no drones'];
+  const cellColors = () => ({
+    0: resolve('var(--color-ok)'),
+    1: resolve('var(--color-bad)'),
+    2: resolve('var(--cds-chart-muted)'),
+    3: resolve(dash.colors[0]),
+    drone: resolve('var(--color-fg)'),
+    bg: resolve('var(--color-bg)'),
+  });
+  function frames() {
+    return rowsOf('wildfire_replay').filter(r => r.policy === pSel.value && String(r.episode) === eSel.value)
+      .sort((a, b) => Number(a.step) - Number(b.step));
+  }
+  function paint() {
+    const fs = frames();
+    const box = canvas.parentElement;
+    const size = box.clientWidth;
+    if (!size || !fs.length) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(size * dpr); canvas.height = Math.round(size * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const f = fs[Math.min(fs.length - 1, Number(slider.value))];
+    const n = Math.round(Math.sqrt(f.grid.length));
+    const cs = size / n;
+    const col = cellColors();
+    ctx.fillStyle = col.bg; ctx.fillRect(0, 0, size, size);
+    for (let i = 0; i < f.grid.length; i++) {
+      const r = Math.floor(i / n), c = i % n;
+      const s = f.grid[i];
+      ctx.globalAlpha = s === '0' ? 0.45 : s === '2' ? 0.6 : 0.9;
+      ctx.fillStyle = col[s] || col[2];
+      ctx.fillRect(c * cs + 0.5, r * cs + 0.5, cs - 1, cs - 1);
+    }
+    ctx.globalAlpha = 1;
+    let drones = [];
+    try { drones = JSON.parse(f.drones); } catch (e) { drones = []; }
+    ctx.fillStyle = col.drone; ctx.strokeStyle = col.bg; ctx.lineWidth = 1.5;
+    drones.forEach(([r, c], k) => {
+      const jx = ((k % 3) - 1) * cs * 0.18, jy = ((Math.floor(k / 3) % 3) - 1) * cs * 0.18;
+      ctx.beginPath(); ctx.arc(c * cs + cs / 2 + jx, r * cs + cs / 2 + jy, Math.max(2.5, cs * 0.2), 0, 2 * Math.PI);
+      ctx.fill(); ctx.stroke();
+    });
+    const burned = [...f.grid].filter(ch => ch === '2').length;
+    document.getElementById('wf-status').textContent =
+      `Step ${f.step} of ${fs[fs.length - 1].step} · ${f.burning} burning · ${burned} burned · ${drones.length} drones`;
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } playBtn.textContent = 'Play'; }
+  playBtn.addEventListener('click', () => {
+    if (timer) { stop(); return; }
+    if (Number(slider.value) >= Number(slider.max)) slider.value = 0;
+    playBtn.textContent = 'Pause';
+    timer = setInterval(() => {
+      if (current !== 'wildfire' || Number(slider.value) >= Number(slider.max)) { stop(); return; }
+      slider.value = Number(slider.value) + 1; paint();
+    }, 160);
+  });
+  slider.addEventListener('input', () => { stop(); paint(); });
+  const resetEpisode = () => { stop(); slider.max = Math.max(0, frames().length - 1); slider.value = 0; drawWildfire(); };
+  pSel.addEventListener('change', resetEpisode);
+  eSel.addEventListener('change', resetEpisode);
+
+  function drawWildfire() {
+    const C = dash.colors;
+    const pcol = { 'swarm (trained)': C[0], 'nearest-fire rule': C[1], 'random': C[2], 'no drones': 'var(--cds-chart-muted)' };
+    const key = document.getElementById('wf-key');
+    key.textContent = '';
+    [['Forest', 'var(--color-ok)'], ['Burning', 'var(--color-bad)'], ['Burned', 'var(--cds-chart-muted)'], ['Retardant', C[0]], ['Drone', 'var(--color-fg)']]
+      .forEach(([n, c]) => d3.select(key).append('span').style('--sw-c', c).text(n));
+    const chart = document.getElementById('wf-chart');
+    const box = canvas.parentElement;
+    if (failOr(chart, ['wildfire_replay'])) {
+      box.classList.toggle('dash-skeleton', dash.data('wildfire_replay').status === 'loading');
+      return;
+    }
+    box.classList.remove('dash-skeleton');
+    const rows = rowsOf('wildfire_replay');
+    if (!wfInit) {
+      const pols = [...new Set(rows.map(r => r.policy))].sort((a, b) => policyOrder.indexOf(a) - policyOrder.indexOf(b));
+      pols.forEach(p => d3.select(pSel).append('option').attr('value', p).text(p));
+      [...new Set(rows.map(r => String(r.episode)))].sort().forEach(e => d3.select(eSel).append('option').attr('value', e).text('Fire ' + e));
+      wfInit = true;
+      slider.max = Math.max(0, frames().length - 1);
+    }
+    paint();
+    const pols = [...new Set(rows.map(r => r.policy))].sort((a, b) => policyOrder.indexOf(a) - policyOrder.indexOf(b));
+    const series = pols.map(p => ({
+      name: p, color: pcol[p] || C[3], width: p === pSel.value ? 2.5 : 1.5,
+      points: rows.filter(r => r.policy === p && String(r.episode) === eSel.value)
+        .map(r => ({ x: Number(r.step), y: Number(r.burning) })).sort((a, b) => a.x - b.x),
+    })).filter(s => s.points.length);
+    // put the longest series first so the tooltip covers every step
+    series.sort((a, b) => b.points.length - a.points.length);
+    legend(document.getElementById('wf-legend'), pols.map(p => ({ name: p, color: pcol[p] || C[3] })));
+    lineChart(chart, {
+      height: 240, series,
+      fmtX: d3.format('d'), fmtY: d3.format('d'),
+      fmtTipX: (v) => 'Step ' + d3.format('d')(v), fmtTipY: (v) => d3.format('d')(v) + ' burning',
+    });
+  }
+
+  // ---------- training ----------
+  function drawTraining() {
+    [['energy', 'train-energy-chart', 0], ['wildfire', 'train-wildfire-chart', 1]].forEach(([app, id, ci]) => {
+      const el = document.getElementById(id);
+      if (failOr(el, ['training_history', 'training_trend'])) return;
+      const raw = rowsOf('training_history').filter(r => r.app === app);
+      // thin the dots for drawing speed; the trend uses every episode
+      const stride = Math.max(1, Math.floor(raw.length / 1500));
+      const dots = raw.filter((_, i) => i % stride === 0).map(r => ({ x: Number(r.step), y: Number(r.return) }));
+      const trend = rowsOf('training_trend').filter(r => r.app === app).map(r => ({ x: Number(r.step), y: Number(r.return) }));
+      lineChart(el, {
+        height: 240,
+        dots: { points: dots },
+        series: [{ name: 'Average return', color: dash.colors[ci], points: trend }],
+        fmtX: (v) => Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(v),
+        fmtY: d3.format(',.0f'),
+        fmtTipX: (v) => 'Step ' + d3.format(',.0f')(v),
+        fmtTipY: d3.format(',.1f'),
+      });
+    });
+  }
+
+  function draw() {
+    drawFigures();
+    table('energy-table', 'energy_results', [['policy'], ['peak_reduction_mw', fmt.int], ['std_reduction_pct', fmt.pct1], ['par_before', fmt.dec3], ['par_after', fmt.dec3]],
+      { sort: (a, b) => Number(b.std_reduction_pct) - Number(a.std_reduction_pct), hi: r => r.policy === 'swarm (trained)' });
+    table('wf-table', 'wildfire_results', [['policy'], ['forest_saved_pct', fmt.pct1], ['burned_cells', fmt.dec1], ['peak_fire_cells', fmt.dec1], ['steps', fmt.dec1], ['drops', fmt.dec1]],
+      { sort: (a, b) => Number(b.forest_saved_pct) - Number(a.forest_saved_pct), hi: r => r.policy === 'swarm (trained)' });
+    table('hotel-table', 'hotel_results', [['week'], ['method'], ['total_cost', fmt.usd], ['shortfall_hours', fmt.dec1], ['requests_honoured'], ['rule_violations', fmt.int]],
+      { key: ['method', 'week'] });
+    table('hotel-savings', 'hotel_savings', [['week'], ['saving', fmt.usd], ['saving_pct', fmt.pct1]]);
+    table('hotel-swarms', 'hotel_swarms', [['swarm'], ['policy'], ['kind'], ['value', fmt.dec1], ['unit']],
+      { key: ['swarm', 'policy'], hi: r => r.kind === 'swarm' });
+    table('scale-table', 'scale_study', [['app'], ['agents', fmt.int], ['policy'], ['value', fmt.dec1], ['params', fmt.int], ['act_ms', d3.format('.2f')], ['update_ms', fmt.dec1]],
+      { key: ['app', 'agents', 'policy'], hi: r => r.policy === 'swarm (trained)' });
+    table('wf-variants', 'wildfire_variants', [['variant'], ['training'], ['forest_saved_pct', fmt.pct1]],
+      { hi: r => r.variant === 'Copy the rule, then RL' });
+    // in-cell bars on one 0-100 scale
+    document.querySelectorAll('#wf-variants tbody tr').forEach((tr, i) => {
+      const r = rowsOf('wildfire_variants')[i];
+      const td = d3.select(tr).append('td').style('width', '40%');
+      td.append('div').style('height', '8px').style('border-radius', '4px')
+        .style('background', r.variant === 'Nearest-fire rule' ? 'var(--cds-chart-muted)' : dash.colors[0])
+        .style('width', Number(r.forest_saved_pct) + '%');
+    });
+    if (current === 'energy') drawEnergy();
+    if (current === 'wildfire') drawWildfire();
+    if (current === 'training') drawTraining();
+  }
+
+  dash.onData(draw);
+  const named = location.hash.slice(1);
+  if (named && document.getElementById(named) && tabs.some(t => t.dataset.tab === named)) show(named, false);
+})();
+</script>
+</main>
+<footer class="site-foot">Results published from a private research codebase (the swarm engine itself is not public). Figures come from held-out test data or simulated scenarios as stated on each card; dollar figures rest on the stated assumptions.</footer>
+</body>
+</html>

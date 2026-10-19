@@ -1,0 +1,46 @@
+[
+ {
+  "policy": "swarm (trained)",
+  "return": -3.072,
+  "burned_cells": 32.72,
+  "forest_saved_pct": 87.21875,
+  "peak_fire_cells": 11.3,
+  "steps": 39.2,
+  "drops": 17.36,
+  "contained": 1.0,
+  "episodes": 50
+ },
+ {
+  "policy": "no drones",
+  "return": -16.896,
+  "burned_cells": 170.96,
+  "forest_saved_pct": 33.21875,
+  "peak_fire_cells": 37.9,
+  "steps": 149.52,
+  "drops": 0.0,
+  "contained": 1.0,
+  "episodes": 50
+ },
+ {
+  "policy": "random",
+  "return": -15.978,
+  "burned_cells": 161.78,
+  "forest_saved_pct": 36.8046875,
+  "peak_fire_cells": 34.7,
+  "steps": 151.36,
+  "drops": 9.38,
+  "contained": 1.0,
+  "episodes": 50
+ },
+ {
+  "policy": "nearest-fire rule",
+  "return": -2.3340000000000005,
+  "burned_cells": 25.34,
+  "forest_saved_pct": 90.1015625,
+  "peak_fire_cells": 10.36,
+  "steps": 31.92,
+  "drops": 17.24,
+  "contained": 1.0,
+  "episodes": 50
+ }
+]

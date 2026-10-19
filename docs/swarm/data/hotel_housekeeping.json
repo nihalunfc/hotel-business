@@ -1,0 +1,38 @@
+[
+ {
+  "policy": "swarm (trained)",
+  "guest_wait_hours": 23.31,
+  "early_promises_kept_pct": 45.514,
+  "ready_by_noon_pct": 38.928,
+  "workload_spread": 0.734,
+  "floor_changes": 84.22,
+  "kind": "swarm"
+ },
+ {
+  "policy": "floor order",
+  "guest_wait_hours": 111.303,
+  "early_promises_kept_pct": 25.175,
+  "ready_by_noon_pct": 45.831,
+  "workload_spread": 3.092,
+  "floor_changes": 4.7,
+  "kind": "status quo"
+ },
+ {
+  "policy": "soonest needed",
+  "guest_wait_hours": 21.54,
+  "early_promises_kept_pct": 48.223,
+  "ready_by_noon_pct": 40.309,
+  "workload_spread": 0.675,
+  "floor_changes": 77.38,
+  "kind": "rule"
+ },
+ {
+  "policy": "random room",
+  "guest_wait_hours": 29.763,
+  "early_promises_kept_pct": 42.07,
+  "ready_by_noon_pct": 39.212,
+  "workload_spread": 0.64,
+  "floor_changes": 87.34,
+  "kind": "rule"
+ }
+]

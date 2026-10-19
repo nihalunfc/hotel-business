@@ -1,0 +1,42 @@
+[
+ {
+  "policy": "agency for every shift",
+  "total_cost": 8000.0,
+  "fill_rate_pct": 0.0,
+  "agency_hours": 200.0,
+  "overtime_hours": 0.0,
+  "cross_property": 0.0,
+  "max_extra_shifts": 0.0,
+  "kind": "status quo"
+ },
+ {
+  "policy": "first to accept",
+  "total_cost": 5248.535,
+  "fill_rate_pct": 97.6,
+  "agency_hours": 4.8,
+  "overtime_hours": 26.88,
+  "cross_property": 13.44,
+  "max_extra_shifts": 1.3,
+  "kind": "rule"
+ },
+ {
+  "policy": "swarm market",
+  "total_cost": 4816.282,
+  "fill_rate_pct": 96.96,
+  "agency_hours": 6.08,
+  "overtime_hours": 21.52,
+  "cross_property": 8.42,
+  "max_extra_shifts": 1.4,
+  "kind": "swarm"
+ },
+ {
+  "policy": "optimal plan (reference)",
+  "total_cost": 4684.645,
+  "fill_rate_pct": 98.88,
+  "agency_hours": 2.24,
+  "overtime_hours": 23.36,
+  "cross_property": 7.0,
+  "max_extra_shifts": 1.56,
+  "kind": "optimum"
+ }
+]

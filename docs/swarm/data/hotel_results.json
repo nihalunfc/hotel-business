@@ -1,0 +1,50 @@
+[
+ {
+  "total_cost": 39417.82,
+  "shortfall_hours": 75.0,
+  "requests_honoured": "41/46",
+  "rule_violations": 0,
+  "method": "PuLP schedule",
+  "week": "Coming week (forecast)"
+ },
+ {
+  "total_cost": 49954.14,
+  "shortfall_hours": 343.7,
+  "requests_honoured": "22/46",
+  "rule_violations": 0,
+  "method": "Fixed weekly pattern",
+  "week": "Coming week (forecast)"
+ },
+ {
+  "total_cost": 47466.67,
+  "shortfall_hours": 294.7,
+  "requests_honoured": "46/46",
+  "rule_violations": 0,
+  "method": "PuLP schedule",
+  "week": "Peak summer week"
+ },
+ {
+  "total_cost": 53071.31,
+  "shortfall_hours": 380.5,
+  "requests_honoured": "22/46",
+  "rule_violations": 0,
+  "method": "Fixed weekly pattern",
+  "week": "Peak summer week"
+ },
+ {
+  "total_cost": 33618.2,
+  "shortfall_hours": 0.0,
+  "requests_honoured": "44/46",
+  "rule_violations": 0,
+  "method": "PuLP schedule",
+  "week": "Quiet winter week"
+ },
+ {
+  "total_cost": 46506.47,
+  "shortfall_hours": 253.0,
+  "requests_honoured": "22/46",
+  "rule_violations": 0,
+  "method": "Fixed weekly pattern",
+  "week": "Quiet winter week"
+ }
+]

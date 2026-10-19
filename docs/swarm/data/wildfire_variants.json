@@ -1,0 +1,37 @@
+[
+ {
+  "variant": "Reinforcement learning only",
+  "forest_saved_pct": 77.3046875,
+  "training": "600k steps"
+ },
+ {
+  "variant": "Copy the rule only",
+  "forest_saved_pct": 83.1875,
+  "training": "20k pre-training updates"
+ },
+ {
+  "variant": "Copy the rule, then RL",
+  "forest_saved_pct": 87.21875,
+  "training": "+400k steps"
+ },
+ {
+  "variant": "Copy, then longer RL",
+  "forest_saved_pct": 84.9140625,
+  "training": "+800k steps"
+ },
+ {
+  "variant": "Copy, RL, demo loss kept longer",
+  "forest_saved_pct": 82.3125,
+  "training": "+400k steps"
+ },
+ {
+  "variant": "Copy, RL, neighbour messages",
+  "forest_saved_pct": 80.0859375,
+  "training": "+400k steps"
+ },
+ {
+  "variant": "Nearest-fire rule",
+  "forest_saved_pct": 90.1015625,
+  "training": "hand-written"
+ }
+]
