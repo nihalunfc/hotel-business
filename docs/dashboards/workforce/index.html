@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hotel Workforce Suite</title>
+<meta name="description" content="A working demo of a hotel workforce management system: scheduling, time clock, timesheets, payroll preview, time off, people records, onboarding, approvals and labour reports, for managers, employees and HR. Fictional data, saved only in your browser.">
+<meta name="theme-color" content="#16395b">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("nihal.theme")==="dark"?"dark":"light")}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<script src="../../assets/header.js"></script>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side" id="side" aria-label="Main menu">
+    <a class="logo" href="#/home"><span class="logo-mark">W</span><span>Workforce<small>Hotel Workforce Suite</small></span></a>
+    <nav class="side-nav" id="side-nav"></nav>
+    <div class="side-foot">
+      <a href="../../index.html">← Hospitality BI Portfolio</a>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="top">
+      <button class="icon-btn only-mobile" id="menu-btn" aria-label="Open menu">☰</button>
+      <div class="top-title" id="top-title">Home</div>
+      <div class="top-tools">
+        <label class="prop-pick" id="prop-pick-wrap"><span class="sr">Property</span><select id="prop-pick"></select></label>
+        <button class="icon-btn theme-btn" id="theme-btn" aria-label="Switch light or dark theme"><span class="moon">🌙</span><span class="sun">☀️</span></button>
+        <button class="icon-btn bell" id="bell" aria-label="Approvals"><span>🔔</span><b id="bell-n"></b></button>
+        <button class="who" id="who-btn" aria-haspopup="dialog"><span class="av" id="who-av"></span><span class="who-txt"><b id="who-name"></b><small id="who-role"></small></span><span class="caret">▾</span></button>
+      </div>
+    </header>
+
+    <div class="demo-bar" id="demo-bar">
+      <span><b>Demo.</b> Every person, hotel and number here is fictional. Changes are saved only in this browser. Use <b>View as</b> (top right) to switch between manager, employee and HR views.</span>
+      <button class="link-btn" id="demo-x" aria-label="Hide this note">Hide</button>
+    </div>
+
+    <main id="view" class="view" tabindex="-1"></main>
+
+    <footer class="foot">© 2026 Nihal. A demo built by Nihal. All people, hotels and figures are fictional samples. Payroll tax amounts are simplified estimates. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></footer>
+  </div>
+
+  <nav class="tabbar" id="tabbar" aria-label="Quick menu"></nav>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" hidden><div class="modal-card" id="modal-card"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
