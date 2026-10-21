@@ -53,7 +53,8 @@
       { href: H + 'tools/housekeeping-board.html', label: 'Housekeeping board', sub: "Today's room assignments" },
       { href: H + 'tools/labour.html', label: 'Labour productivity', sub: 'Hours and cost per occupied room' },
       { href: H + 'tools/night-audit.html', label: 'Night audit assistant', sub: 'Checklist, balancing and daily report' },
-      { href: H + 'tools/energy-estimator.html', label: 'Peak-energy savings', sub: 'Ontario Global Adjustment savings' }
+      { href: H + 'tools/energy-estimator.html', label: 'Peak-energy savings', sub: 'Ontario Global Adjustment savings' },
+      { href: H + 'tools/report-dashboard/', label: 'Hotel report builder', sub: "Upload any exports, get a manager's report" }
     ] }
   ];
   var HOTEL_DASHBOARDS = [

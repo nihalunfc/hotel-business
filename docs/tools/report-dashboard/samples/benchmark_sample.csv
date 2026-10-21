@@ -1,0 +1,661 @@
+date,property,group,source,metric,value
+2026-07-27,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,94.1
+2026-07-27,Summit Tower Hotel,Own,Sample comp-set feed,ADR,225.97
+2026-07-27,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,212.69
+2026-07-27,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,98.0
+2026-07-27,Grand Terrace Resort,Own,Sample comp-set feed,ADR,317.0
+2026-07-27,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,310.66
+2026-07-27,Riverside Suites,Own,Sample comp-set feed,Occupancy %,98.0
+2026-07-27,Riverside Suites,Own,Sample comp-set feed,ADR,226.43
+2026-07-27,Riverside Suites,Own,Sample comp-set feed,RevPAR,221.9
+2026-07-27,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,98.0
+2026-07-27,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,324.22
+2026-07-27,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,317.73
+2026-07-27,Parkview Inn,Own,Sample comp-set feed,Occupancy %,89.2
+2026-07-27,Parkview Inn,Own,Sample comp-set feed,ADR,252.43
+2026-07-27,Parkview Inn,Own,Sample comp-set feed,RevPAR,225.2
+2026-07-27,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,88.5
+2026-07-27,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,241.8
+2026-07-27,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,214.11
+2026-07-27,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,90.5
+2026-07-27,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,320.77
+2026-07-27,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,290.28
+2026-07-27,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,98.0
+2026-07-27,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,234.68
+2026-07-27,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,229.98
+2026-07-27,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,98.0
+2026-07-27,Queen Street Suites,Competitor,Sample comp-set feed,ADR,254.49
+2026-07-27,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,249.4
+2026-07-27,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,97.9
+2026-07-27,Table Rock Resort,Competitor,Sample comp-set feed,ADR,259.69
+2026-07-27,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,254.2
+2026-07-27,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,98.0
+2026-07-27,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,243.57
+2026-07-27,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,238.7
+2026-08-03,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,92.7
+2026-08-03,Summit Tower Hotel,Own,Sample comp-set feed,ADR,224.75
+2026-08-03,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,208.25
+2026-08-03,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,98.0
+2026-08-03,Grand Terrace Resort,Own,Sample comp-set feed,ADR,315.28
+2026-08-03,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,308.98
+2026-08-03,Riverside Suites,Own,Sample comp-set feed,Occupancy %,98.0
+2026-08-03,Riverside Suites,Own,Sample comp-set feed,ADR,225.21
+2026-08-03,Riverside Suites,Own,Sample comp-set feed,RevPAR,220.7
+2026-08-03,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,98.0
+2026-08-03,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,322.46
+2026-08-03,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,316.01
+2026-08-03,Parkview Inn,Own,Sample comp-set feed,Occupancy %,90.7
+2026-08-03,Parkview Inn,Own,Sample comp-set feed,ADR,251.07
+2026-08-03,Parkview Inn,Own,Sample comp-set feed,RevPAR,227.75
+2026-08-03,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,91.2
+2026-08-03,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,240.49
+2026-08-03,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,219.4
+2026-08-03,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,92.5
+2026-08-03,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,319.03
+2026-08-03,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,295.1
+2026-08-03,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,91.9
+2026-08-03,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,233.41
+2026-08-03,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,214.54
+2026-08-03,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,98.0
+2026-08-03,Queen Street Suites,Competitor,Sample comp-set feed,ADR,253.12
+2026-08-03,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,248.05
+2026-08-03,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,93.8
+2026-08-03,Table Rock Resort,Competitor,Sample comp-set feed,ADR,258.28
+2026-08-03,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,242.17
+2026-08-03,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,98.0
+2026-08-03,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,242.25
+2026-08-03,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,237.4
+2026-08-10,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,89.3
+2026-08-10,Summit Tower Hotel,Own,Sample comp-set feed,ADR,223.52
+2026-08-10,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,199.63
+2026-08-10,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,96.3
+2026-08-10,Grand Terrace Resort,Own,Sample comp-set feed,ADR,313.57
+2026-08-10,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,301.95
+2026-08-10,Riverside Suites,Own,Sample comp-set feed,Occupancy %,96.0
+2026-08-10,Riverside Suites,Own,Sample comp-set feed,ADR,223.98
+2026-08-10,Riverside Suites,Own,Sample comp-set feed,RevPAR,214.98
+2026-08-10,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,95.8
+2026-08-10,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,320.71
+2026-08-10,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,307.2
+2026-08-10,Parkview Inn,Own,Sample comp-set feed,Occupancy %,86.3
+2026-08-10,Parkview Inn,Own,Sample comp-set feed,ADR,249.7
+2026-08-10,Parkview Inn,Own,Sample comp-set feed,RevPAR,215.51
+2026-08-10,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,89.4
+2026-08-10,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,239.18
+2026-08-10,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,213.71
+2026-08-10,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,90.0
+2026-08-10,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,317.3
+2026-08-10,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,285.62
+2026-08-10,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,92.1
+2026-08-10,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,232.14
+2026-08-10,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,213.85
+2026-08-10,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,97.8
+2026-08-10,Queen Street Suites,Competitor,Sample comp-set feed,ADR,251.74
+2026-08-10,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,246.21
+2026-08-10,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,92.1
+2026-08-10,Table Rock Resort,Competitor,Sample comp-set feed,ADR,256.88
+2026-08-10,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,236.63
+2026-08-10,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,95.8
+2026-08-10,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,240.93
+2026-08-10,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,230.75
+2026-08-17,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,86.9
+2026-08-17,Summit Tower Hotel,Own,Sample comp-set feed,ADR,222.3
+2026-08-17,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,193.1
+2026-08-17,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,96.9
+2026-08-17,Grand Terrace Resort,Own,Sample comp-set feed,ADR,311.85
+2026-08-17,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,302.26
+2026-08-17,Riverside Suites,Own,Sample comp-set feed,Occupancy %,96.4
+2026-08-17,Riverside Suites,Own,Sample comp-set feed,ADR,222.76
+2026-08-17,Riverside Suites,Own,Sample comp-set feed,RevPAR,214.7
+2026-08-17,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,92.1
+2026-08-17,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,318.95
+2026-08-17,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,293.72
+2026-08-17,Parkview Inn,Own,Sample comp-set feed,Occupancy %,82.2
+2026-08-17,Parkview Inn,Own,Sample comp-set feed,ADR,248.33
+2026-08-17,Parkview Inn,Own,Sample comp-set feed,RevPAR,204.2
+2026-08-17,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,84.9
+2026-08-17,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,237.87
+2026-08-17,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,202.0
+2026-08-17,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,88.0
+2026-08-17,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,315.56
+2026-08-17,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,277.67
+2026-08-17,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,89.0
+2026-08-17,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,230.87
+2026-08-17,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,205.52
+2026-08-17,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,94.0
+2026-08-17,Queen Street Suites,Competitor,Sample comp-set feed,ADR,250.36
+2026-08-17,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,235.28
+2026-08-17,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,94.3
+2026-08-17,Table Rock Resort,Competitor,Sample comp-set feed,ADR,255.47
+2026-08-17,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,240.79
+2026-08-17,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,94.5
+2026-08-17,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,239.61
+2026-08-17,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,226.39
+2026-08-24,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,83.9
+2026-08-24,Summit Tower Hotel,Own,Sample comp-set feed,ADR,221.08
+2026-08-24,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,185.53
+2026-08-24,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,89.6
+2026-08-24,Grand Terrace Resort,Own,Sample comp-set feed,ADR,310.14
+2026-08-24,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,277.97
+2026-08-24,Riverside Suites,Own,Sample comp-set feed,Occupancy %,95.0
+2026-08-24,Riverside Suites,Own,Sample comp-set feed,ADR,221.53
+2026-08-24,Riverside Suites,Own,Sample comp-set feed,RevPAR,210.48
+2026-08-24,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,92.8
+2026-08-24,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,317.2
+2026-08-24,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,294.33
+2026-08-24,Parkview Inn,Own,Sample comp-set feed,Occupancy %,85.3
+2026-08-24,Parkview Inn,Own,Sample comp-set feed,ADR,246.97
+2026-08-24,Parkview Inn,Own,Sample comp-set feed,RevPAR,210.67
+2026-08-24,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,83.0
+2026-08-24,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,236.56
+2026-08-24,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,196.46
+2026-08-24,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,83.4
+2026-08-24,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,313.83
+2026-08-24,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,261.78
+2026-08-24,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,91.6
+2026-08-24,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,229.6
+2026-08-24,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,210.4
+2026-08-24,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,95.1
+2026-08-24,Queen Street Suites,Competitor,Sample comp-set feed,ADR,248.99
+2026-08-24,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,236.7
+2026-08-24,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,91.6
+2026-08-24,Table Rock Resort,Competitor,Sample comp-set feed,ADR,254.07
+2026-08-24,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,232.71
+2026-08-24,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,91.8
+2026-08-24,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,238.3
+2026-08-24,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,218.81
+2026-08-31,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,85.8
+2026-08-31,Summit Tower Hotel,Own,Sample comp-set feed,ADR,219.86
+2026-08-31,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,188.54
+2026-08-31,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,91.9
+2026-08-31,Grand Terrace Resort,Own,Sample comp-set feed,ADR,308.42
+2026-08-31,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,283.46
+2026-08-31,Riverside Suites,Own,Sample comp-set feed,Occupancy %,89.9
+2026-08-31,Riverside Suites,Own,Sample comp-set feed,ADR,220.31
+2026-08-31,Riverside Suites,Own,Sample comp-set feed,RevPAR,198.04
+2026-08-31,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,87.9
+2026-08-31,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,315.45
+2026-08-31,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,277.25
+2026-08-31,Parkview Inn,Own,Sample comp-set feed,Occupancy %,80.7
+2026-08-31,Parkview Inn,Own,Sample comp-set feed,ADR,245.6
+2026-08-31,Parkview Inn,Own,Sample comp-set feed,RevPAR,198.12
+2026-08-31,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,84.8
+2026-08-31,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,235.26
+2026-08-31,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,199.45
+2026-08-31,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,81.6
+2026-08-31,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,312.09
+2026-08-31,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,254.62
+2026-08-31,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,89.3
+2026-08-31,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,228.33
+2026-08-31,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,203.91
+2026-08-31,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,93.0
+2026-08-31,Queen Street Suites,Competitor,Sample comp-set feed,ADR,247.61
+2026-08-31,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,230.18
+2026-08-31,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,88.4
+2026-08-31,Table Rock Resort,Competitor,Sample comp-set feed,ADR,252.66
+2026-08-31,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,223.34
+2026-08-31,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,89.5
+2026-08-31,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,236.98
+2026-08-31,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,212.17
+2026-09-07,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,84.7
+2026-09-07,Summit Tower Hotel,Own,Sample comp-set feed,ADR,218.63
+2026-09-07,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,185.28
+2026-09-07,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,90.4
+2026-09-07,Grand Terrace Resort,Own,Sample comp-set feed,ADR,306.7
+2026-09-07,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,277.15
+2026-09-07,Riverside Suites,Own,Sample comp-set feed,Occupancy %,88.0
+2026-09-07,Riverside Suites,Own,Sample comp-set feed,ADR,219.08
+2026-09-07,Riverside Suites,Own,Sample comp-set feed,RevPAR,192.83
+2026-09-07,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,85.7
+2026-09-07,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,313.69
+2026-09-07,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,268.74
+2026-09-07,Parkview Inn,Own,Sample comp-set feed,Occupancy %,79.3
+2026-09-07,Parkview Inn,Own,Sample comp-set feed,ADR,244.24
+2026-09-07,Parkview Inn,Own,Sample comp-set feed,RevPAR,193.78
+2026-09-07,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,82.9
+2026-09-07,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,233.95
+2026-09-07,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,194.04
+2026-09-07,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,79.9
+2026-09-07,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,310.36
+2026-09-07,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,247.88
+2026-09-07,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,87.5
+2026-09-07,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,227.06
+2026-09-07,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,198.69
+2026-09-07,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,89.2
+2026-09-07,Queen Street Suites,Competitor,Sample comp-set feed,ADR,246.23
+2026-09-07,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,219.6
+2026-09-07,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,83.8
+2026-09-07,Table Rock Resort,Competitor,Sample comp-set feed,ADR,251.26
+2026-09-07,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,210.56
+2026-09-07,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,91.4
+2026-09-07,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,235.66
+2026-09-07,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,215.43
+2026-09-14,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,78.1
+2026-09-14,Summit Tower Hotel,Own,Sample comp-set feed,ADR,217.41
+2026-09-14,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,169.91
+2026-09-14,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,86.9
+2026-09-14,Grand Terrace Resort,Own,Sample comp-set feed,ADR,304.99
+2026-09-14,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,265.14
+2026-09-14,Riverside Suites,Own,Sample comp-set feed,Occupancy %,89.0
+2026-09-14,Riverside Suites,Own,Sample comp-set feed,ADR,217.86
+2026-09-14,Riverside Suites,Own,Sample comp-set feed,RevPAR,193.99
+2026-09-14,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,87.8
+2026-09-14,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,311.94
+2026-09-14,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,273.95
+2026-09-14,Parkview Inn,Own,Sample comp-set feed,Occupancy %,80.7
+2026-09-14,Parkview Inn,Own,Sample comp-set feed,ADR,242.87
+2026-09-14,Parkview Inn,Own,Sample comp-set feed,RevPAR,195.91
+2026-09-14,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,79.0
+2026-09-14,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,232.64
+2026-09-14,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,183.7
+2026-09-14,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,79.9
+2026-09-14,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,308.62
+2026-09-14,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,246.51
+2026-09-14,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,86.5
+2026-09-14,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,225.79
+2026-09-14,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,195.33
+2026-09-14,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,86.0
+2026-09-14,Queen Street Suites,Competitor,Sample comp-set feed,ADR,244.85
+2026-09-14,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,210.58
+2026-09-14,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,83.8
+2026-09-14,Table Rock Resort,Competitor,Sample comp-set feed,ADR,249.85
+2026-09-14,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,209.44
+2026-09-14,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,87.4
+2026-09-14,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,234.34
+2026-09-14,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,204.79
+2026-09-21,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,76.2
+2026-09-21,Summit Tower Hotel,Own,Sample comp-set feed,ADR,216.19
+2026-09-21,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,164.66
+2026-09-21,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,84.7
+2026-09-21,Grand Terrace Resort,Own,Sample comp-set feed,ADR,303.27
+2026-09-21,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,257.01
+2026-09-21,Riverside Suites,Own,Sample comp-set feed,Occupancy %,87.5
+2026-09-21,Riverside Suites,Own,Sample comp-set feed,ADR,216.63
+2026-09-21,Riverside Suites,Own,Sample comp-set feed,RevPAR,189.54
+2026-09-21,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,82.5
+2026-09-21,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,310.18
+2026-09-21,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,255.8
+2026-09-21,Parkview Inn,Own,Sample comp-set feed,Occupancy %,74.1
+2026-09-21,Parkview Inn,Own,Sample comp-set feed,ADR,241.5
+2026-09-21,Parkview Inn,Own,Sample comp-set feed,RevPAR,178.93
+2026-09-21,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,76.7
+2026-09-21,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,231.33
+2026-09-21,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,177.48
+2026-09-21,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,79.2
+2026-09-21,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,306.88
+2026-09-21,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,243.02
+2026-09-21,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,83.8
+2026-09-21,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,224.52
+2026-09-21,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,188.17
+2026-09-21,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,85.2
+2026-09-21,Queen Street Suites,Competitor,Sample comp-set feed,ADR,243.48
+2026-09-21,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,207.34
+2026-09-21,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,84.4
+2026-09-21,Table Rock Resort,Competitor,Sample comp-set feed,ADR,248.45
+2026-09-21,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,209.66
+2026-09-21,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,86.0
+2026-09-21,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,233.02
+2026-09-21,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,200.49
+2026-09-28,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,77.1
+2026-09-28,Summit Tower Hotel,Own,Sample comp-set feed,ADR,214.96
+2026-09-28,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,165.67
+2026-09-28,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,84.8
+2026-09-28,Grand Terrace Resort,Own,Sample comp-set feed,ADR,301.56
+2026-09-28,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,255.71
+2026-09-28,Riverside Suites,Own,Sample comp-set feed,Occupancy %,87.3
+2026-09-28,Riverside Suites,Own,Sample comp-set feed,ADR,215.4
+2026-09-28,Riverside Suites,Own,Sample comp-set feed,RevPAR,188.09
+2026-09-28,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,83.8
+2026-09-28,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,308.43
+2026-09-28,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,258.34
+2026-09-28,Parkview Inn,Own,Sample comp-set feed,Occupancy %,73.8
+2026-09-28,Parkview Inn,Own,Sample comp-set feed,ADR,240.14
+2026-09-28,Parkview Inn,Own,Sample comp-set feed,RevPAR,177.3
+2026-09-28,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,75.9
+2026-09-28,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,230.02
+2026-09-28,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,174.69
+2026-09-28,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,79.1
+2026-09-28,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,305.15
+2026-09-28,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,241.42
+2026-09-28,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,82.5
+2026-09-28,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,223.25
+2026-09-28,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,184.23
+2026-09-28,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,87.5
+2026-09-28,Queen Street Suites,Competitor,Sample comp-set feed,ADR,242.1
+2026-09-28,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,211.76
+2026-09-28,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,81.5
+2026-09-28,Table Rock Resort,Competitor,Sample comp-set feed,ADR,247.04
+2026-09-28,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,201.31
+2026-09-28,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,83.7
+2026-09-28,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,231.71
+2026-09-28,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,193.99
+2026-10-05,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,77.4
+2026-10-05,Summit Tower Hotel,Own,Sample comp-set feed,ADR,213.74
+2026-10-05,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,165.35
+2026-10-05,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,83.3
+2026-10-05,Grand Terrace Resort,Own,Sample comp-set feed,ADR,299.84
+2026-10-05,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,249.75
+2026-10-05,Riverside Suites,Own,Sample comp-set feed,Occupancy %,84.1
+2026-10-05,Riverside Suites,Own,Sample comp-set feed,ADR,214.18
+2026-10-05,Riverside Suites,Own,Sample comp-set feed,RevPAR,180.15
+2026-10-05,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,81.2
+2026-10-05,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,306.67
+2026-10-05,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,249.0
+2026-10-05,Parkview Inn,Own,Sample comp-set feed,Occupancy %,70.8
+2026-10-05,Parkview Inn,Own,Sample comp-set feed,ADR,238.77
+2026-10-05,Parkview Inn,Own,Sample comp-set feed,RevPAR,169.02
+2026-10-05,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,72.7
+2026-10-05,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,228.71
+2026-10-05,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,166.33
+2026-10-05,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,75.6
+2026-10-05,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,303.41
+2026-10-05,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,229.33
+2026-10-05,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,79.3
+2026-10-05,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,221.98
+2026-10-05,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,175.93
+2026-10-05,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,86.0
+2026-10-05,Queen Street Suites,Competitor,Sample comp-set feed,ADR,240.72
+2026-10-05,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,207.0
+2026-10-05,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,76.3
+2026-10-05,Table Rock Resort,Competitor,Sample comp-set feed,ADR,245.63
+2026-10-05,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,187.38
+2026-10-05,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,78.9
+2026-10-05,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,230.39
+2026-10-05,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,181.8
+2026-10-12,Summit Tower Hotel,Own,Sample comp-set feed,Occupancy %,71.9
+2026-10-12,Summit Tower Hotel,Own,Sample comp-set feed,ADR,212.52
+2026-10-12,Summit Tower Hotel,Own,Sample comp-set feed,RevPAR,152.71
+2026-10-12,Grand Terrace Resort,Own,Sample comp-set feed,Occupancy %,79.4
+2026-10-12,Grand Terrace Resort,Own,Sample comp-set feed,ADR,298.13
+2026-10-12,Grand Terrace Resort,Own,Sample comp-set feed,RevPAR,236.8
+2026-10-12,Riverside Suites,Own,Sample comp-set feed,Occupancy %,82.4
+2026-10-12,Riverside Suites,Own,Sample comp-set feed,ADR,212.95
+2026-10-12,Riverside Suites,Own,Sample comp-set feed,RevPAR,175.43
+2026-10-12,Harbour Lights Hotel,Own,Sample comp-set feed,Occupancy %,77.7
+2026-10-12,Harbour Lights Hotel,Own,Sample comp-set feed,ADR,304.92
+2026-10-12,Harbour Lights Hotel,Own,Sample comp-set feed,RevPAR,236.79
+2026-10-12,Parkview Inn,Own,Sample comp-set feed,Occupancy %,68.7
+2026-10-12,Parkview Inn,Own,Sample comp-set feed,ADR,237.41
+2026-10-12,Parkview Inn,Own,Sample comp-set feed,RevPAR,163.12
+2026-10-12,Falls Crest Hotel,Competitor,Sample comp-set feed,Occupancy %,71.8
+2026-10-12,Falls Crest Hotel,Competitor,Sample comp-set feed,ADR,227.41
+2026-10-12,Falls Crest Hotel,Competitor,Sample comp-set feed,RevPAR,163.23
+2026-10-12,Clifton Gardens Inn,Competitor,Sample comp-set feed,Occupancy %,74.6
+2026-10-12,Clifton Gardens Inn,Competitor,Sample comp-set feed,ADR,301.68
+2026-10-12,Clifton Gardens Inn,Competitor,Sample comp-set feed,RevPAR,224.99
+2026-10-12,Lundy's Lane Lodge,Competitor,Sample comp-set feed,Occupancy %,78.6
+2026-10-12,Lundy's Lane Lodge,Competitor,Sample comp-set feed,ADR,220.71
+2026-10-12,Lundy's Lane Lodge,Competitor,Sample comp-set feed,RevPAR,173.58
+2026-10-12,Queen Street Suites,Competitor,Sample comp-set feed,Occupancy %,79.6
+2026-10-12,Queen Street Suites,Competitor,Sample comp-set feed,ADR,239.35
+2026-10-12,Queen Street Suites,Competitor,Sample comp-set feed,RevPAR,190.5
+2026-10-12,Table Rock Resort,Competitor,Sample comp-set feed,Occupancy %,76.9
+2026-10-12,Table Rock Resort,Competitor,Sample comp-set feed,ADR,244.23
+2026-10-12,Table Rock Resort,Competitor,Sample comp-set feed,RevPAR,187.91
+2026-10-12,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,Occupancy %,81.8
+2026-10-12,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,ADR,229.07
+2026-10-12,Rainbow Bridge Hotel,Competitor,Sample comp-set feed,RevPAR,187.48
+2026-07-01,Summit Tower Hotel,Own,Google reviews (sample),Rating,3.79
+2026-07-01,Summit Tower Hotel,Own,Google reviews (sample),Review count,63
+2026-07-01,Summit Tower Hotel,Own,Tripadvisor (sample),Rating,3.78
+2026-07-01,Summit Tower Hotel,Own,Tripadvisor (sample),Review count,121
+2026-07-01,Summit Tower Hotel,Own,Booking.com (sample),Rating,7.49
+2026-07-01,Summit Tower Hotel,Own,Booking.com (sample),Review count,100
+2026-07-01,Grand Terrace Resort,Own,Google reviews (sample),Rating,4.2
+2026-07-01,Grand Terrace Resort,Own,Google reviews (sample),Review count,86
+2026-07-01,Grand Terrace Resort,Own,Tripadvisor (sample),Rating,4.21
+2026-07-01,Grand Terrace Resort,Own,Tripadvisor (sample),Review count,36
+2026-07-01,Grand Terrace Resort,Own,Booking.com (sample),Rating,8.32
+2026-07-01,Grand Terrace Resort,Own,Booking.com (sample),Review count,83
+2026-07-01,Riverside Suites,Own,Google reviews (sample),Rating,4.1
+2026-07-01,Riverside Suites,Own,Google reviews (sample),Review count,97
+2026-07-01,Riverside Suites,Own,Tripadvisor (sample),Rating,4.06
+2026-07-01,Riverside Suites,Own,Tripadvisor (sample),Review count,135
+2026-07-01,Riverside Suites,Own,Booking.com (sample),Rating,8.67
+2026-07-01,Riverside Suites,Own,Booking.com (sample),Review count,107
+2026-07-01,Harbour Lights Hotel,Own,Google reviews (sample),Rating,4.55
+2026-07-01,Harbour Lights Hotel,Own,Google reviews (sample),Review count,56
+2026-07-01,Harbour Lights Hotel,Own,Tripadvisor (sample),Rating,4.39
+2026-07-01,Harbour Lights Hotel,Own,Tripadvisor (sample),Review count,99
+2026-07-01,Harbour Lights Hotel,Own,Booking.com (sample),Rating,8.93
+2026-07-01,Harbour Lights Hotel,Own,Booking.com (sample),Review count,146
+2026-07-01,Parkview Inn,Own,Google reviews (sample),Rating,4.12
+2026-07-01,Parkview Inn,Own,Google reviews (sample),Review count,80
+2026-07-01,Parkview Inn,Own,Tripadvisor (sample),Rating,3.9
+2026-07-01,Parkview Inn,Own,Tripadvisor (sample),Review count,45
+2026-07-01,Parkview Inn,Own,Booking.com (sample),Rating,8.22
+2026-07-01,Parkview Inn,Own,Booking.com (sample),Review count,154
+2026-07-01,Falls Crest Hotel,Competitor,Google reviews (sample),Rating,3.75
+2026-07-01,Falls Crest Hotel,Competitor,Google reviews (sample),Review count,57
+2026-07-01,Falls Crest Hotel,Competitor,Tripadvisor (sample),Rating,3.79
+2026-07-01,Falls Crest Hotel,Competitor,Tripadvisor (sample),Review count,55
+2026-07-01,Falls Crest Hotel,Competitor,Booking.com (sample),Rating,7.93
+2026-07-01,Falls Crest Hotel,Competitor,Booking.com (sample),Review count,78
+2026-07-01,Clifton Gardens Inn,Competitor,Google reviews (sample),Rating,4.34
+2026-07-01,Clifton Gardens Inn,Competitor,Google reviews (sample),Review count,121
+2026-07-01,Clifton Gardens Inn,Competitor,Tripadvisor (sample),Rating,4.26
+2026-07-01,Clifton Gardens Inn,Competitor,Tripadvisor (sample),Review count,26
+2026-07-01,Clifton Gardens Inn,Competitor,Booking.com (sample),Rating,8.81
+2026-07-01,Clifton Gardens Inn,Competitor,Booking.com (sample),Review count,129
+2026-07-01,Lundy's Lane Lodge,Competitor,Google reviews (sample),Rating,4.22
+2026-07-01,Lundy's Lane Lodge,Competitor,Google reviews (sample),Review count,138
+2026-07-01,Lundy's Lane Lodge,Competitor,Tripadvisor (sample),Rating,4.25
+2026-07-01,Lundy's Lane Lodge,Competitor,Tripadvisor (sample),Review count,170
+2026-07-01,Lundy's Lane Lodge,Competitor,Booking.com (sample),Rating,8.43
+2026-07-01,Lundy's Lane Lodge,Competitor,Booking.com (sample),Review count,176
+2026-07-01,Queen Street Suites,Competitor,Google reviews (sample),Rating,4.57
+2026-07-01,Queen Street Suites,Competitor,Google reviews (sample),Review count,91
+2026-07-01,Queen Street Suites,Competitor,Tripadvisor (sample),Rating,4.35
+2026-07-01,Queen Street Suites,Competitor,Tripadvisor (sample),Review count,28
+2026-07-01,Queen Street Suites,Competitor,Booking.com (sample),Rating,8.75
+2026-07-01,Queen Street Suites,Competitor,Booking.com (sample),Review count,68
+2026-07-01,Table Rock Resort,Competitor,Google reviews (sample),Rating,4.38
+2026-07-01,Table Rock Resort,Competitor,Google reviews (sample),Review count,84
+2026-07-01,Table Rock Resort,Competitor,Tripadvisor (sample),Rating,4.16
+2026-07-01,Table Rock Resort,Competitor,Tripadvisor (sample),Review count,128
+2026-07-01,Table Rock Resort,Competitor,Booking.com (sample),Rating,8.81
+2026-07-01,Table Rock Resort,Competitor,Booking.com (sample),Review count,118
+2026-07-01,Rainbow Bridge Hotel,Competitor,Google reviews (sample),Rating,4.35
+2026-07-01,Rainbow Bridge Hotel,Competitor,Google reviews (sample),Review count,39
+2026-07-01,Rainbow Bridge Hotel,Competitor,Tripadvisor (sample),Rating,4.55
+2026-07-01,Rainbow Bridge Hotel,Competitor,Tripadvisor (sample),Review count,45
+2026-07-01,Rainbow Bridge Hotel,Competitor,Booking.com (sample),Rating,8.79
+2026-07-01,Rainbow Bridge Hotel,Competitor,Booking.com (sample),Review count,125
+2026-08-01,Summit Tower Hotel,Own,Google reviews (sample),Rating,3.84
+2026-08-01,Summit Tower Hotel,Own,Google reviews (sample),Review count,109
+2026-08-01,Summit Tower Hotel,Own,Tripadvisor (sample),Rating,4.0
+2026-08-01,Summit Tower Hotel,Own,Tripadvisor (sample),Review count,77
+2026-08-01,Summit Tower Hotel,Own,Booking.com (sample),Rating,7.45
+2026-08-01,Summit Tower Hotel,Own,Booking.com (sample),Review count,172
+2026-08-01,Grand Terrace Resort,Own,Google reviews (sample),Rating,4.42
+2026-08-01,Grand Terrace Resort,Own,Google reviews (sample),Review count,72
+2026-08-01,Grand Terrace Resort,Own,Tripadvisor (sample),Rating,4.38
+2026-08-01,Grand Terrace Resort,Own,Tripadvisor (sample),Review count,64
+2026-08-01,Grand Terrace Resort,Own,Booking.com (sample),Rating,8.64
+2026-08-01,Grand Terrace Resort,Own,Booking.com (sample),Review count,77
+2026-08-01,Riverside Suites,Own,Google reviews (sample),Rating,4.26
+2026-08-01,Riverside Suites,Own,Google reviews (sample),Review count,75
+2026-08-01,Riverside Suites,Own,Tripadvisor (sample),Rating,4.11
+2026-08-01,Riverside Suites,Own,Tripadvisor (sample),Review count,172
+2026-08-01,Riverside Suites,Own,Booking.com (sample),Rating,8.3
+2026-08-01,Riverside Suites,Own,Booking.com (sample),Review count,97
+2026-08-01,Harbour Lights Hotel,Own,Google reviews (sample),Rating,4.42
+2026-08-01,Harbour Lights Hotel,Own,Google reviews (sample),Review count,178
+2026-08-01,Harbour Lights Hotel,Own,Tripadvisor (sample),Rating,4.39
+2026-08-01,Harbour Lights Hotel,Own,Tripadvisor (sample),Review count,71
+2026-08-01,Harbour Lights Hotel,Own,Booking.com (sample),Rating,9.17
+2026-08-01,Harbour Lights Hotel,Own,Booking.com (sample),Review count,155
+2026-08-01,Parkview Inn,Own,Google reviews (sample),Rating,4.01
+2026-08-01,Parkview Inn,Own,Google reviews (sample),Review count,118
+2026-08-01,Parkview Inn,Own,Tripadvisor (sample),Rating,3.84
+2026-08-01,Parkview Inn,Own,Tripadvisor (sample),Review count,57
+2026-08-01,Parkview Inn,Own,Booking.com (sample),Rating,7.87
+2026-08-01,Parkview Inn,Own,Booking.com (sample),Review count,112
+2026-08-01,Falls Crest Hotel,Competitor,Google reviews (sample),Rating,3.83
+2026-08-01,Falls Crest Hotel,Competitor,Google reviews (sample),Review count,162
+2026-08-01,Falls Crest Hotel,Competitor,Tripadvisor (sample),Rating,3.77
+2026-08-01,Falls Crest Hotel,Competitor,Tripadvisor (sample),Review count,97
+2026-08-01,Falls Crest Hotel,Competitor,Booking.com (sample),Rating,7.39
+2026-08-01,Falls Crest Hotel,Competitor,Booking.com (sample),Review count,39
+2026-08-01,Clifton Gardens Inn,Competitor,Google reviews (sample),Rating,4.23
+2026-08-01,Clifton Gardens Inn,Competitor,Google reviews (sample),Review count,91
+2026-08-01,Clifton Gardens Inn,Competitor,Tripadvisor (sample),Rating,4.23
+2026-08-01,Clifton Gardens Inn,Competitor,Tripadvisor (sample),Review count,48
+2026-08-01,Clifton Gardens Inn,Competitor,Booking.com (sample),Rating,8.93
+2026-08-01,Clifton Gardens Inn,Competitor,Booking.com (sample),Review count,141
+2026-08-01,Lundy's Lane Lodge,Competitor,Google reviews (sample),Rating,4.15
+2026-08-01,Lundy's Lane Lodge,Competitor,Google reviews (sample),Review count,25
+2026-08-01,Lundy's Lane Lodge,Competitor,Tripadvisor (sample),Rating,4.16
+2026-08-01,Lundy's Lane Lodge,Competitor,Tripadvisor (sample),Review count,116
+2026-08-01,Lundy's Lane Lodge,Competitor,Booking.com (sample),Rating,8.33
+2026-08-01,Lundy's Lane Lodge,Competitor,Booking.com (sample),Review count,71
+2026-08-01,Queen Street Suites,Competitor,Google reviews (sample),Rating,4.41
+2026-08-01,Queen Street Suites,Competitor,Google reviews (sample),Review count,30
+2026-08-01,Queen Street Suites,Competitor,Tripadvisor (sample),Rating,4.33
+2026-08-01,Queen Street Suites,Competitor,Tripadvisor (sample),Review count,166
+2026-08-01,Queen Street Suites,Competitor,Booking.com (sample),Rating,8.93
+2026-08-01,Queen Street Suites,Competitor,Booking.com (sample),Review count,89
+2026-08-01,Table Rock Resort,Competitor,Google reviews (sample),Rating,4.42
+2026-08-01,Table Rock Resort,Competitor,Google reviews (sample),Review count,42
+2026-08-01,Table Rock Resort,Competitor,Tripadvisor (sample),Rating,4.14
+2026-08-01,Table Rock Resort,Competitor,Tripadvisor (sample),Review count,167
+2026-08-01,Table Rock Resort,Competitor,Booking.com (sample),Rating,8.74
+2026-08-01,Table Rock Resort,Competitor,Booking.com (sample),Review count,74
+2026-08-01,Rainbow Bridge Hotel,Competitor,Google reviews (sample),Rating,4.35
+2026-08-01,Rainbow Bridge Hotel,Competitor,Google reviews (sample),Review count,89
+2026-08-01,Rainbow Bridge Hotel,Competitor,Tripadvisor (sample),Rating,4.57
+2026-08-01,Rainbow Bridge Hotel,Competitor,Tripadvisor (sample),Review count,43
+2026-08-01,Rainbow Bridge Hotel,Competitor,Booking.com (sample),Rating,9.19
+2026-08-01,Rainbow Bridge Hotel,Competitor,Booking.com (sample),Review count,165
+2026-09-01,Summit Tower Hotel,Own,Google reviews (sample),Rating,3.97
+2026-09-01,Summit Tower Hotel,Own,Google reviews (sample),Review count,63
+2026-09-01,Summit Tower Hotel,Own,Tripadvisor (sample),Rating,3.81
+2026-09-01,Summit Tower Hotel,Own,Tripadvisor (sample),Review count,63
+2026-09-01,Summit Tower Hotel,Own,Booking.com (sample),Rating,7.68
+2026-09-01,Summit Tower Hotel,Own,Booking.com (sample),Review count,32
+2026-09-01,Grand Terrace Resort,Own,Google reviews (sample),Rating,4.39
+2026-09-01,Grand Terrace Resort,Own,Google reviews (sample),Review count,172
+2026-09-01,Grand Terrace Resort,Own,Tripadvisor (sample),Rating,4.45
+2026-09-01,Grand Terrace Resort,Own,Tripadvisor (sample),Review count,42
+2026-09-01,Grand Terrace Resort,Own,Booking.com (sample),Rating,8.89
+2026-09-01,Grand Terrace Resort,Own,Booking.com (sample),Review count,29
+2026-09-01,Riverside Suites,Own,Google reviews (sample),Rating,4.18
+2026-09-01,Riverside Suites,Own,Google reviews (sample),Review count,167
+2026-09-01,Riverside Suites,Own,Tripadvisor (sample),Rating,4.31
+2026-09-01,Riverside Suites,Own,Tripadvisor (sample),Review count,69
+2026-09-01,Riverside Suites,Own,Booking.com (sample),Rating,8.4
+2026-09-01,Riverside Suites,Own,Booking.com (sample),Review count,39
+2026-09-01,Harbour Lights Hotel,Own,Google reviews (sample),Rating,3.99
+2026-09-01,Harbour Lights Hotel,Own,Google reviews (sample),Review count,92
+2026-09-01,Harbour Lights Hotel,Own,Tripadvisor (sample),Rating,4.27
+2026-09-01,Harbour Lights Hotel,Own,Tripadvisor (sample),Review count,80
+2026-09-01,Harbour Lights Hotel,Own,Booking.com (sample),Rating,8.18
+2026-09-01,Harbour Lights Hotel,Own,Booking.com (sample),Review count,57
+2026-09-01,Parkview Inn,Own,Google reviews (sample),Rating,3.99
+2026-09-01,Parkview Inn,Own,Google reviews (sample),Review count,143
+2026-09-01,Parkview Inn,Own,Tripadvisor (sample),Rating,4.1
+2026-09-01,Parkview Inn,Own,Tripadvisor (sample),Review count,78
+2026-09-01,Parkview Inn,Own,Booking.com (sample),Rating,7.87
+2026-09-01,Parkview Inn,Own,Booking.com (sample),Review count,169
+2026-09-01,Falls Crest Hotel,Competitor,Google reviews (sample),Rating,3.74
+2026-09-01,Falls Crest Hotel,Competitor,Google reviews (sample),Review count,28
+2026-09-01,Falls Crest Hotel,Competitor,Tripadvisor (sample),Rating,3.91
+2026-09-01,Falls Crest Hotel,Competitor,Tripadvisor (sample),Review count,36
+2026-09-01,Falls Crest Hotel,Competitor,Booking.com (sample),Rating,7.96
+2026-09-01,Falls Crest Hotel,Competitor,Booking.com (sample),Review count,112
+2026-09-01,Clifton Gardens Inn,Competitor,Google reviews (sample),Rating,4.46
+2026-09-01,Clifton Gardens Inn,Competitor,Google reviews (sample),Review count,28
+2026-09-01,Clifton Gardens Inn,Competitor,Tripadvisor (sample),Rating,4.34
+2026-09-01,Clifton Gardens Inn,Competitor,Tripadvisor (sample),Review count,122
+2026-09-01,Clifton Gardens Inn,Competitor,Booking.com (sample),Rating,8.6
+2026-09-01,Clifton Gardens Inn,Competitor,Booking.com (sample),Review count,141
+2026-09-01,Lundy's Lane Lodge,Competitor,Google reviews (sample),Rating,4.33
+2026-09-01,Lundy's Lane Lodge,Competitor,Google reviews (sample),Review count,68
+2026-09-01,Lundy's Lane Lodge,Competitor,Tripadvisor (sample),Rating,4.32
+2026-09-01,Lundy's Lane Lodge,Competitor,Tripadvisor (sample),Review count,97
+2026-09-01,Lundy's Lane Lodge,Competitor,Booking.com (sample),Rating,8.39
+2026-09-01,Lundy's Lane Lodge,Competitor,Booking.com (sample),Review count,76
+2026-09-01,Queen Street Suites,Competitor,Google reviews (sample),Rating,4.59
+2026-09-01,Queen Street Suites,Competitor,Google reviews (sample),Review count,71
+2026-09-01,Queen Street Suites,Competitor,Tripadvisor (sample),Rating,4.37
+2026-09-01,Queen Street Suites,Competitor,Tripadvisor (sample),Review count,136
+2026-09-01,Queen Street Suites,Competitor,Booking.com (sample),Rating,9.07
+2026-09-01,Queen Street Suites,Competitor,Booking.com (sample),Review count,118
+2026-09-01,Table Rock Resort,Competitor,Google reviews (sample),Rating,4.19
+2026-09-01,Table Rock Resort,Competitor,Google reviews (sample),Review count,63
+2026-09-01,Table Rock Resort,Competitor,Tripadvisor (sample),Rating,4.16
+2026-09-01,Table Rock Resort,Competitor,Tripadvisor (sample),Review count,48
+2026-09-01,Table Rock Resort,Competitor,Booking.com (sample),Rating,8.26
+2026-09-01,Table Rock Resort,Competitor,Booking.com (sample),Review count,34
+2026-09-01,Rainbow Bridge Hotel,Competitor,Google reviews (sample),Rating,4.43
+2026-09-01,Rainbow Bridge Hotel,Competitor,Google reviews (sample),Review count,114
+2026-09-01,Rainbow Bridge Hotel,Competitor,Tripadvisor (sample),Rating,4.57
+2026-09-01,Rainbow Bridge Hotel,Competitor,Tripadvisor (sample),Review count,108
+2026-09-01,Rainbow Bridge Hotel,Competitor,Booking.com (sample),Rating,8.86
+2026-09-01,Rainbow Bridge Hotel,Competitor,Booking.com (sample),Review count,53
+2026-10-01,Summit Tower Hotel,Own,Google reviews (sample),Rating,3.86
+2026-10-01,Summit Tower Hotel,Own,Google reviews (sample),Review count,142
+2026-10-01,Summit Tower Hotel,Own,Tripadvisor (sample),Rating,3.99
+2026-10-01,Summit Tower Hotel,Own,Tripadvisor (sample),Review count,43
+2026-10-01,Summit Tower Hotel,Own,Booking.com (sample),Rating,7.68
+2026-10-01,Summit Tower Hotel,Own,Booking.com (sample),Review count,101
+2026-10-01,Grand Terrace Resort,Own,Google reviews (sample),Rating,4.4
+2026-10-01,Grand Terrace Resort,Own,Google reviews (sample),Review count,71
+2026-10-01,Grand Terrace Resort,Own,Tripadvisor (sample),Rating,4.42
+2026-10-01,Grand Terrace Resort,Own,Tripadvisor (sample),Review count,175
+2026-10-01,Grand Terrace Resort,Own,Booking.com (sample),Rating,8.49
+2026-10-01,Grand Terrace Resort,Own,Booking.com (sample),Review count,62
+2026-10-01,Riverside Suites,Own,Google reviews (sample),Rating,4.07
+2026-10-01,Riverside Suites,Own,Google reviews (sample),Review count,108
+2026-10-01,Riverside Suites,Own,Tripadvisor (sample),Rating,4.2
+2026-10-01,Riverside Suites,Own,Tripadvisor (sample),Review count,67
+2026-10-01,Riverside Suites,Own,Booking.com (sample),Rating,8.29
+2026-10-01,Riverside Suites,Own,Booking.com (sample),Review count,30
+2026-10-01,Harbour Lights Hotel,Own,Google reviews (sample),Rating,4.17
+2026-10-01,Harbour Lights Hotel,Own,Google reviews (sample),Review count,169
+2026-10-01,Harbour Lights Hotel,Own,Tripadvisor (sample),Rating,4.07
+2026-10-01,Harbour Lights Hotel,Own,Tripadvisor (sample),Review count,178
+2026-10-01,Harbour Lights Hotel,Own,Booking.com (sample),Rating,8.53
+2026-10-01,Harbour Lights Hotel,Own,Booking.com (sample),Review count,100
+2026-10-01,Parkview Inn,Own,Google reviews (sample),Rating,3.91
+2026-10-01,Parkview Inn,Own,Google reviews (sample),Review count,62
+2026-10-01,Parkview Inn,Own,Tripadvisor (sample),Rating,3.95
+2026-10-01,Parkview Inn,Own,Tripadvisor (sample),Review count,120
+2026-10-01,Parkview Inn,Own,Booking.com (sample),Rating,7.66
+2026-10-01,Parkview Inn,Own,Booking.com (sample),Review count,109
+2026-10-01,Falls Crest Hotel,Competitor,Google reviews (sample),Rating,3.84
+2026-10-01,Falls Crest Hotel,Competitor,Google reviews (sample),Review count,114
+2026-10-01,Falls Crest Hotel,Competitor,Tripadvisor (sample),Rating,3.71
+2026-10-01,Falls Crest Hotel,Competitor,Tripadvisor (sample),Review count,127
+2026-10-01,Falls Crest Hotel,Competitor,Booking.com (sample),Rating,7.46
+2026-10-01,Falls Crest Hotel,Competitor,Booking.com (sample),Review count,156
+2026-10-01,Clifton Gardens Inn,Competitor,Google reviews (sample),Rating,4.48
+2026-10-01,Clifton Gardens Inn,Competitor,Google reviews (sample),Review count,157
+2026-10-01,Clifton Gardens Inn,Competitor,Tripadvisor (sample),Rating,4.32
+2026-10-01,Clifton Gardens Inn,Competitor,Tripadvisor (sample),Review count,120
+2026-10-01,Clifton Gardens Inn,Competitor,Booking.com (sample),Rating,8.65
+2026-10-01,Clifton Gardens Inn,Competitor,Booking.com (sample),Review count,140
+2026-10-01,Lundy's Lane Lodge,Competitor,Google reviews (sample),Rating,4.22
+2026-10-01,Lundy's Lane Lodge,Competitor,Google reviews (sample),Review count,119
+2026-10-01,Lundy's Lane Lodge,Competitor,Tripadvisor (sample),Rating,4.12
+2026-10-01,Lundy's Lane Lodge,Competitor,Tripadvisor (sample),Review count,149
+2026-10-01,Lundy's Lane Lodge,Competitor,Booking.com (sample),Rating,8.36
+2026-10-01,Lundy's Lane Lodge,Competitor,Booking.com (sample),Review count,110
+2026-10-01,Queen Street Suites,Competitor,Google reviews (sample),Rating,4.35
+2026-10-01,Queen Street Suites,Competitor,Google reviews (sample),Review count,97
+2026-10-01,Queen Street Suites,Competitor,Tripadvisor (sample),Rating,4.41
+2026-10-01,Queen Street Suites,Competitor,Tripadvisor (sample),Review count,126
+2026-10-01,Queen Street Suites,Competitor,Booking.com (sample),Rating,9.07
+2026-10-01,Queen Street Suites,Competitor,Booking.com (sample),Review count,58
+2026-10-01,Table Rock Resort,Competitor,Google reviews (sample),Rating,4.39
+2026-10-01,Table Rock Resort,Competitor,Google reviews (sample),Review count,131
+2026-10-01,Table Rock Resort,Competitor,Tripadvisor (sample),Rating,4.26
+2026-10-01,Table Rock Resort,Competitor,Tripadvisor (sample),Review count,102
+2026-10-01,Table Rock Resort,Competitor,Booking.com (sample),Rating,8.61
+2026-10-01,Table Rock Resort,Competitor,Booking.com (sample),Review count,53
+2026-10-01,Rainbow Bridge Hotel,Competitor,Google reviews (sample),Rating,4.48
+2026-10-01,Rainbow Bridge Hotel,Competitor,Google reviews (sample),Review count,175
+2026-10-01,Rainbow Bridge Hotel,Competitor,Tripadvisor (sample),Rating,4.49
+2026-10-01,Rainbow Bridge Hotel,Competitor,Tripadvisor (sample),Review count,40
+2026-10-01,Rainbow Bridge Hotel,Competitor,Booking.com (sample),Rating,9.07
+2026-10-01,Rainbow Bridge Hotel,Competitor,Booking.com (sample),Review count,165

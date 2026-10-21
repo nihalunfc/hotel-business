@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hotel Report Builder</title>
+<meta name="description" content="Upload the daily CSV or Excel exports from your hotel systems. Columns and names are matched automatically (or by you), then a manager's report builds itself: profit, expense and loss by hour, day, week, department, hotel and staff, with data checks and benchmarks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css">
+<script src="../../assets/header.js"></script>
+<link rel="stylesheet" href="../../assets/tool.css">
+<style>
+.grid.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 860px) { .grid.g2 { grid-template-columns: 1fr; } }
+.howto.h6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 960px) { .howto.h6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .howto.h6 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* upload */
+.drop { border: 2px dashed var(--line-2); border-radius: 12px; padding: 26px 18px; text-align: center; background: var(--surface-2); transition: border-color .15s, background .15s; }
+.drop.over { border-color: var(--brand-2); background: var(--brand-soft); }
+.drop p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; }
+.drop .btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
+.files { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 16px; }
+.fcard { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); position: relative; }
+.fcard h4 { margin: 0 26px 2px 0; font-size: 14.5px; overflow-wrap: anywhere; }
+.fcard .meta { font-size: 13px; color: var(--ink-3); }
+.fcard .xbtn { position: absolute; top: 6px; right: 6px; }
+.fcard .lbl span { white-space: nowrap; }
+.fcard .lbl { display: flex; gap: 6px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+.fcard .lbl input { padding: 4px 7px; font-size: 13.5px; }
+.st { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 1px 8px; margin-top: 6px; }
+.st.ok { background: var(--good-soft); color: var(--good); }
+.st.warn { background: var(--warn-soft); color: var(--warn); }
+.st.bad { background: var(--bad-soft); color: var(--bad); }
+.st.info { background: var(--brand-soft); color: var(--brand); }
+
+/* mapping */
+.matrix th, .matrix td { font-size: 13.5px; padding: 7px 9px; white-space: nowrap; }
+.matrix td.f { font-weight: 600; }
+.matrix td .src { color: var(--ink-2); }
+.matrix td.miss { color: var(--ink-3); }
+.conf { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.conf.hi { background: var(--good); } .conf.mid { background: #e0a100; } .conf.lo { background: var(--bad); } .conf.man { background: var(--brand-2); } .conf.tpl { background: #7a5af8; }
+.legend-inline { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin: 8px 0 0; }
+.ftabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 16px 0 10px; }
+.ftabs button { font: inherit; font-size: 13.5px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 8px; padding: 6px 11px; cursor: pointer; color: var(--ink-2); }
+.ftabs button.on { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.ftabs button .n { display: inline-block; margin-left: 6px; background: var(--bad); color: #fff; border-radius: 999px; font-size: 11px; padding: 0 6px; }
+.colmap td { vertical-align: middle; font-size: 14px; padding: 8px 9px; }
+.colmap td.cn { font-weight: 600; }
+.colmap td.sm { color: var(--ink-3); font-size: 12.5px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.colmap select { min-width: 190px; padding: 5px 7px; font-size: 13.5px; }
+.colmap .why { font-size: 12px; color: var(--ink-3); }
+.colmap tr.unmatched td { background: var(--warn-soft); }
+@media (max-width: 640px) {
+  .colmap thead { display: none; }
+  .colmap tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; }
+  .colmap td { display: block; border: 0; padding: 3px 4px; }
+  .colmap td.sm { max-width: none; white-space: normal; }
+  .colmap select { width: 100%; }
+}
+.defaults { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 12px; align-items: flex-end; }
+.defaults .field { min-width: 190px; }
+.issuebox { border-radius: 8px; padding: 10px 14px; font-size: 14px; margin-top: 12px; }
+.issuebox.bad { background: var(--bad-soft); border: 1px solid var(--line-2); color: var(--bad); }
+.issuebox.ok { background: var(--good-soft); border: 1px solid var(--line-2); color: var(--good); }
+.issuebox ul { margin: 4px 0 0 18px; padding: 0; }
+.valmap td { font-size: 13.5px; padding: 6px 8px; vertical-align: middle; }
+.valmap input { padding: 4px 7px; font-size: 13.5px; min-width: 170px; }
+.valmap tr.grp-start td { border-top: 2px solid var(--line-2); }
+.valcols > * { min-width: 0; }
+.valcols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 960px) { .valcols { grid-template-columns: 1fr; } }
+
+/* filters */
+.fbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fbtn { font: inherit; font-size: 13.5px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 8px; padding: 7px 11px; cursor: pointer; color: var(--ink); display: inline-flex; gap: 6px; align-items: center; max-width: 100%; }
+.fbtn:hover { border-color: var(--brand-2); }
+.fbtn b { font-weight: 600; color: var(--ink-2); }
+.fbtn .v { color: var(--brand); font-weight: 600; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fbtn.set { background: var(--brand-soft); border-color: var(--brand-2); }
+.fbtn::after { content: "▾"; font-size: 10px; color: var(--ink-3); }
+.fbar input[type=date] { width: 150px; padding: 6px 8px; font-size: 13.5px; }
+.fbar .dr { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; color: var(--ink-2); flex-wrap: wrap; }
+.pop { position: fixed; z-index: 60; background: var(--surface); color: var(--ink); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 16px 40px rgba(16,24,40,.18); width: 300px; max-width: calc(100vw - 24px); display: none; }
+.pop.open { display: block; }
+.pop .ph { padding: 10px 12px 8px; border-bottom: 1px solid var(--line); }
+.pop .ph input { width: 100%; padding: 6px 9px; font-size: 14px; }
+.pop .pa { display: flex; gap: 10px; font-size: 13px; margin-top: 8px; }
+.pop .pa button { font: inherit; border: 0; background: none; color: var(--brand-2); cursor: pointer; padding: 0; font-weight: 600; }
+.pop .pl { max-height: 300px; overflow-y: auto; padding: 6px; }
+.pop label { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 7px; font-size: 14px; cursor: pointer; }
+.pop label:hover { background: var(--surface-2); }
+.pop label .c { margin-left: auto; color: var(--ink-3); font-size: 12px; }
+.pop .pf { padding: 8px 12px; border-top: 1px solid var(--line); text-align: right; }
+@media (max-width: 640px) { .pop { left: 12px !important; right: 12px; width: auto; top: auto !important; bottom: 12px; } .pop .pl { max-height: 50vh; } }
+.sticky-f { position: sticky; top: 60px; z-index: 15; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(4px); padding: 10px 0; margin: -6px 0 12px; border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) { .sticky-f { position: static; } }
+.active-f { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+
+/* report */
+.flash { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; }
+.flash > * { min-width: 0; }
+@media (max-width: 860px) { .flash { grid-template-columns: 1fr; } }
+.flash ul { margin: 0; padding-left: 18px; }
+.flash li { margin-bottom: 6px; font-size: 14.5px; }
+.ftable td, .ftable th { padding: 7px 9px; font-size: 14px; }
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1060px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpis .kpi { padding: 13px 14px; }
+.kpis .kpi .value { font-size: 23px; }
+.kpis .kpi .label { font-size: 13px; }
+@media (max-width: 640px) { .kpis .kpi .value { font-size: 19px; } }
+.mchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mchip { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 5px 11px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.mchip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.mchip.on { background: var(--brand-soft); border-color: var(--brand-2); color: var(--brand); }
+.ctl { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; margin-bottom: 12px; }
+.ctl .field { min-width: 150px; }
+.ctl .field.wide { flex: 1 1 320px; }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: flex-start; margin-bottom: 8px; }
+.card-head h3 { margin: 0; }
+.card-head .muted { font-size: 13px; margin: 2px 0 0; }
+.card .note { margin-top: 6px; }
+.chart-box.sm { height: 250px; }
+.chart-empty { display: grid; place-items: center; height: 100%; color: var(--ink-3); font-size: 14px; text-align: center; padding: 0 20px; }
+.heat { border-collapse: separate; border-spacing: 2px; width: 100%; font-size: 11.5px; }
+.heat th, .heat td { padding: 0; border: 0; text-align: center; background: none; font-weight: 500; }
+.heat th { color: var(--ink-3); font-size: 11px; }
+.heat td { height: 26px; border-radius: 3px; color: #0d366b; min-width: 18px; }
+.heat td.dk { color: #fff; }
+.heat th.rh { text-align: left; padding-right: 6px; white-space: nowrap; }
+.heat-wrap { overflow-x: auto; }
+.heat-leg { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+.heat-leg span.bar { width: 140px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, #eef5fd, #86b6ef, #2a78d6, #184f95); }
+.pos { color: var(--good); font-weight: 600; }
+.neg { color: var(--bad); font-weight: 600; }
+th.sortable { cursor: pointer; }
+th.sortable:hover { color: var(--brand-2); }
+.insights li { margin-bottom: 7px; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+.small-table td, .small-table th { padding: 6px 8px; font-size: 13.5px; }
+.eda-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.eda-grid > * { min-width: 0; }
+@media (max-width: 860px) { .eda-grid { grid-template-columns: 1fr; } }
+.qbar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 2px; }
+.qbar i { display: block; height: 100%; background: var(--good); }
+.bench-note { background: var(--warn-soft); border: 1px solid var(--line-2); color: var(--warn); border-radius: 8px; padding: 10px 14px; font-size: 14px; margin-bottom: 14px; }
+.srcs { columns: 2; column-gap: 28px; font-size: 14px; }
+@media (max-width: 860px) { .srcs { columns: 1; } }
+.srcs li { break-inside: avoid; margin-bottom: 8px; }
+#t-hotels td:first-child { white-space: nowrap; font-weight: 500; }
+.empty-report { text-align: center; padding: 30px 10px; color: var(--ink-2); }
+#busy { position: fixed; inset: 0; background: color-mix(in srgb, var(--bg) 70%, transparent); display: none; place-items: center; z-index: 90; font-weight: 600; color: var(--brand); }
+#busy.on { display: grid; }
+@media print {
+  .sticky-f { position: static; }
+  .fbar, .ctl, .mchips, #s-upload, #s-map, #s-values { display: none !important; }
+  .chart-box { height: 230px; }
+  .card { break-inside: avoid; margin-bottom: 12px; }
+  .kpis { grid-template-columns: repeat(6, 1fr); }
+}
+</style>
+</head>
+<body>
+<site-header></site-header>
+
+<div class="hero-tool">
+  <div class="wrap">
+    <h1>Hotel Report Builder</h1>
+    <p class="lead">Drop in the day's exports from your hotel systems: PMS, POS, payroll, invoices, loss logs, in CSV or Excel. Matching columns are lined up automatically, you confirm anything unclear, and a manager's report builds itself: profit, expense and loss by hour, day, week, department, hotel and staff.</p>
+    <div class="chips"><span>Any number of files</span><span>Remembers your matching for tomorrow's files</span><span>Runs only in your browser</span><span>Free</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <nav class="howto h6 no-print" aria-label="Steps">
+    <a href="#s-upload"><b>Step 1</b>Add your files</a>
+    <a href="#s-map"><b>Step 2</b>Check matched columns</a>
+    <a href="#s-values"><b>Step 3</b>Check matched names</a>
+    <a href="#s-report"><b>Step 4</b>Read the report</a>
+    <a href="#s-eda"><b>Step 5</b>Data checks</a>
+    <a href="#s-bench"><b>Step 6</b>Benchmarks</a>
+  </nav>
+
+  <!-- STEP 1 -->
+  <section class="sec" id="s-upload">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">1</span>Add your files</h2>
+        <p>Add as many CSV or Excel exports as you like, from any system. Each file can have its own column names, date format and spelling of hotel and department names.</p></div>
+      <div class="toolbar"><button class="btn sm reset" id="b-clear">Reset: remove all files</button></div>
+    </div>
+    <div class="sec-body">
+      <div class="drop" id="drop">
+        <b style="font-size:16.5px">Drop CSV or Excel files here</b>
+        <p>or choose them from your computer or phone</p>
+        <div class="btns">
+          <label class="btn primary" for="f-in" style="cursor:pointer">Choose files</label>
+          <button class="btn" id="b-sample">Load the 5 sample files</button>
+        </div>
+        <input type="file" id="f-in" accept=".csv,.txt,.tsv,.xlsx,.xls" multiple hidden>
+      </div>
+      <p class="note">Sample files (fictional, for trying the tool): <a href="samples/opera_pms_daily_revenue.csv" download>PMS revenue</a> · <a href="samples/micros_pos_sales.csv" download>POS sales</a> · <a href="samples/dayforce_timecards.csv" download>payroll time cards</a> · <a href="samples/ap_invoices.csv" download>invoices</a> · <a href="samples/loss_incident_log.csv" download>loss log</a></p>
+      <div class="files" id="files"></div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="sec" id="s-map">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">2</span>Check matched columns</h2>
+        <p>Every column is matched to a standard report field by its name and by what is in it. Anything the tool is unsure about is marked, and you can change any match. Your choices are remembered, so tomorrow's files with the same columns match instantly.</p></div>
+      <div class="toolbar">
+        <button class="btn sm" id="b-tpl-export">Export matching rules</button>
+        <label class="btn sm" for="tpl-in" style="cursor:pointer">Import rules</label>
+        <input type="file" id="tpl-in" accept=".json" hidden>
+        <button class="btn sm reset" id="b-tpl-reset">Reset: forget saved matching</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div id="map-empty" class="muted">Add files in step 1 to see the matching.</div>
+      <div id="map-wrap" hidden>
+        <h3 style="font-size:16px">How the files line up</h3>
+        <div class="table-wrap"><table class="matrix" id="matrix"></table></div>
+        <div class="legend-inline">
+          <span><i class="conf hi"></i>Matched, sure</span><span><i class="conf mid"></i>Matched, please check</span><span><i class="conf tpl"></i>From your saved rules</span><span><i class="conf man"></i>Set by you</span><span><i class="conf lo"></i>Not matched</span>
+        </div>
+        <div id="issues"></div>
+        <div class="ftabs" id="ftabs"></div>
+        <div class="table-wrap"><table class="colmap" id="colmap"></table></div>
+        <div id="defaults"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="sec" id="s-values">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">3</span>Check matched names</h2>
+        <p>The same hotel or department is often spelled differently in each system ("STH-NIAGARA", "Summit Tower", "Summit Tower Hotel"). These are grouped under one standard name. Type over any standard name to change it; rows with the same standard name are counted together.</p></div>
+      <div class="toolbar"><button class="btn sm reset" id="b-val-reset">Reset: redo name matching</button></div>
+    </div>
+    <div class="sec-body">
+      <div id="val-empty" class="muted">Names appear here once columns are matched.</div>
+      <div class="valcols" id="valcols"></div>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="sec" id="s-report">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">4</span>Manager's report</h2>
+        <p id="rep-sub">Builds automatically as soon as the files are matched. Use the filters to focus on any hotels, departments, staff, days or hours. Every chart and table below follows them.</p></div>
+      <div class="toolbar no-print">
+        <button class="btn sm" id="b-print">Print or save as PDF</button>
+        <button class="btn sm reset" id="b-freset">Reset filters</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div id="rep-empty" class="empty-report">The report appears here once at least one file is matched with a date and an amount.</div>
+      <div id="rep" hidden>
+        <div class="sticky-f no-print">
+          <div class="fbar" id="fbar"></div>
+          <div class="active-f" id="active-f"></div>
+        </div>
+
+        <div class="card" id="flash-card">
+          <div class="card-head"><div><h3 id="flash-title">Daily flash report</h3><p class="muted" id="flash-sub"></p></div>
+            <div class="field" style="min-width:160px"><label for="flash-day">Report day</label><select id="flash-day"></select></div></div>
+          <div class="flash"><div><div class="table-wrap"><table class="ftable" id="flash-table"></table></div></div><div><b style="font-size:14px">What stands out</b><ul id="flash-notes" style="margin-top:6px"></ul></div></div>
+        </div>
+
+        <h3 style="margin:22px 0 10px">Selected period</h3>
+        <div class="kpis" id="kpis"></div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-head"><div><h3>Build your own view</h3><p class="muted">Pick one or more measures and how to group them. Add a split to compare hotels, departments or anything else side by side.</p></div>
+            <button class="btn sm" id="b-x-csv">Download this table (CSV)</button></div>
+          <div class="ctl">
+            <div class="field wide"><label>Measures</label><div class="mchips" id="x-metrics"></div></div>
+            <div class="field"><label for="x-group">Group by</label><select id="x-group"></select></div>
+            <div class="field"><label for="x-split">Split by</label><select id="x-split"></select></div>
+            <div class="field"><label for="x-type">Chart</label><select id="x-type"><option value="auto">Automatic</option><option value="line">Line</option><option value="bar">Bars</option><option value="stack">Stacked bars</option></select></div>
+          </div>
+          <div class="chart-box tall"><canvas id="c-x"></canvas></div>
+          <p class="note" id="x-note"></p>
+          <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600;font-size:14px">Show the numbers</summary><div class="table-wrap" style="max-height:420px;margin-top:8px"><table class="small-table" id="x-table"></table></div></details>
+        </div>
+
+        <div class="grid g2" style="margin-top:16px">
+          <div class="card"><div class="card-head"><div><h3>Profit by day</h3><p class="muted">Revenue minus expense minus loss, with the 7-day average</p></div></div><div class="chart-box"><canvas id="c-day"></canvas></div></div>
+          <div class="card"><div class="card-head"><div><h3>Profit by week</h3><p class="muted">Monday to Sunday weeks, change against the week before</p></div></div><div class="chart-box"><canvas id="c-week"></canvas></div></div>
+          <div class="card"><div class="card-head"><div><h3>Expense by department</h3><p class="muted">Labour and invoices together, largest first</p></div></div><div class="chart-box"><canvas id="c-dept"></canvas></div></div>
+          <div class="card"><div class="card-head"><div><h3>Expense by hour and weekday</h3><p class="muted" id="heat-sub">Average expense in each hour, from rows that have a time</p></div>
+            <select id="heat-m" style="width:auto"><option value="exp">Expense</option><option value="rev">Revenue</option><option value="loss">Loss</option><option value="hrs">Labour hours</option></select></div><div class="heat-wrap" id="heat"></div></div>
+          <div class="card"><div class="card-head"><div><h3>Loss by hotel</h3><p class="muted">Loss as a share of revenue shown in brackets</p></div></div><div class="chart-box sm"><canvas id="c-loss-hotel"></canvas></div></div>
+          <div class="card"><div class="card-head"><div><h3>Loss by type</h3><p class="muted">Voids, comps, refunds, spoilage and the rest</p></div></div><div class="chart-box sm"><canvas id="c-loss-type"></canvas></div></div>
+          <div class="card"><div class="card-head"><div><h3>Loss by staff member</h3><p class="muted">Top 10, with number of entries. Worth a look, not proof of wrongdoing.</p></div></div><div class="chart-box sm"><canvas id="c-loss-staff"></canvas></div></div>
+          <div class="card"><div class="card-head"><div><h3>Profit by weekday</h3><p class="muted">Average day, by hotel</p></div></div><div class="chart-box sm"><canvas id="c-dow"></canvas></div></div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-head"><div><h3>Hotel comparison</h3><p class="muted">Click a column title to sort. Change is against the same number of days just before the selected period.</p></div><button class="btn sm" id="b-h-csv">Download (CSV)</button></div>
+          <div class="table-wrap"><table id="t-hotels"></table></div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-head"><div><h3>Automatic findings</h3><p class="muted">Unusual days, trends and outliers found in the selected data</p></div></div>
+          <ul class="insights" id="insights"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="sec" id="s-eda">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">5</span>Data checks (exploratory analysis)</h2>
+        <p>What is in each file, how complete it is, and the spread of every amount, so you know how far to trust the report.</p></div>
+    </div>
+    <div class="sec-body">
+      <div id="eda-empty" class="muted">Checks appear once files are matched.</div>
+      <div id="eda" hidden>
+        <div class="table-wrap"><table class="small-table" id="t-quality"></table></div>
+        <h3 style="font-size:16px;margin-top:20px">Spread of each amount (all files, after matching)</h3>
+        <div class="table-wrap"><table class="small-table" id="t-stats"></table></div>
+        <div class="eda-grid" style="margin-top:16px">
+          <div class="card"><div class="card-head"><div><h3>Distribution</h3><p class="muted">How the amounts in single rows are spread</p></div><select id="hist-m" style="width:auto"></select></div><div class="chart-box sm"><canvas id="c-hist"></canvas></div></div>
+          <div class="card"><div class="card-head"><div><h3>What moves together</h3><p class="muted">Correlation of daily totals per hotel (1 = move together, 0 = unrelated)</p></div></div><div class="heat-wrap" id="corr"></div></div>
+        </div>
+        <h3 style="font-size:16px;margin-top:20px">Column profile</h3>
+        <div class="table-wrap" style="max-height:440px"><table class="small-table" id="t-profile"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 6 -->
+  <section class="sec" id="s-bench">
+    <div class="sec-head">
+      <div><h2><span class="num-badge">6</span>Benchmarks: sister hotels, competitors and reviews</h2>
+        <p>Compare your hotels with the rest of the company, a competitor set and review scores. Load a benchmark file in the simple format below from any source you are licensed to use.</p></div>
+      <div class="toolbar">
+        <label class="btn sm" for="bench-in" style="cursor:pointer">Load benchmark file</label>
+        <input type="file" id="bench-in" accept=".csv,.xlsx" hidden>
+        <a class="btn sm" href="samples/benchmark_sample.csv" download>Sample file</a>
+        <button class="btn sm reset" id="b-bench-reset">Reset to sample</button>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="bench-note" id="bench-src"></div>
+      <div class="ctl">
+        <div class="field"><label for="bm-metric">Market measure</label><select id="bm-metric"></select></div>
+        <div class="field"><label for="bm-prop">Your hotel</label><select id="bm-prop"></select></div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><div class="card-head"><div><h3 id="bm-t1">Your hotel against the competitor set</h3><p class="muted">Weekly, competitor set shown as the average and the range</p></div></div><div class="chart-box"><canvas id="c-bm-trend"></canvas></div></div>
+        <div class="card"><div class="card-head"><div><h3>Index against the competitor set</h3><p class="muted">100 = level with the competitor average. Above 100 = ahead.</p></div></div><div class="chart-box"><canvas id="c-bm-index"></canvas></div></div>
+        <div class="card"><div class="card-head"><div><h3>Review scores, latest month</h3><p class="muted">Out of 5 (Booking.com scaled from 10)</p></div><select id="bm-src" style="width:auto"></select></div><div class="chart-box"><canvas id="c-bm-rating"></canvas></div></div>
+        <div class="card"><div class="card-head"><div><h3>Review score trend</h3><p class="muted">Your hotels against the competitor average</p></div></div><div class="chart-box"><canvas id="c-bm-rtrend"></canvas></div></div>
+      </div>
+      <details class="tech" style="margin-top:16px">
+        <summary>Where benchmark data can come from (and what we don't do)</summary>
+        <ul class="srcs">
+          <li><b>Sister hotels in the company:</b> the same reports from other properties, shared through the company's own database. Load their exports in step 1 and they appear as extra hotels everywhere in the report.</li>
+          <li><b>Competitor set (occupancy, ADR, RevPAR):</b> a licensed benchmarking subscription such as STR / CoStar, or a rate-shopping tool (OTA Insight / Lighthouse, RateGain). Export their weekly report as CSV.</li>
+          <li><b>Google reviews:</b> the Google Business Profile API returns ratings and reviews for the hotels you manage. Competitor ratings are visible publicly in Google Maps; a reputation tool can collect them under licence.</li>
+          <li><b>Tripadvisor:</b> the Tripadvisor Content API (with an approved key) provides ratings and review counts for listed hotels and restaurants.</li>
+          <li><b>All-in-one reputation tools:</b> ReviewPro, TrustYou, Revinate or Medallia gather Google, Tripadvisor, Booking.com and Expedia scores for you and your competitors and export them.</li>
+          <li><b>Public market data:</b> Statistics Canada, Destination Canada and regional tourism boards publish monthly occupancy and visitor numbers for free.</li>
+          <li><b>What we don't do:</b> scrape sites whose terms forbid it. The production version would connect to the licensed sources above on a daily schedule.</li>
+          <li><b>File format:</b> one row per number, with the columns <code>date, property, group, source, metric, value</code>. Group is Own, Sister or Competitor; metric is for example Occupancy %, ADR, RevPAR, Rating or Review count.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <details class="tech">
+    <summary>How it works, privacy and the production plan</summary>
+    <p><b>Matching columns.</b> Each column name is cleaned up and compared with a dictionary of more than 150 names hotel systems use (for example "Business Date", "trans_dt", "Work Date" all mean the date). The tool also reads the values: a column only matches Date if most of its values are dates, an amount only if they are numbers, and so on. Each file can have one column per field; if two columns claim the same field, you are asked to choose.</p>
+    <p><b>Matching names.</b> Hotel and department names are compared by spelling, by initials ("STH" = Summit Tower Hotel, "F&amp;B" = Food &amp; Beverage), by containment ("Summit Tower" inside "Summit Tower Hotel") and by a hotel-industry list of department names.</p>
+    <p><b>Report.</b> Profit = revenue − expense − loss. Labour cost counts as expense. Charts by hour use only the rows that have a time. Week = Monday to Sunday.</p>
+    <p><b>Privacy.</b> Files are read and stored only in this browser (IndexedDB), never uploaded. Saved matching rules and settings stay in this browser's local storage. Each Reset button clears its own part.</p>
+    <p><b>Production plan.</b> This is a demo. The production version would pick up the daily exports automatically (SFTP or the systems' APIs), keep every day in a database for deeper analysis, run the same matching rules on a schedule and email the daily flash report to each manager before their morning meeting, with sign-in and per-hotel access.</p>
+  </details>
+</main>
+
+<div class="pop" id="pop" role="dialog" aria-modal="false"></div>
+<div id="busy">Working…</div>
+
+<p class="note wrap no-print" style="margin:-36px auto 24px">All hotels, staff, benchmark and review figures in the sample files are fictional.</p>
+<site-footer class="no-print"></site-footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="../../assets/common.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
