@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
 <title>Hotel Swarm Operations</title>
 <meta name="description" content="How a group of five hotels could cut peak electricity charges, get rooms ready sooner, keep overbooked guests in the group and fill open shifts for less, tested against today's common practice.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -93,19 +94,125 @@ dl.gl dt { font-weight: 600; }
 dl.gl dd { margin: 0; color: var(--ink-2); }
 @media (max-width: 640px) { dl.gl { grid-template-columns: 1fr; } dl.gl dd { margin-bottom: 8px; } h1 { font-size: 25px; } .kpi .big { font-size: 28px; } }
 .foot { max-width: 1180px; margin: 0 auto; padding: 0 16px 32px; color: var(--ink-3); font-size: 13px; }
+/* shared tokens */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #18212b; --ink-2: #4a5561; --ink-3: #6b7682;
+  --line: #e2e6eb; --line-2: #cfd6de; --brand: #1f4e79; --link: #2a78d6;
+  --good: #1a7f4b; --good-soft: #e7f5ec; --warn: #9a5b00; --warn-soft: #fff3df; --bad: #b42318; --bad-soft: #fdecea;
+  --c-swarm: #2a78d6; --c-rule: #eb6834; --c-today: #9aa4ae; --c-best: #1baf7a; --c-extra: #eda100;
+  --grid: #eef1f4; --axis: #b8c0c9; --radius: 10px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .04);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-feature-settings: "tnum" 1; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+main { max-width: 1180px; margin: 0 auto; padding: 28px 16px 48px; }
+h1 { font-size: 30px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -.01em; }
+.lead { font-size: 17px; color: var(--ink-2); max-width: 62rem; margin: 0; }
+.tabs { position: sticky; top: 0; z-index: 5; background: var(--bg); display: flex; gap: 2px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 24px 0 20px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { font: inherit; font-size: 15px; white-space: nowrap; background: none; border: 0; border-bottom: 3px solid transparent; color: var(--ink-3); padding: 10px 14px; cursor: pointer; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--brand); font-weight: 600; }
+.page { display: flex; flex-direction: column; gap: 18px; }
+.page[hidden] { display: none; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); }
+.grid2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; min-width: 0; }
+.card h2 { font-size: 18px; margin: 0 0 4px; }
+.card h3 { font-size: 15px; margin: 16px 0 4px; }
+.card p { margin: 6px 0; }
+.sub { color: var(--ink-3); font-size: 13.5px; margin: 0 0 12px !important; }
+.muted { color: var(--ink-3); }
+.kpi { display: flex; flex-direction: column; gap: 4px; }
+.kpi .label { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); font-weight: 600; }
+.kpi .big { font-size: 32px; font-weight: 700; line-height: 1.15; letter-spacing: -.01em; }
+.kpi .vs { font-size: 13.5px; color: var(--ink-2); }
+.kpi .so { font-size: 14px; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 8px; color: var(--ink-2); }
+.kpi a.more { font-size: 13.5px; margin-top: 4px; }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 99px; vertical-align: 1px; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.callout { border-left: 4px solid var(--brand); background: #eaf2fc; padding: 12px 16px; border-radius: 0 var(--radius) var(--radius) 0; }
+.callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+.callout p { margin: 4px 0; }
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+.steps li { counter-increment: s; background: var(--bg); border-radius: 8px; padding: 12px 14px 12px 46px; position: relative; font-size: 14px; }
+.steps li::before { content: counter(s); position: absolute; left: 14px; top: 12px; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.steps b { display: block; }
+ul.tight { margin: 6px 0; padding-left: 20px; }
+ul.tight li { margin: 3px 0; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+th { font-size: 12.5px; color: var(--ink-3); font-weight: 600; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+td.l, th.l { text-align: left; }
+tr.hi td { background: #f3f8fe; font-weight: 600; }
+tr.ref td { color: var(--ink-3); font-style: italic; }
+td small { display: block; color: var(--ink-3); font-weight: 400; font-style: normal; font-size: 12.5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin: 4px 0 8px; }
+.legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; background: var(--c); }
+.legend span.ln::before { height: 3px; border-radius: 2px; vertical-align: 3px; }
+.legend span.band::before { background: #fdecea; border: 1px solid #f3b8b2; }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; overflow: visible; }
+.chart text { font-size: 12px; fill: var(--ink-3); }
+.chart .lbl { fill: var(--ink); font-size: 13px; }
+.chart .val { fill: var(--ink); font-size: 12.5px; font-weight: 600; }
+.tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid var(--line-2); border-radius: 8px; box-shadow: 0 4px 16px rgba(16,24,40,.12); padding: 8px 10px; font-size: 13px; white-space: nowrap; z-index: 3; display: none; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+dl.gl { display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); gap: 8px 16px; margin: 8px 0 0; }
+dl.gl dt { font-weight: 600; }
+dl.gl dd { margin: 0; color: var(--ink-2); }
+@media (max-width: 640px) { dl.gl { grid-template-columns: 1fr; } dl.gl dd { margin-bottom: 8px; } h1 { font-size: 25px; } .kpi .big { font-size: 28px; } }
+
+/* =====================================================================
+   Shared look for nihalunfc.github.io and /hotel-business/ (2026-10-21).
+   Light by default; <html data-theme="dark"> switches to the dark palette.
+   The header and footer come from /assets/header.js.
+   ===================================================================== */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --surface: #ffffff; --surface-2: #f3f4f6;
+  --ink: #111827; --ink-2: #4b5563; --ink-3: #6b7280; --line: #e5e7eb; --line-2: #d1d5db;
+  --brand: #1d4ed8; --brand-2: #2563eb; --link: #1d4ed8; --brand-soft: #eef3fe; --on-brand: #ffffff;
+  --hotel: #0f766e; --hotel-soft: #e6f4f1;
+  --good: #15803d; --good-soft: #e8f5ec; --warn: #a15c00; --warn-soft: #fff4e0; --bad: #b42318; --bad-soft: #fdecea;
+  --grid: #eef0f3; --axis: #c3c9d1; --hi-row: #f3f7fe; --tip-bg: #ffffff;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(17, 24, 39, .05);
+  --shadow-lg: 0 8px 24px rgba(17, 24, 39, .08);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #0f1318; --panel: #161b22; --surface: #161b22; --surface-2: #1d232c;
+  --ink: #e6e9ee; --ink-2: #b4bdc9; --ink-3: #8b95a3; --line: #2a313c; --line-2: #3a4350;
+  --brand: #7aa7ff; --brand-2: #7aa7ff; --link: #8db4ff; --brand-soft: rgba(122, 167, 255, .14); --on-brand: #0b1220;
+  --hotel: #3cc9b5; --hotel-soft: rgba(60, 201, 181, .14);
+  --good: #4cc38a; --good-soft: rgba(76, 195, 138, .14); --warn: #e3a94f; --warn-soft: rgba(227, 169, 79, .14); --bad: #f07167; --bad-soft: rgba(240, 113, 103, .14);
+  --grid: #242b35; --axis: #4a5361; --hi-row: rgba(122, 167, 255, .08); --tip-bg: #1d232c;
+  --shadow: none; --shadow-lg: 0 8px 24px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+.callout { background: var(--brand-soft); }
+tr.hi td { background: var(--hi-row); }
+.tip { background: var(--tip-bg); color: var(--ink); }
+.legend span.band::before { background: var(--bad-soft); border-color: var(--bad); }
+.steps li::before { color: var(--on-brand); }
+.tabs { top: 64px; z-index: 20; }
+@media (max-width: 900px) { .tabs { top: 0; position: static; } }
+.foot { margin-top: 8px; padding-bottom: 0; }
+site-footer.sf { margin-top: 32px; }
 </style>
+<script src="../assets/header.js"></script>
 </head>
 <body>
-<header class="top"><div class="in">
-  <a class="brand" href="../index.html">Hospitality BI Portfolio</a>
-  <nav>
-    <a href="../index.html">Home</a>
-    <a href="../revenue.html">Revenue Command Centre</a>
-    <a href="../schedule.html">Staff Schedule Builder</a>
-    <a href="../tools/index.html">Free tools</a>
-    <a class="on" href="./">AI Swarm</a>
-  </nav>
-</div></header>
+<site-header></site-header>
 
 <main>
   <h1>Hotel Swarm Operations</h1>
@@ -469,7 +576,8 @@ dl.gl dd { margin: 0; color: var(--ink-2); }
     </div>
   </section>
 </main>
-<footer class="foot">© 2026 Nihal. Prepared by Nihal as part of a hospitality BI portfolio. The swarm engine is in a private research codebase; this page shows its results. All hotels are fictional sample properties. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a></footer>
+<p class="foot">© 2026 Nihal. Prepared by Nihal as part of a hospitality BI portfolio. The swarm engine is in a private research codebase; this page shows its results. All hotels are fictional sample properties.</p>
+<site-footer></site-footer>
 
 <script src="assets/d3.min.js"></script>
 <script>const DATA = {"hotel_energy": [{"policy": "swarm (trained)", "net_saving_usd": 278960.55, "peak_cut_kw": 666.42, "peak_cut_pct": 25.18, "peaks_hit": 5.0, "ga_saving_usd": 299889.38, "extra_energy_usd": 20928.83, "missed_kwh": 0.0, "kind": "swarm"}, {"policy": "no action", "net_saving_usd": 0.0, "peak_cut_kw": 0.0, "peak_cut_pct": 0.0, "peaks_hit": 0.0, "ga_saving_usd": 0.0, "extra_energy_usd": 0.0, "missed_kwh": 0.0, "kind": "status quo"}, {"policy": "every weekday", "net_saving_usd": 248597.82, "peak_cut_kw": 561.27, "peak_cut_pct": 21.21, "peaks_hit": 5.0, "ga_saving_usd": 252572.82, "extra_energy_usd": 3975.01, "missed_kwh": 0.0, "kind": "rule"}, {"policy": "peak-alert rule", "net_saving_usd": 251421.77, "peak_cut_kw": 561.27, "peak_cut_pct": 21.21, "peaks_hit": 5.0, "ga_saving_usd": 252572.82, "extra_energy_usd": 1151.05, "missed_kwh": 0.0, "kind": "rule"}], "hotel_housekeeping": [{"policy": "swarm (trained)", "guest_wait_hours": 23.31, "early_promises_kept_pct": 45.51, "ready_by_noon_pct": 38.93, "workload_spread": 0.73, "floor_changes": 84.22, "kind": "swarm"}, {"policy": "floor order", "guest_wait_hours": 111.3, "early_promises_kept_pct": 25.18, "ready_by_noon_pct": 45.83, "workload_spread": 3.09, "floor_changes": 4.7, "kind": "status quo"}, {"policy": "soonest needed", "guest_wait_hours": 21.54, "early_promises_kept_pct": 48.22, "ready_by_noon_pct": 40.31, "workload_spread": 0.68, "floor_changes": 77.38, "kind": "rule"}, {"policy": "random room", "guest_wait_hours": 29.76, "early_promises_kept_pct": 42.07, "ready_by_noon_pct": 39.21, "workload_spread": 0.64, "floor_changes": 87.34, "kind": "rule"}], "hotel_relocation": [{"policy": "walk to competitor", "net_value": -10158.29, "revenue_kept": 0.0, "total_cost": 10158.29, "kept_in_group_pct": 0.0, "rule_violations": 0.0, "mean_transfer_km": 0.0, "kind": "status quo"}, {"policy": "nearest sister hotel", "net_value": 3569.86, "revenue_kept": 7808.91, "total_cost": 4239.05, "kept_in_group_pct": 85.57, "rule_violations": 0.0, "mean_transfer_km": 10.24, "kind": "rule"}, {"policy": "swarm auction", "net_value": 4619.48, "revenue_kept": 8568.7, "total_cost": 3949.22, "kept_in_group_pct": 86.36, "rule_violations": 0.0, "mean_transfer_km": 10.31, "kind": "swarm"}, {"policy": "optimal plan (reference)", "net_value": 4850.6, "revenue_kept": 8679.51, "total_cost": 3828.91, "kept_in_group_pct": 87.36, "rule_violations": 0.0, "mean_transfer_km": 10.2, "kind": "optimum"}], "hotel_shifts": [{"policy": "agency for every shift", "total_cost": 8000.0, "fill_rate_pct": 0.0, "agency_hours": 200.0, "overtime_hours": 0.0, "cross_property": 0.0, "max_extra_shifts": 0.0, "kind": "status quo"}, {"policy": "first to accept", "total_cost": 5248.53, "fill_rate_pct": 97.6, "agency_hours": 4.8, "overtime_hours": 26.88, "cross_property": 13.44, "max_extra_shifts": 1.3, "kind": "rule"}, {"policy": "swarm market", "total_cost": 4816.28, "fill_rate_pct": 96.96, "agency_hours": 6.08, "overtime_hours": 21.52, "cross_property": 8.42, "max_extra_shifts": 1.4, "kind": "swarm"}, {"policy": "optimal plan (reference)", "total_cost": 4684.65, "fill_rate_pct": 98.88, "agency_hours": 2.24, "overtime_hours": 23.36, "cross_property": 7.0, "max_extra_shifts": 1.56, "kind": "optimum"}], "hotel_results": [{"total_cost": 39417.82, "shortfall_hours": 75.0, "requests_honoured": "41/46", "rule_violations": 0, "method": "PuLP schedule", "week": "Coming week (forecast)"}, {"total_cost": 49954.14, "shortfall_hours": 343.7, "requests_honoured": "22/46", "rule_violations": 0, "method": "Fixed weekly pattern", "week": "Coming week (forecast)"}, {"total_cost": 47466.67, "shortfall_hours": 294.7, "requests_honoured": "46/46", "rule_violations": 0, "method": "PuLP schedule", "week": "Peak summer week"}, {"total_cost": 53071.31, "shortfall_hours": 380.5, "requests_honoured": "22/46", "rule_violations": 0, "method": "Fixed weekly pattern", "week": "Peak summer week"}, {"total_cost": 33618.2, "shortfall_hours": 0.0, "requests_honoured": "44/46", "rule_violations": 0, "method": "PuLP schedule", "week": "Quiet winter week"}, {"total_cost": 46506.47, "shortfall_hours": 253.0, "requests_honoured": "22/46", "rule_violations": 0, "method": "Fixed weekly pattern", "week": "Quiet winter week"}], "hotel_energy_peaks": [{"rank": 1, "when": "Thu Jul 16, 16:00", "grid_mw": 20904.86, "hotels_kw_before": 2687.59, "hotels_kw_rule": 2218.67, "hotels_kw_swarm": 1600.67}, {"rank": 2, "when": "Thu Jul 16, 15:00", "grid_mw": 20852.04, "hotels_kw_before": 2498.02, "hotels_kw_rule": 1666.73, "hotels_kw_swarm": 1499.77}, {"rank": 3, "when": "Mon Jul 13, 16:00", "grid_mw": 20582.75, "hotels_kw_before": 2819.3, "hotels_kw_rule": 2350.38, "hotels_kw_swarm": 2350.38}, {"rank": 4, "when": "Thu Jul 16, 17:00", "grid_mw": 20581.5, "hotels_kw_before": 2620.01, "hotels_kw_rule": 2414.07, "hotels_kw_swarm": 2384.6}, {"rank": 5, "when": "Mon Jul 13, 15:00", "grid_mw": 20546.25, "hotels_kw_before": 2607.78, "hotels_kw_rule": 1776.49, "hotels_kw_swarm": 2065.18}], "hotel_energy_day": [{"hour": 0, "grid_mw": 14457.73, "before_kw": 2271.41, "rule_kw": 2271.41, "swarm_kw": 2895.67, "top5": false}, {"hour": 1, "grid_mw": 13792.67, "before_kw": 2125.06, "rule_kw": 2125.06, "swarm_kw": 2856.8, "top5": false}, {"hour": 2, "grid_mw": 13280.39, "before_kw": 2051.89, "rule_kw": 2051.89, "swarm_kw": 2448.16, "top5": false}, {"hour": 3, "grid_mw": 12886.49, "before_kw": 2000.67, "rule_kw": 2000.67, "swarm_kw": 2240.57, "top5": false}, {"hour": 4, "grid_mw": 12778.46, "before_kw": 1964.09, "rule_kw": 1964.09, "swarm_kw": 1981.86, "top5": false}, {"hour": 5, "grid_mw": 12936.75, "before_kw": 1934.82, "rule_kw": 1934.82, "swarm_kw": 1977.75, "top5": false}, {"hour": 6, "grid_mw": 13144.76, "before_kw": 1905.55, "rule_kw": 1905.55, "swarm_kw": 2369.02, "top5": false}, {"hour": 7, "grid_mw": 13341.84, "before_kw": 1876.17, "rule_kw": 1876.17, "swarm_kw": 2522.64, "top5": false}, {"hour": 8, "grid_mw": 14083.12, "before_kw": 2031.74, "rule_kw": 2031.74, "swarm_kw": 2021.93, "top5": false}, {"hour": 9, "grid_mw": 15237.44, "before_kw": 2051.34, "rule_kw": 2051.34, "swarm_kw": 2363.24, "top5": false}, {"hour": 10, "grid_mw": 16586.55, "before_kw": 2067.61, "rule_kw": 2067.61, "swarm_kw": 2671.28, "top5": false}, {"hour": 11, "grid_mw": 17847.48, "before_kw": 2086.97, "rule_kw": 2956.97, "swarm_kw": 2639.0, "top5": false}, {"hour": 12, "grid_mw": 18885.22, "before_kw": 2203.8, "rule_kw": 3073.8, "swarm_kw": 2663.01, "top5": false}, {"hour": 13, "grid_mw": 19800.07, "before_kw": 2315.1, "rule_kw": 3185.1, "swarm_kw": 2655.15, "top5": false}, {"hour": 14, "grid_mw": 20423.68, "before_kw": 2405.89, "rule_kw": 1407.64, "swarm_kw": 2352.82, "top5": false}, {"hour": 15, "grid_mw": 20852.04, "before_kw": 2498.02, "rule_kw": 1666.73, "swarm_kw": 1499.77, "top5": true}, {"hour": 16, "grid_mw": 20904.86, "before_kw": 2687.59, "rule_kw": 2218.67, "swarm_kw": 1600.67, "top5": true}, {"hour": 17, "grid_mw": 20581.5, "before_kw": 2620.01, "rule_kw": 2414.07, "swarm_kw": 2384.6, "top5": true}, {"hour": 18, "grid_mw": 19861.92, "before_kw": 2673.82, "rule_kw": 2980.48, "swarm_kw": 3326.22, "top5": false}, {"hour": 19, "grid_mw": 19069.46, "before_kw": 2694.13, "rule_kw": 2965.33, "swarm_kw": 2988.33, "top5": false}, {"hour": 20, "grid_mw": 18393.96, "before_kw": 2689.17, "rule_kw": 2804.53, "swarm_kw": 3446.34, "top5": false}, {"hour": 21, "grid_mw": 17786.18, "before_kw": 2659.96, "rule_kw": 2659.96, "swarm_kw": 2611.68, "top5": false}, {"hour": 22, "grid_mw": 16922.33, "before_kw": 2623.49, "rule_kw": 2623.49, "swarm_kw": 3033.22, "top5": false}, {"hour": 23, "grid_mw": 15850.08, "before_kw": 2439.7, "rule_kw": 2439.7, "swarm_kw": 2390.46, "top5": false}], "hotel_energy_equipment": [{"hotel": "Summit Tower Hotel", "equipment": "chiller", "shiftable_kw": 186.0, "swarm_cut_kw": 94.48, "rule_cut_kw": 54.3}, {"hotel": "Summit Tower Hotel", "equipment": "laundry", "shiftable_kw": 49.6, "swarm_cut_kw": 25.79, "rule_cut_kw": 35.71}, {"hotel": "Summit Tower Hotel", "equipment": "ev", "shiftable_kw": 57.87, "swarm_cut_kw": 28.93, "rule_cut_kw": 28.93}, {"hotel": "Summit Tower Hotel", "equipment": "pool", "shiftable_kw": 42.0, "swarm_cut_kw": 31.12, "rule_cut_kw": 31.88}, {"hotel": "Grand Terrace Resort", "equipment": "chiller", "shiftable_kw": 156.0, "swarm_cut_kw": 79.24, "rule_cut_kw": 45.54}, {"hotel": "Grand Terrace Resort", "equipment": "laundry", "shiftable_kw": 41.6, "swarm_cut_kw": 21.63, "rule_cut_kw": 29.95}, {"hotel": "Grand Terrace Resort", "equipment": "ev", "shiftable_kw": 48.53, "swarm_cut_kw": 24.27, "rule_cut_kw": 24.27}, {"hotel": "Grand Terrace Resort", "equipment": "pool", "shiftable_kw": 175.0, "swarm_cut_kw": 148.75, "rule_cut_kw": 132.82}, {"hotel": "Riverside Suites", "equipment": "chiller", "shiftable_kw": 114.0, "swarm_cut_kw": 57.91, "rule_cut_kw": 33.28}, {"hotel": "Riverside Suites", "equipment": "laundry", "shiftable_kw": 30.4, "swarm_cut_kw": 15.81, "rule_cut_kw": 21.89}, {"hotel": "Riverside Suites", "equipment": "ev", "shiftable_kw": 35.47, "swarm_cut_kw": 16.85, "rule_cut_kw": 17.73}, {"hotel": "Riverside Suites", "equipment": "pool", "shiftable_kw": 35.0, "swarm_cut_kw": 25.64, "rule_cut_kw": 26.56}, {"hotel": "Harbour Lights Hotel", "equipment": "chiller", "shiftable_kw": 90.0, "swarm_cut_kw": 40.86, "rule_cut_kw": 26.27}, {"hotel": "Harbour Lights Hotel", "equipment": "laundry", "shiftable_kw": 24.0, "swarm_cut_kw": 12.48, "rule_cut_kw": 17.28}, {"hotel": "Parkview Inn", "equipment": "chiller", "shiftable_kw": 72.0, "swarm_cut_kw": 32.69, "rule_cut_kw": 21.02}, {"hotel": "Parkview Inn", "equipment": "laundry", "shiftable_kw": 19.2, "swarm_cut_kw": 9.98, "rule_cut_kw": 13.82}], "hotel_portfolio": [{"hotel": "Summit Tower Hotel", "style": "Full-service tower", "rooms": 620, "agents": 4, "equipment": "chiller, laundry, ev, pool", "peak_load_kw": 775.35, "shiftable_kw": 335.47, "swarm_cut_kw": 180.33, "rule_cut_kw": 150.82, "swarm_saving_usd": 81146.6, "rule_saving_usd": 67870.43}, {"hotel": "Grand Terrace Resort", "style": "Resort with indoor waterpark", "rooms": 520, "agents": 4, "equipment": "chiller, laundry, ev, pool", "peak_load_kw": 769.1, "shiftable_kw": 421.13, "swarm_cut_kw": 273.89, "rule_cut_kw": 232.59, "swarm_saving_usd": 123249.99, "rule_saving_usd": 104663.46}, {"hotel": "Riverside Suites", "style": "Upscale all-suite", "rooms": 380, "agents": 4, "equipment": "chiller, laundry, ev, pool", "peak_load_kw": 483.08, "shiftable_kw": 214.87, "swarm_cut_kw": 116.2, "rule_cut_kw": 99.47, "swarm_saving_usd": 52289.22, "rule_saving_usd": 44760.1}, {"hotel": "Harbour Lights Hotel", "style": "Select-service", "rooms": 300, "agents": 2, "equipment": "chiller, laundry", "peak_load_kw": 343.89, "shiftable_kw": 114.0, "swarm_cut_kw": 53.34, "rule_cut_kw": 43.55, "swarm_saving_usd": 24001.99, "rule_saving_usd": 19599.35}, {"hotel": "Parkview Inn", "style": "Economy", "rooms": 240, "agents": 2, "equipment": "chiller, laundry", "peak_load_kw": 275.12, "shiftable_kw": 91.2, "swarm_cut_kw": 42.67, "rule_cut_kw": 34.84, "swarm_saving_usd": 19201.59, "rule_saving_usd": 15679.48}], "hotel_energy_avgday": [{"hour": 0, "swarm_kw": 56.89, "rule_kw": 0.0}, {"hour": 1, "swarm_kw": 154.34, "rule_kw": 0.0}, {"hour": 2, "swarm_kw": 123.65, "rule_kw": 0.0}, {"hour": 3, "swarm_kw": 195.09, "rule_kw": 0.0}, {"hour": 4, "swarm_kw": 173.8, "rule_kw": 0.0}, {"hour": 5, "swarm_kw": 178.24, "rule_kw": 0.0}, {"hour": 6, "swarm_kw": 149.0, "rule_kw": 0.0}, {"hour": 7, "swarm_kw": 174.7, "rule_kw": 0.0}, {"hour": 8, "swarm_kw": 67.22, "rule_kw": 0.0}, {"hour": 9, "swarm_kw": 172.27, "rule_kw": 0.0}, {"hour": 10, "swarm_kw": 192.36, "rule_kw": 0.0}, {"hour": 11, "swarm_kw": 114.94, "rule_kw": 179.52}, {"hour": 12, "swarm_kw": 87.7, "rule_kw": 179.52}, {"hour": 13, "swarm_kw": 53.13, "rule_kw": 176.11}, {"hour": 14, "swarm_kw": -193.95, "rule_kw": -207.04}, {"hour": 15, "swarm_kw": -264.6, "rule_kw": -172.58}, {"hour": 16, "swarm_kw": -177.64, "rule_kw": -97.81}, {"hour": 17, "swarm_kw": 36.19, "rule_kw": -45.82}, {"hour": 18, "swarm_kw": 276.32, "rule_kw": 63.28}, {"hour": 19, "swarm_kw": 257.64, "rule_kw": 55.96}, {"hour": 20, "swarm_kw": 340.96, "rule_kw": 26.94}, {"hour": 21, "swarm_kw": 230.09, "rule_kw": 0.0}, {"hour": 22, "swarm_kw": 349.12, "rule_kw": 0.0}, {"hour": 23, "swarm_kw": 265.12, "rule_kw": 0.0}], "hotels": [{"hotel_id": "1", "hotel_name": "Summit Tower Hotel", "style": "Full-service tower", "rooms": 620, "base_rate": 219.0}, {"hotel_id": "2", "hotel_name": "Grand Terrace Resort", "style": "Resort with indoor waterpark", "rooms": 520, "base_rate": 239.0}, {"hotel_id": "3", "hotel_name": "Riverside Suites", "style": "Upscale all-suite", "rooms": 380, "base_rate": 199.0}, {"hotel_id": "4", "hotel_name": "Harbour Lights Hotel", "style": "Select-service", "rooms": 300, "base_rate": 169.0}, {"hotel_id": "5", "hotel_name": "Parkview Inn", "style": "Economy", "rooms": 240, "base_rate": 129.0}]};</script>
@@ -754,6 +862,5 @@ dl.gl dd { margin: 0; color: var(--ink-2); }
   show(location.hash.slice(1) || 'overview', false);
 })();
 </script>
-<script src="../assets/navmenu.js" defer></script>
 </body>
 </html>

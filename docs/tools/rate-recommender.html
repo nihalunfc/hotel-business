@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
 <title>Rate Recommender</title>
 <meta name="description" content="A free daily rate recommender for hotels: enter the next 30 days of bookings, last year's pace and competitor rates, and get a recommended best available rate for every day with a plain reason, then export the rate plan.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/header.js"></script>
 <link rel="stylesheet" href="../assets/tool.css">
 <style>
 .howto { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -19,7 +21,7 @@ table.edit.rr input.w-num { width: 74px; }
 table.edit.rr input.w-date { width: 142px; }
 table.edit.rr input.w-ev { width: 120px; }
 table.edit.rr td.dow { color: var(--ink-3); font-size: 13px; white-space: nowrap; }
-table.edit.rr tr.ev td { background: #fff8e8; }
+table.edit.rr tr.ev td { background: var(--warn-soft); }
 table.edit.rr tr.bad td { background: var(--bad-soft); }
 .pastebox { display: none; margin-bottom: 14px; }
 .pastebox.open { display: block; }
@@ -28,7 +30,7 @@ table.edit.rr tr.bad td { background: var(--bad-soft); }
 @media (max-width: 860px) { .strip { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
 .strip .cell { border-radius: 5px; padding: 4px 0 5px; text-align: center; font-size: 11px; line-height: 1.25; position: relative; cursor: default; }
 .strip .cell b { display: block; font-size: 13px; }
-.strip .cell.ev::after { content: ""; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #eda100; box-shadow: 0 0 0 1.5px #fff; }
+.strip .cell.ev::after { content: ""; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #eda100; box-shadow: 0 0 0 1.5px var(--surface); }
 .t-Low { background: var(--tier-need); color: #0d366b; }
 .t-Moderate { background: var(--tier-shoulder); color: #0d366b; }
 .t-High { background: var(--tier-high); color: #fff; }
@@ -47,20 +49,7 @@ td.why { width: 32%; min-width: 280px; font-size: 13.5px; color: var(--ink-2); }
 </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
-    <nav class="nav">
-      <a href="../index.html">Home</a>
-      <a href="../revenue.html">Revenue Command Centre</a>
-      <a href="../schedule.html">Staff Schedule Builder</a>
-      <a class="active" href="../tools/index.html">Free tools</a>
-      <a href="../swarm/">AI Swarm</a>
-      <a href="../index.html#proposals">Proposals</a>
-      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
-    </nav>
-  </div>
-</header>
+<site-header></site-header>
 
 <div class="hero-tool">
   <div class="wrap">
@@ -196,7 +185,7 @@ td.why { width: 32%; min-width: 280px; font-size: 13.5px; color: var(--ink-2); }
   </details>
 </main>
 
-<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+<site-footer class="no-print"></site-footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -646,6 +635,5 @@ td.why { width: 32%; min-width: 280px; font-size: 13.5px; color: var(--ink-2); }
   renderAll();
 })();
 </script>
-<script src="../assets/navmenu.js" defer></script>
 </body>
 </html>

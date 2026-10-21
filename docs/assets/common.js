@@ -33,9 +33,13 @@ function el(html) {
   return t.content.firstElementChild;
 }
 
+const isDark = () => document.documentElement.getAttribute("data-theme") === "dark";
 const COLORS = {
   s1: "#2a78d6", s2: "#eb6834", s3: "#1baf7a", s4: "#eda100",
-  grid: "#e9edf1", ink: "#4a5561", muted: "#9aa4ae",
+  get grid() { return isDark() ? "#2a313c" : "#e9edf1"; },
+  get ink() { return isDark() ? "#b4bdc9" : "#4a5561"; },
+  get muted() { return isDark() ? "#6b7685" : "#9aa4ae"; },
+  get bg() { return isDark() ? "#161b22" : "#ffffff"; },
 };
 
 function chartDefaults() {
@@ -45,10 +49,7 @@ function chartDefaults() {
   Chart.defaults.color = COLORS.ink;
   Chart.defaults.plugins.legend.labels.boxWidth = 12;
   Chart.defaults.plugins.legend.labels.boxHeight = 12;
-  Chart.defaults.plugins.tooltip.backgroundColor = "#ffffff";
-  Chart.defaults.plugins.tooltip.titleColor = "#18212b";
-  Chart.defaults.plugins.tooltip.bodyColor = "#18212b";
-  Chart.defaults.plugins.tooltip.borderColor = "#cfd6de";
+  chartTheme();
   Chart.defaults.plugins.tooltip.borderWidth = 1;
   Chart.defaults.plugins.tooltip.padding = 10;
   Chart.defaults.elements.line.borderWidth = 2;
@@ -63,3 +64,34 @@ function chartDefaults() {
 function gridScale(extra = {}) {
   return Object.assign({ grid: { color: COLORS.grid }, border: { display: false }, ticks: { color: COLORS.ink } }, extra);
 }
+
+// Light and dark theme for Chart.js. Runs at start-up and again when the visitor
+// switches theme (assets/header.js sends "themechange"): every chart on the page
+// gets the new grid, label and tooltip colours without being rebuilt.
+function chartTheme() {
+  if (!window.Chart) return;
+  const d = isDark(), ink = COLORS.ink, grid = COLORS.grid;
+  Chart.defaults.color = ink;
+  Chart.defaults.borderColor = grid;
+  const tt = Chart.defaults.plugins.tooltip;
+  tt.backgroundColor = d ? "#1d232c" : "#ffffff";
+  tt.titleColor = tt.bodyColor = d ? "#e6e9ee" : "#18212b";
+  tt.borderColor = d ? "#3a4350" : "#cfd6de";
+  return { ink, grid, tt };
+}
+window.addEventListener("themechange", () => {
+  if (!window.Chart) return;
+  const { ink, grid, tt } = chartTheme();
+  Object.values(Chart.instances || {}).forEach(ch => {
+    const o = ch.options;
+    Object.values(o.scales || {}).forEach(sc => {
+      if (sc.grid && sc.grid.color !== "transparent" && sc.grid.display !== false) sc.grid.color = grid;
+      if (sc.ticks) sc.ticks.color = ink;
+      if (sc.title) sc.title.color = ink;
+    });
+    if (o.plugins && o.plugins.legend && o.plugins.legend.labels) o.plugins.legend.labels.color = ink;
+    if (o.plugins && o.plugins.tooltip) Object.assign(o.plugins.tooltip, { backgroundColor: tt.backgroundColor, titleColor: tt.titleColor, bodyColor: tt.bodyColor, borderColor: tt.borderColor });
+    (ch.data.datasets || []).forEach(ds => { if (ds.borderColor === "#ffffff" || ds.borderColor === "#161b22") ds.borderColor = COLORS.bg; });
+    ch.update("none");
+  });
+});

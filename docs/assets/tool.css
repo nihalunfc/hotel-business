@@ -53,3 +53,4 @@ table.edit input.w-name { min-width: 130px; }
   .sec-head .toolbar { display: none; }
 }
 #t-team thead th { position: sticky; top: 0; z-index: 1; }
+

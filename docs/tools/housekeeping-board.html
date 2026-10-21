@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
 <title>Housekeeping Board</title>
 <meta name="description" content="A free housekeeping board for hotels: load today's rooms and attendants, get balanced, floor-by-floor room assignments in priority order, print a board card per attendant and track progress live.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/header.js"></script>
 <link rel="stylesheet" href="../assets/tool.css">
 <style>
 .rooms-scroll { max-height: 440px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
@@ -16,10 +18,10 @@
 table.edit input.w-room { width: 74px; }
 table.edit input.w-floor { width: 58px; }
 table.edit input[type=time] { font: inherit; font-size: 14px; border: 1px solid var(--line-2); border-radius: 7px; padding: 4px 6px; width: 124px; }
-input[type=time] { font: inherit; font-size: 14.5px; color: var(--ink); border: 1px solid var(--line-2); border-radius: 7px; padding: 6px 8px; background: #fff; }
+input[type=time] { font: inherit; font-size: 14.5px; color: var(--ink); border: 1px solid var(--line-2); border-radius: 7px; padding: 6px 8px; background: var(--surface); }
 table.edit input[type=checkbox], .cards input[type=checkbox], #t-board input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--good); cursor: pointer; }
 textarea { font: inherit; font-size: 13.5px; width: 100%; min-height: 110px; border: 1px solid var(--line-2); border-radius: 7px; padding: 8px; font-family: ui-monospace, Menlo, Consolas, monospace; }
-.paste-box { margin-top: 12px; background: #fafbfc; border: 1px dashed var(--line-2); border-radius: 8px; padding: 12px; }
+.paste-box { margin-top: 12px; background: var(--surface-2); border: 1px dashed var(--line-2); border-radius: 8px; padding: 12px; }
 .tagx { display: inline-block; font-size: 11.5px; font-weight: 700; border-radius: 4px; padding: 1px 6px; margin-right: 3px; white-space: nowrap; }
 .tagx.vip { background: #e9e2f8; color: #3f2a85; }
 .tagx.early { background: #fff3df; color: #8a5300; }
@@ -34,13 +36,13 @@ tr.is-done td { color: var(--ink-3); }
 tr.is-done td .rn { text-decoration: line-through; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 .bcard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
-.bcard header { background: var(--brand); color: #fff; padding: 10px 14px; }
+.bcard header { background: var(--brand); color: var(--on-brand); padding: 10px 14px; }
 .bcard header b { font-size: 16px; display: block; }
 .bcard header span { font-size: 12.5px; color: #dbe8f7; }
 .bcard table { font-size: 13px; }
 .bcard th, .bcard td { padding: 5px 8px; vertical-align: middle; }
-.bcard .foot { padding: 8px 14px; font-size: 12.5px; color: var(--ink-2); border-top: 1px solid var(--line); background: #fafbfc; }
-.bar { height: 10px; background: #e9edf1; border-radius: 99px; overflow: hidden; }
+.bcard .foot { padding: 8px 14px; font-size: 12.5px; color: var(--ink-2); border-top: 1px solid var(--line); background: var(--surface-2); }
+.bar { height: 10px; background: var(--grid); border-radius: 99px; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--good); border-radius: 99px; }
 .prog-big { height: 16px; margin: 6px 0 14px; }
 .prog-row { display: grid; grid-template-columns: minmax(110px, 180px) 1fr minmax(120px, auto); gap: 6px 14px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
@@ -65,20 +67,7 @@ tr.is-done td .rn { text-decoration: line-through; }
 </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
-    <nav class="nav">
-      <a href="../index.html">Home</a>
-      <a href="../revenue.html">Revenue Command Centre</a>
-      <a href="../schedule.html">Staff Schedule Builder</a>
-      <a class="active" href="../tools/index.html">Free tools</a>
-      <a href="../swarm/">AI Swarm</a>
-      <a href="../index.html#proposals">Proposals</a>
-      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
-    </nav>
-  </div>
-</header>
+<site-header></site-header>
 
 <div class="hero-tool">
   <div class="wrap">
@@ -252,7 +241,7 @@ tr.is-done td .rn { text-decoration: line-through; }
   </details>
 </main>
 
-<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+<site-footer class="no-print"></site-footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="../assets/common.js"></script>
@@ -659,10 +648,10 @@ tr.is-done td .rn { text-decoration: line-through; }
     const data = {
       labels,
       datasets: [
-        { label: "Departures", data: st.map(x => x.dep), backgroundColor: COLORS.s1, borderColor: "#fff", borderWidth: 2, stack: "w" },
-        { label: "Stayovers", data: st.map(x => x.so), backgroundColor: COLORS.s3, borderColor: "#fff", borderWidth: 2, stack: "w" },
-        { label: "Travel", data: st.map(x => x.travel), backgroundColor: COLORS.s4, borderColor: "#fff", borderWidth: 2, stack: "w" },
-        { label: "Spare shift time", data: spare, backgroundColor: "#e4e7eb", borderColor: "#fff", borderWidth: 2, stack: "w" },
+        { label: "Departures", data: st.map(x => x.dep), backgroundColor: COLORS.s1, borderColor: COLORS.bg, borderWidth: 2, stack: "w" },
+        { label: "Stayovers", data: st.map(x => x.so), backgroundColor: COLORS.s3, borderColor: COLORS.bg, borderWidth: 2, stack: "w" },
+        { label: "Travel", data: st.map(x => x.travel), backgroundColor: COLORS.s4, borderColor: COLORS.bg, borderWidth: 2, stack: "w" },
+        { label: "Spare shift time", data: spare, backgroundColor: "#e4e7eb", borderColor: COLORS.bg, borderWidth: 2, stack: "w" },
       ],
     };
     if (chart) { chart.data = data; chart.update("none"); return; }
@@ -817,6 +806,5 @@ tr.is-done td .rn { text-decoration: line-through; }
   setInterval(() => { if (P) renderProgress(); }, 60000);
 })();
 </script>
-<script src="../assets/navmenu.js" defer></script>
 </body>
 </html>

@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
 <title>Labour Productivity Calculator</title>
 <meta name="description" content="A free hotel labour productivity calculator: labour hours, shifts, FTEs, cost per occupied room and labour cost as a share of rooms revenue for housekeeping, front desk, food and beverage and your own departments, with a staffing guide from 30% to 100% occupancy.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/header.js"></script>
 <link rel="stylesheet" href="../assets/tool.css">
 <style>
-.dept { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; background: #fcfdfe; }
+.dept { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 14px; background: var(--surface); }
 .dept-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .dept-head .nm { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; }
 .dept-head .nm input { font-weight: 600; max-width: 280px; }
@@ -31,25 +33,12 @@ tr.cur td { background: var(--brand-soft); font-weight: 600; }
 .bm-status { font-size: 13px; font-weight: 700; white-space: nowrap; }
 .bm-status.in { color: var(--good); } .bm-status.hi { color: var(--warn); } .bm-status.lo { color: var(--warn); }
 .seg-wrap { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 8px; }
-.tfoot-row td { font-weight: 700; background: #fafbfc; }
+.tfoot-row td { font-weight: 700; background: var(--surface-2); }
 @media print { .dept { break-inside: avoid; } .chart-box { break-inside: avoid; } }
 </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
-    <nav class="nav">
-      <a href="../index.html">Home</a>
-      <a href="../revenue.html">Revenue Command Centre</a>
-      <a href="../schedule.html">Staff Schedule Builder</a>
-      <a class="active" href="../tools/index.html">Free tools</a>
-      <a href="../swarm/">AI Swarm</a>
-      <a href="../index.html#proposals">Proposals</a>
-      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
-    </nav>
-  </div>
-</header>
+<site-header></site-header>
 
 <div class="hero-tool">
   <div class="wrap">
@@ -196,7 +185,7 @@ tr.cur td { background: var(--brand-soft); font-weight: 600; }
   </details>
 </main>
 
-<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+<site-footer class="no-print"></site-footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="../assets/common.js"></script>
@@ -418,13 +407,13 @@ tr.cur td { background: var(--brand-soft); font-weight: 600; }
     if (!window.Chart) { document.querySelectorAll(".chart-box").forEach(b => b.innerHTML = `<p class="muted">Charts could not load. The tables show the same numbers.</p>`); return; }
     const G = guideRows();
     const mk = (id, cfg) => { if (charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update("none"); } else charts[id] = new Chart($(id), cfg); };
-    mk("#c-cost", { type: "bar", data: { labels: M.rows.map(r => r.d.name), datasets: [{ label: "Cost per day", data: M.rows.map(r => Math.round(r.cost)), backgroundColor: M.rows.map(r => DCOL[r.i % DCOL.length]), borderColor: "#fff", borderWidth: 2, maxBarThickness: 46 }] },
+    mk("#c-cost", { type: "bar", data: { labels: M.rows.map(r => r.d.name), datasets: [{ label: "Cost per day", data: M.rows.map(r => Math.round(r.cost)), backgroundColor: M.rows.map(r => DCOL[r.i % DCOL.length]), borderColor: COLORS.bg, borderWidth: 2, maxBarThickness: 46 }] },
       options: { indexAxis: "y", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${money(c.raw)} a day (${fmt.pct(c.raw / (M.tot.cost || 1), 0)})` } } }, scales: { x: gridScale({ ticks: { callback: (v) => fmt.compact(v) } }), y: gridScale({ grid: { display: false } }) } } });
     mk("#c-cpor", { type: "line", data: { labels: LEVELS.map(p => p + "%"), datasets: [
       { label: "All departments", data: G.map(g => g.m.cpor != null ? +g.m.cpor.toFixed(2) : null), borderColor: COLORS.s1, backgroundColor: COLORS.s1, pointRadius: 3 },
       { label: "Rooms division", data: G.map(g => g.m.rdCpor != null ? +g.m.rdCpor.toFixed(2) : null), borderColor: COLORS.s2, backgroundColor: COLORS.s2, pointRadius: 3 }] },
       options: { plugins: { legend: { position: "bottom" }, tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${money(c.raw, 2)}` } } }, scales: { x: gridScale({ title: { display: true, text: "Occupancy" } }), y: gridScale({ beginAtZero: true, ticks: { callback: (v) => "$" + v } }) } } });
-    mk("#c-guide", { type: "bar", data: { labels: LEVELS.map(p => p + "%"), datasets: D.map((d, i) => ({ label: d.name, data: G.map(g => g.m.rows[i].shifts), backgroundColor: DCOL[i % DCOL.length], borderColor: "#fff", borderWidth: 2, stack: "s" })) },
+    mk("#c-guide", { type: "bar", data: { labels: LEVELS.map(p => p + "%"), datasets: D.map((d, i) => ({ label: d.name, data: G.map(g => g.m.rows[i].shifts), backgroundColor: DCOL[i % DCOL.length], borderColor: COLORS.bg, borderWidth: 2, stack: "s" })) },
       options: { plugins: { legend: { position: "bottom" }, title: { display: true, text: "People to schedule per day, by occupancy", align: "start", color: COLORS.ink, font: { weight: "600" } } }, scales: { x: gridScale({ stacked: true, grid: { display: false } }), y: gridScale({ stacked: true, beginAtZero: true, title: { display: true, text: "People (shifts)" } }) } } });
   }
 
@@ -525,6 +514,5 @@ tr.cur td { background: var(--brand-soft); font-weight: 600; }
   renderAll();
 })();
 </script>
-<script src="../assets/navmenu.js" defer></script>
 </body>
 </html>

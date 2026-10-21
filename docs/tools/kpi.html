@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
 <title>Hotel KPI Dashboard</title>
 <meta name="description" content="A free hotel KPI dashboard: upload your daily rooms and revenue data (or use the sample) to see occupancy, ADR, RevPAR, TRevPAR and GOPPAR against last period, last year and budget, for one hotel or a whole portfolio.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/header.js"></script>
 <link rel="stylesheet" href="../assets/tool.css">
 <style>
 .howto.h4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -32,7 +34,7 @@ textarea { font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; width: 100%;
 .chart-empty { display: grid; place-items: center; height: 100%; color: var(--ink-3); font-size: 14px; text-align: center; }
 table.budget input { width: 78px; padding: 4px 6px; font-size: 14px; text-align: right; }
 table.budget td, table.budget th { padding: 7px 8px; vertical-align: middle; white-space: nowrap; }
-table.budget tfoot td, table.mt tfoot td { font-weight: 600; background: #fafbfc; }
+table.budget tfoot td, table.mt tfoot td { font-weight: 600; background: var(--surface-2); }
 .pos { color: var(--good); font-weight: 600; }
 .neg { color: var(--bad); font-weight: 600; }
 .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
@@ -50,20 +52,7 @@ tr.sel td { background: var(--brand-soft); }
 </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="../index.html">Hospitality <span>BI</span> Portfolio</a>
-    <nav class="nav">
-      <a href="../index.html">Home</a>
-      <a href="../revenue.html">Revenue Command Centre</a>
-      <a href="../schedule.html">Staff Schedule Builder</a>
-      <a class="active" href="../tools/index.html">Free tools</a>
-      <a href="../swarm/">AI Swarm</a>
-      <a href="../index.html#proposals">Proposals</a>
-      <a href="https://github.com/nihalunfc/hotel-business">Code</a>
-    </nav>
-  </div>
-</header>
+<site-header></site-header>
 
 <div class="hero-tool">
   <div class="wrap">
@@ -212,7 +201,7 @@ tr.sel td { background: var(--brand-soft); }
   </details>
 </main>
 
-<footer class="site-footer no-print"><div class="wrap">© 2026 Nihal. Built by Nihal and free to use. All hotels, guests, staff and figures are fictional samples. · <a href="https://nihalunfc.github.io/">Portfolio</a> · <a href="https://nihalunfc.github.io/about/">About</a> · <a href="https://nihalunfc.github.io/disclaimer/">Disclaimer</a> · <a href="https://github.com/nihalunfc/hotel-business">Code</a></div></footer>
+<site-footer class="no-print"></site-footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -644,8 +633,8 @@ tr.sel td { background: var(--brand-soft); }
     const lyv = DOW.map((_, w) => m.f(agg(hs, P.ly[0], P.ly[1], d => dowOf(d) === w)));
     if (charts.dow) charts.dow.destroy();
     charts.dow = new Chart($("#c-dow"), { type: "bar", data: { labels: DOW, datasets: [
-        { label: rangeText(P.from, P.to), data: cur.map(v => v == null ? null : +v.toFixed(4)), backgroundColor: COLORS.s1, borderColor: "#fff", borderWidth: 1 },
-        { label: "Last year", data: lyv.map(v => v == null ? null : +v.toFixed(4)), backgroundColor: "#cfd6de", borderColor: "#fff", borderWidth: 1 }] },
+        { label: rangeText(P.from, P.to), data: cur.map(v => v == null ? null : +v.toFixed(4)), backgroundColor: COLORS.s1, borderColor: COLORS.bg, borderWidth: 1 },
+        { label: "Last year", data: lyv.map(v => v == null ? null : +v.toFixed(4)), backgroundColor: "#cfd6de", borderColor: COLORS.bg, borderWidth: 1 }] },
       options: { plugins: { legend: { position: "bottom" }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw == null ? "no data" : m.fmt(c.raw)}` } } },
         scales: { y: Object.assign(yScale, { beginAtZero: true }), x: gridScale({ grid: { display: false } }) } } });
   }
@@ -884,6 +873,5 @@ tr.sel td { background: var(--brand-soft); }
   start();
 })();
 </script>
-<script src="../assets/navmenu.js" defer></script>
 </body>
 </html>
