@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hotel Operations Hub</title>
+<meta name="description" content="A working demo of a hotel operations platform: housekeeping room board, work orders, preventive maintenance, guest requests and incidents, inspections, shift logbook, lost and found, inventory and reports, with role-based views for every department.">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="ops.css">
+<script src="../../assets/header.js"></script>
+</head>
+<body class="ops">
+<site-header></site-header>
+
+<div class="ops-shell">
+  <aside class="ops-side" id="side" aria-label="Modules"></aside>
+  <div class="scrim" id="scrim"></div>
+  <main class="ops-main" id="main" tabindex="-1">
+    <noscript><div class="panel">The Operations Hub needs JavaScript to run.</div></noscript>
+  </main>
+</div>
+<nav class="bnav" id="bnav" aria-label="Quick navigation"></nav>
+
+<site-footer class="no-print"></site-footer>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="ops-data.js"></script>
+<script src="ops.js"></script>
+<script src="ops-views-1.js"></script>
+<script src="ops-views-2.js"></script>
+</body>
+</html>

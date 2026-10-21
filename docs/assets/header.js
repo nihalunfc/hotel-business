@@ -59,7 +59,8 @@
   ];
   var HOTEL_DASHBOARDS = [
     { href: H + 'revenue.html', label: 'Revenue command centre', sub: 'Twelve months of pricing decisions' },
-    { href: H + 'dashboards/workforce/', label: 'Workforce', sub: 'Scheduling, time clock, timesheets and payroll' }
+    { href: H + 'dashboards/workforce/', label: 'Workforce', sub: 'Scheduling, time clock, timesheets and payroll' },
+    { href: H + 'dashboards/operations/', label: 'Operations', sub: 'Housekeeping, maintenance and guest requests in one app' }
   ];
   var PROJECTS = [
     { href: '/swarm/', label: 'Swarm Intelligence', sub: 'One AI engine for hotels, grid batteries and wildfire drones' },
