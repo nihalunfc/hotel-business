@@ -54,6 +54,9 @@ Initiatives that optimize staffing, guest flow, housekeeping and facilities. The
 ### [Data Foundation](./Data%20Foundation/proposal.md)
 The shared data layer behind both projects: data sources, star-schema fact and dimension tables, controlled label sets, database layers, data quality checks and privacy governance.
 
+### [AI Workflow](./ai-workflow/README.md)
+How I work with Claude Code on a live data platform: safety rules for the agent, a repeatable ETL triage method with five verdicts, a tested read-only SQL runner, and triage checks that run against this repository's warehouse.
+
 ### [Further Ideas](./Further%20Ideas/README.md)
 Ideas with real potential that are not yet ready for a full proposal, each listed with what it lacks and what would make it viable.
 
@@ -66,6 +69,7 @@ Ideas with real potential that are not yet ready for a full proposal, each liste
 | [Data Foundation](./Data%20Foundation/proposal.md) | Shared data model, labels and governance |
 | [Further Ideas](./Further%20Ideas/README.md) | Ideas with their limitations |
 | [analytics](./analytics) | Python and SQL pipeline behind the demos, with tests |
+| [ai-workflow](./ai-workflow/README.md) | Claude Code rules, triage skills and a read-only SQL runner |
 | [docs](./docs) | The demo website (GitHub Pages) |
 | [data/sample](./data/sample) | Small extracts of the generated sample data |
 | [June 2026](./June%202026) | Earlier booking snapshot analysis |
