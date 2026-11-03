@@ -17,7 +17,7 @@ pytest analytics/tests
 | 3. Quality checks | [hbi/sql/04_quality_checks.sql](hbi/sql/04_quality_checks.sql) | Ten checks, including duplicate keys, room-night arithmetic, revenue tie-out between booking and stay-night grain, and sold above capacity. Any failure stops the build. |
 | 4. Revenue analytics | [hbi/demand.py](hbi/demand.py) | Booking pace rebuilt from booking and cancellation dates; additive pickup forecast with a back-test against same-day-last-year; unconstrained demand on sold-out nights, validated against the known denials; event uplift; channel net rate; cancellations by lead time; 365-day demand tiers and the weekly selling brief. |
 | 5. Scheduling | [hbi/schedule.py](hbi/schedule.py), [hbi/excel.py](hbi/excel.py) | Converts departures and stayovers into labour hours, solves a mixed-integer shift assignment with PuLP and CBC, checks the result with an independent Ontario ESA rule checker, compares it with a fixed weekly pattern, and writes a colour-coded Excel workbook with live formulas. |
-| 6. Site export | [hbi/site_export.py](hbi/site_export.py) | Writes the JSON and Excel files the pages in [docs/](../docs) read. |
+| 6. Site export | [hbi/site_export.py](hbi/site_export.py) | Writes the JSON and Excel files the live pages read, into `public/data/hospitality/` and `public/downloads/hospitality/` of the site repo (set `SITE_REPO` to its local clone). |
 
 ## Key definitions
 

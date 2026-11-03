@@ -9,8 +9,12 @@ DATA_DIR = ROOT / "data" / "generated"
 SAMPLE_DIR = ROOT / "data" / "sample"
 WAREHOUSE_PATH = DATA_DIR / "warehouse.sqlite"
 SQL_DIR = ANALYTICS_DIR / "hbi" / "sql"
-SITE_DATA_DIR = ROOT / "docs" / "data"
-SITE_DOWNLOADS_DIR = ROOT / "docs" / "downloads"
+# The live pages are on nihalsulaiman.com (repo nihalunfc/nihalunfc.github.io). Point SITE_REPO at a
+# local clone of it; the export then writes straight into its public/ folder.
+import os as _os
+SITE_REPO = Path(_os.environ.get("SITE_REPO", ROOT.parent / "nihalunfc.github.io"))
+SITE_DATA_DIR = SITE_REPO / "public" / "data" / "hospitality"
+SITE_DOWNLOADS_DIR = SITE_REPO / "public" / "downloads" / "hospitality"
 
 SEED = 2026
 AS_OF = date(2026, 10, 1)            # "today" for on-the-books and forecasts

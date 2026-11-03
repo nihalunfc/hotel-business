@@ -4,12 +4,12 @@ A portfolio of proposals and working tools for multi-property resort hotels. The
 
 ## Live Demos
 
-**Start here: [nihalunfc.github.io/hotel-business](https://nihalunfc.github.io/hotel-business/)**
+**Start here: [nihalsulaiman.com/projects/hospitality-bi](https://nihalsulaiman.com/projects/hospitality-bi/)**
 
 | Demo | What it shows |
 | :-- | :-- |
-| [Revenue Command Centre](https://nihalunfc.github.io/hotel-business/revenue.html) | Three years of booking history turned into a 365-night demand calendar, a weekly selling brief, booking pace against last year, demand turned away on sold-out nights, channel net rates, cancellations, and a forecast accuracy check. |
-| [Staff Schedule Builder](https://nihalunfc.github.io/hotel-business/schedule.html) | A housekeeping schedule built from expected workload, checked against Ontario labour rules, compared with a fixed weekly pattern, and exported to Excel, print and a staff-app shift list. |
+| [Revenue Command Centre](https://nihalsulaiman.com/tools/revenue-command-centre/hotels/) | Three years of booking history turned into a 365-night demand calendar, a weekly selling brief, booking pace against last year, demand turned away on sold-out nights, channel net rates, cancellations, and a forecast accuracy check. |
+| [Staff Schedule Builder](https://nihalsulaiman.com/tools/shift-scheduler/hotels/) | A housekeeping schedule built from expected workload, checked against Ontario labour rules, compared with a fixed weekly pattern, and exported to Excel, print and a staff-app shift list. |
 
 Both demos run on one shared sample dataset of five fictional hotels (about 640,000 bookings over four years). The code that builds it, the SQL warehouse, the quality checks and the tests are in [analytics/](./analytics). A small extract of the sample data is in [data/sample/](./data/sample).
 
@@ -70,7 +70,7 @@ Ideas with real potential that are not yet ready for a full proposal, each liste
 | [Further Ideas](./Further%20Ideas/README.md) | Ideas with their limitations |
 | [analytics](./analytics) | Python and SQL pipeline behind the demos, with tests |
 | [ai-workflow](./ai-workflow/README.md) | Claude Code rules, triage skills and a read-only SQL runner |
-| [docs](./docs) | The demo website (GitHub Pages) |
+| [docs](./docs) | Redirects only. The live pages moved to [nihalsulaiman.com](https://nihalsulaiman.com/projects/hospitality-bi/); their source is `public/` in [nihalunfc/nihalunfc.github.io](https://github.com/nihalunfc/nihalunfc.github.io) |
 | [data/sample](./data/sample) | Small extracts of the generated sample data |
 | [June 2026](./June%202026) | Earlier booking snapshot analysis |
 
